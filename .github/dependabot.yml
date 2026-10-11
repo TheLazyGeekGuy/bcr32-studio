@@ -17,6 +17,9 @@ updates:
       # (ts.transpileModule). Stay on 5.x until the loader is migrated.
       - dependency-name: typescript
         versions: [">=7"]
+      # Types follow the Node.js version used by CI and documented for contributors (22).
+      - dependency-name: "@types/node"
+        versions: [">=23"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
