@@ -12,7 +12,7 @@ function metaCsp(): Plugin {
 }
 
 export default defineConfig({
-  // Relative asset URLs: the same build works at a domain root (Cloudflare) and under /bcr32-studio/ (GitHub Pages).
+  // Relative asset URLs: the same build works at a domain root (GitHub Pages, Cloudflare) and under any sub-path.
   base: './',
   plugins: [react(), ...(process.env.META_CSP === '1' ? [metaCsp()] : [])],
   server: {

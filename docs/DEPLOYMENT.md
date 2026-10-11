@@ -5,7 +5,7 @@ asset URLs are relative (Vite `base: './'`).
 
 ## GitHub Pages (primary)
 
-Every push to `main` runs the tests, builds and publishes **https://thelazygeekguy.github.io/bcr32-studio/**
+Every push to `main` runs the tests, builds and publishes **https://bcr32-studio.github.io/**
 (`.github/workflows/pages.yml`). No secret, no external service. GitHub Pages cannot send response headers, so the
 build injects the Content-Security-Policy of `public/_headers` as a `<meta>` tag (`META_CSP=1`); `frame-ancestors` and
 `X-Frame-Options` are not available there. `404.html` is a copy of `index.html` for the single-page fallback.
@@ -26,7 +26,7 @@ carries the version of `package.json`. Workflows: `.github/workflows/ci.yml` and
 ## Why it only runs on GitHub
 
 Every job is guarded by `github.server_url == 'https://github.com'`, and the deploy jobs also by
-`github.repository == 'TheLazyGeekGuy/bcr32-studio'` and `vars.DEPLOY_ENABLED == 'true'`. A Forgejo or Gitea mirror, which reads `.github/workflows` when
+`github.repository == 'bcr32-studio/bcr32-studio.github.io'` and `vars.DEPLOY_ENABLED == 'true'`. A Forgejo or Gitea mirror, which reads `.github/workflows` when
 it has no `.forgejo/workflows`, skips the jobs; a fork has no Cloudflare secret and skips the deploy jobs.
 Pull requests use the `pull_request` event, never `pull_request_target`, so code from a fork never runs with secrets.
 

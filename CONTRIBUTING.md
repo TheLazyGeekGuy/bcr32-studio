@@ -19,7 +19,7 @@ flowchart LR
 3. Open a pull request. CI runs the tests, the type check, the build and a generic leak scan. Pull requests from forks
    run without any secret.
 4. The maintainer reviews (every path is owned by the maintainer, see `.github/CODEOWNERS`) and merges.
-5. Every merge to `main` is deployed automatically to GitHub Pages, https://thelazygeekguy.github.io/bcr32-studio/.
+5. Every merge to `main` is deployed automatically to GitHub Pages, https://bcr32-studio.github.io/.
    An optional Cloudflare deployment (dev, then production after approval) exists but is disabled. See
    [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 

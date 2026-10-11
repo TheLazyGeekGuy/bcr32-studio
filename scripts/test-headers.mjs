@@ -36,7 +36,7 @@ for (const path of shipped) assert.ok(!excluded(path), 'Shipped public file excl
 const src = join(root, 'src'), referenced = new Set()
 for (const file of readdirSync(src).filter(f => /\.(tsx?|css)$/.test(f))) for (const m of readFileSync(join(src, file), 'utf8').matchAll(/['"`(]\/?((?:[\w-]+\/)+[\w.-]+\.(?:webp|png|jpe?g|svg|ttf|woff2?))['"`)]/g)) referenced.add(m[1])
 assert.deepEqual([...referenced].sort(), ['branding/bcr32-studio-logo.webp', 'fonts/NotoSans-Regular.ttf'], 'App asset files: the logo and the PDF font, nothing else')
-// Paths are relative (vite base './'), so the same build works at a domain root and under /bcr32-studio/ on GitHub Pages.
+// Paths are relative (vite base './'), so the same build works at a domain root and under any sub-path.
 for (const file of readdirSync(src).filter(f => /\.(tsx?|css)$/.test(f))) assert.ok(!/['"`(]\/(branding|fonts)\//.test(readFileSync(join(src, file), 'utf8')), 'Root-absolute asset path in ' + file)
 for (const path of referenced) { assert.ok(existsSync(join(pub, path)), 'Missing public asset: ' + path); assert.ok(!excluded(path), 'App asset excluded from upload: ' + path) }
 // The panel plate is procedural CSS: its only image is an inline SVG data: URI, which the CSP allows through img-src data:.
