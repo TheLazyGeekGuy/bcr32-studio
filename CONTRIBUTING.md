@@ -11,9 +11,7 @@ flowchart LR
   B --> C{CI: tests, types,\nbuild, leak scan}
   C -->|green| D[Maintainer review]
   D -->|merge| E[main]
-  E --> F[Automatic deploy\nto the dev site]
-  F --> G{Maintainer checks dev\nand publishes a release}
-  G -->|approved| H[Deploy to production]
+  E --> F[Automatic deploy\nto GitHub Pages]
 ```
 
 1. Fork the repository and create a branch from `main`.
@@ -21,9 +19,9 @@ flowchart LR
 3. Open a pull request. CI runs the tests, the type check, the build and a generic leak scan. Pull requests from forks
    run without any secret.
 4. The maintainer reviews (every path is owned by the maintainer, see `.github/CODEOWNERS`) and merges.
-5. Every merge to `main` is deployed automatically to the **development** site.
-6. After checking the development site, the maintainer publishes a GitHub release; the **production** deployment then
-   waits for the maintainer's approval of the `production` environment. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+5. Every merge to `main` is deployed automatically to GitHub Pages, https://thelazygeekguy.github.io/bcr32-studio/.
+   An optional Cloudflare deployment (dev, then production after approval) exists but is disabled. See
+   [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Development setup
 
