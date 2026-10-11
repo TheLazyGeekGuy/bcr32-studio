@@ -23,7 +23,7 @@ const at = '@', slash = '/'
 const generic = [
   { name: 'home-directory path', re: /(?:\/Users\/|\/home\/)[A-Za-z0-9._-]+\/|[A-Za-z]:\\Users\\[^\\\s]+\\/g, sample: slash + 'Users' + slash + 'someone' + slash + 'x' },
   { name: 'e-mail address', re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, sample: 'someone' + at + 'example.org',
-    allow: m => /@users\.noreply\.github\.com$|@anthropic\.com$/.test(m) },
+    allow: m => /@users\.noreply\.github\.com$|@anthropic\.com$|^(noreply|support)@github\.com$/.test(m) }, // bots' sign-off lines
   { name: 'private IPv4 address', re: /\b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b/g, sample: '192.' + '168.1.20' },
   { name: 'Cloudflare account id', re: /account_id"?\s*[:=]\s*"?[0-9a-f]{32}/gi, sample: 'account_id = "' + 'a'.repeat(32) + '"' },
   { name: 'GitHub token', re: /\bgh[pousr]_[A-Za-z0-9]{30,}\b/g, sample: 'ghp' + '_' + 'A'.repeat(36) },
