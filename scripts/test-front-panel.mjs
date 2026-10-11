@@ -36,7 +36,7 @@ const profile = {
 // Locked panel geometry (panel coordinate space 1717 × 1440), independent of layout helpers.
 // This is a regression oracle for the placement, not a pixel-perfect rendering oracle.
 const geometryHTML = renderToStaticMarkup(React.createElement(exports.FrontPanel, { profile, selection: { kind: 'encoders', id: 1 }, select() {}, action() {}, compact: true }))
-assert.ok(geometryHTML.includes('/branding/bcr32-studio-logo.webp'))
+assert.ok(geometryHTML.includes('src="branding/bcr32-studio-logo.webp"'))
 assert.ok(geometryHTML.includes('alt="BCR32 Studio"'))
 assert.ok(!geometryHTML.includes('<strong>BCR-32</strong>'))
 assert.match(css, /\.editor-brand img\s*\{[^}]*object-fit:contain;[^}]*transform:scale\(1\.4266\)/)

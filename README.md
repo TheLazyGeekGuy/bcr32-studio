@@ -6,6 +6,11 @@ install, no account, nothing leaves your machine.
 
 Current version: **0.5.0** · [Changelog](CHANGELOG.md)
 
+**Try it now: https://thelazygeekguy.github.io/bcr32-studio/** (Chrome, Edge, Brave or Opera; plug in the BCR32 over USB
+and allow MIDI access). Without a controller the editor still opens: presets, PDF sheets and the Cubase export work offline.
+
+![BCR32 Studio: two encoders turning, OLED and activity strip following the incoming MIDI](docs/images/screenshot.webp)
+
 > BCR32 Studio is an independent community project. It is not affiliated with, endorsed or supported by Behringer or
 > Music Tribe. "Behringer" and "BCR32" are trademarks of their owners, used here only to name the hardware this editor
 > works with.
@@ -35,8 +40,11 @@ most valuable contribution.
 
 ## Use it
 
-Open the hosted app in a Chromium-based browser (Chrome, Edge, Brave, Opera): Web MIDI with SysEx is required. Plug in
-the BCR32 over USB and allow MIDI access when the browser asks.
+- **Hosted**: https://thelazygeekguy.github.io/bcr32-studio/, rebuilt from `main` on every merge.
+- **Local**: `npm ci && npm run dev`, then http://127.0.0.1:5173/.
+
+A Chromium-based browser is required: Web MIDI with SysEx is not available in Firefox or Safari. Everything stays in
+your browser (local storage); there is no account and no server.
 
 ## Develop
 
@@ -54,8 +62,8 @@ Stack: React 19, TypeScript (strict), Vite, Web MIDI, pdf-lib; deployed as stati
 
 ## Contribute
 
-Pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Merged changes go live on the development site
-automatically and reach production after review ([docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)). Security issues:
+Pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Merged changes go live on GitHub Pages automatically
+([docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)). Security issues:
 [SECURITY.md](SECURITY.md).
 
 ## License

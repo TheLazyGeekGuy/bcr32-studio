@@ -247,7 +247,7 @@ function App() {
     setPdfBusy(true)
     try {
       const p = makePreset(snapshot, presetName)
-      if (!pdfFont) pdfFont = fetch('/fonts/NotoSans-Regular.ttf').then(response => { if (!response.ok) throw new Error('PDF font unavailable'); return response.arrayBuffer() }).catch(error => { pdfFont = null; throw error })
+      if (!pdfFont) pdfFont = fetch('fonts/NotoSans-Regular.ttf').then(response => { if (!response.ok) throw new Error('PDF font unavailable'); return response.arrayBuffer() }).catch(error => { pdfFont = null; throw error })
       const { presetPdf } = await import('./preset-pdf')
       const bytes = await presetPdf(p, new Uint8Array((await pdfFont).slice(0)))
       download(bytes.buffer as ArrayBuffer, `bcr32-${fileStem(p.name)}-A4.pdf`, 'application/pdf')

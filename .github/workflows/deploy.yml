@@ -1,5 +1,7 @@
 name: Deploy
 
+# Cloudflare Workers: DISABLED by default. The jobs run only when the repository variable DEPLOY_ENABLED is 'true'
+# (GitHub Pages, .github/workflows/pages.yml, is the primary deployment).
 # main          -> development worker (bcr32-studio-dev), automatically after tests.
 # release       -> production worker (bcr32-studio), after approval of the "production" environment.
 # manual run    -> either target, same rules.

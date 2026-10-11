@@ -1,6 +1,19 @@
 # Deployment
 
-BCR32 Studio is a static single-page app served by Cloudflare Workers (static assets, no server code).
+BCR32 Studio is a static single-page app (no server code). The same build runs at a domain root or under a sub-path:
+asset URLs are relative (Vite `base: './'`).
+
+## GitHub Pages (primary)
+
+Every push to `main` runs the tests, builds and publishes **https://thelazygeekguy.github.io/bcr32-studio/**
+(`.github/workflows/pages.yml`). No secret, no external service. GitHub Pages cannot send response headers, so the
+build injects the Content-Security-Policy of `public/_headers` as a `<meta>` tag (`META_CSP=1`); `frame-ancestors` and
+`X-Frame-Options` are not available there. `404.html` is a copy of `index.html` for the single-page fallback.
+
+## Cloudflare Workers (optional, disabled by default)
+
+Kept for later use. The deploy jobs run only when the repository variable `DEPLOY_ENABLED` is `true` and the
+Cloudflare secrets below exist.
 
 | Environment | Worker | Deployed when | Approval |
 | --- | --- | --- | --- |
