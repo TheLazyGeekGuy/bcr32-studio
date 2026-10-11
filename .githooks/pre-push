@@ -1,0 +1,4 @@
+#!/bin/sh
+# Full leak gate before any push (generic rules + the maintainer's private denylist).
+# Enable once per clone: git config core.hooksPath .githooks
+node scripts/leak-gate.mjs || { echo "pre-push: leak gate failed, push refused." >&2; exit 1; }

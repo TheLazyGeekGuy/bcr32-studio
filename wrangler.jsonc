@@ -1,0 +1,36 @@
+{
+  // Cloudflare Workers static-assets deployment of the built app (dist/).
+  //   production:  `npx wrangler deploy --env production` -> worker "bcr32-studio"
+  //   development: `npx wrangler deploy --env dev`        -> worker "bcr32-studio-dev"
+  // The Cloudflare account is never committed: CI passes CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN as secrets,
+  // a maintainer deploying by hand uses `npx wrangler login`. See docs/DEPLOYMENT.md.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bcr32-studio",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "env": {
+    "production": {
+      "name": "bcr32-studio",
+      "workers_dev": true,
+      "preview_urls": false,
+      "assets": {
+        "directory": "./dist",
+        "not_found_handling": "single-page-application"
+      }
+    },
+    "dev": {
+      "name": "bcr32-studio-dev",
+      "workers_dev": true,
+      "preview_urls": false,
+      "assets": {
+        "directory": "./dist",
+        "not_found_handling": "single-page-application"
+      }
+    }
+  }
+}

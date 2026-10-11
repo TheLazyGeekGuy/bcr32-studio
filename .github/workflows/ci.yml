@@ -1,0 +1,32 @@
+name: CI
+
+# Tests, type check, build and the generic leak scan on every pull request (forks included: no secret is used here)
+# and on every push to main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # GitHub only. Forgejo/Gitea read .github/workflows when they have no .forgejo/workflows; on such a mirror the job
+    # is skipped instead of running on the mirror's runners.
+    if: github.server_url == 'https://github.com'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: ALSA headers for the optional MIDI CLI dependency
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libasound2-dev
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Leak scan (generic rules)
+        run: node scripts/leak-gate.mjs --ci

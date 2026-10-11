@@ -1,0 +1,24 @@
+# Served by Cloudflare Workers static assets (wrangler). Blank lines and lines
+# starting with '#' are skipped by the _headers parser; header lines are split
+# on the first ':' so values may contain ':' (blob:, data:).
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: midi=(self)
+  # Legacy companion of frame-ancestors for browsers without CSP level 2.
+  X-Frame-Options: DENY
+  # CSP checked against src/, index.html and the vite production bundle:
+  #   default-src 'self'          fallback for any fetch directive not listed below
+  #   script-src 'self'           only /assets/*.js; no inline script; the only Function() constructor in dist is the
+  #                               function-bind fallback (preset-pdf chunk), dead where Function.prototype.bind exists
+  #   style-src 'self'            only /assets/*.css; no <style>/style="" in index.html, React sets styles via CSSOM
+  #   img-src 'self' blob: data:  /branding images; data: for the procedural panel grain (inline SVG in CSS); blob: for client-generated files
+  #   font-src 'self'             no @font-face today (system font stack); keeps /fonts loadable
+  #   connect-src 'self'          fetch('/fonts/NotoSans-Regular.ttf') for the PDF export; Web MIDI is not network
+  #   worker-src 'self'           no worker today; forbids blob: workers
+  #   object-src 'none'           no plugins or <object>/<embed>
+  #   base-uri 'self'             no <base> hijack
+  #   form-action 'self'          no form submission leaves the origin
+  #   frame-ancestors 'none'      the editor must never be embedded
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
