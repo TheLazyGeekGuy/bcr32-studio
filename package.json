@@ -17,12 +17,12 @@
     "@pdf-lib/fontkit": "^1.1.1",
     "pdf-lib": "^1.17.1",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
     "@types/react": "19.1.12",
-    "@types/react-dom": "19.1.9",
+    "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "5.0.2",
     "typescript": "5.8.3",
     "vite": "7.3.7",
