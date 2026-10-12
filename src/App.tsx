@@ -76,6 +76,9 @@ function App() {
   }
   const [autoZoom, setAutoZoom] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.auto-zoom') === 'true' } catch { return false } })
   useEffect(() => { try { window.localStorage.setItem('bcr32-studio.auto-zoom', String(autoZoom)) } catch { /* Optional preference. */ } }, [autoZoom])
+  // Numbers above encoders and keys: shown unless the user turned them off.
+  const [showNumbers, setShowNumbers] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.show-numbers') !== 'false' } catch { return true } })
+  useEffect(() => { try { window.localStorage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
   const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files'>('control')
   const [profile, setProfile] = useState<Bcr32Profile>(initial.profile)
   const profileRef = useRef(profile); profileRef.current = profile
@@ -558,7 +561,7 @@ function App() {
   return translatedTree(<main className="studio compact" data-theme={theme} onKeyDown={event=>{if(event.key!=='Escape')return;if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
-        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} profile={profile} screenControl={screenControl} screenValue={screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
+        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} profile={profile} screenControl={screenControl} screenValue={screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
@@ -576,6 +579,7 @@ function App() {
           <h2>Config</h2>
           <div className="theme-swatches" role="group" aria-label="Controller and interface theme"><Icon name="palette" />{themes.map(t => <button key={t.id} className={`theme-swatch swatch-${t.id}`} aria-label={`Theme ${t.name}`} aria-pressed={theme === t.id} title={t.name} onClick={() => setTheme(parseTheme(t.id))}><span className="sr-only">{t.name}</span><span className="swatch-tooltip" aria-hidden="true">{t.name}</span></button>)}</div>
           <label className="zoom-option"><input type="checkbox" checked={autoZoom} onChange={event => setAutoZoom(event.target.checked)} />Zoom while adjusting</label>
+          <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>

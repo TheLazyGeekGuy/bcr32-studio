@@ -40,13 +40,14 @@ function InlineName({ initial, style, name, commit, cancel }: { initial: string;
     onKeyDown={event => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); finish() } else if (event.key === 'Escape') { event.preventDefault(); finished.current = true; cancel() } }} />
 }
 
-export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false }: {
+export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true }: {
   profile: Bcr32Profile; selection: Selection; selections?: Selection[]; select: (value: Selection, gesture?: SelectionGesture) => void; action: (name: string) => void
   values?: LiveValues; setValue?: (id: number, value: number) => void; ringMode?: LedMode
   compact?: boolean
   mouseMulti?: boolean
   selectMany?: (controls:Selection[])=>void
   autoZoom?: boolean
+  showNumbers?: boolean
   customLabels?: VisualLabels
   rename?: (control: Selection, name: string) => void
   activity?: Activity
@@ -89,7 +90,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
     onDoubleClick={() => startRename({ kind: 'buttons', id })} onKeyDown={event => renameKey(event, { kind: 'buttons', id })}>
       {customLabels.buttons[controlIndex('buttons', id)] && <span className="custom-key-label">{customLabels.buttons[controlIndex('buttons', id)]}</span>}
       {!customLabels.buttons[controlIndex('buttons', id)] && <span className="silver-key-label">{label}</span>}
-      {id < 21 && <span className="key-number" aria-hidden="true">{id - 4}</span>}
+      {showNumbers && id < 21 && <span className="key-number" aria-hidden="true">{id - 4}</span>}
     </button>
 
   return <div className="panel-scroll"><div className="panel-viewport"><div className={`front-panel${zoomed ? ' auto-zoom-active' : ''}${mouseMulti?' mouse-multi':''}`} tabIndex={-1} aria-label={t('Interactive BCR32 front panel')}
@@ -129,7 +130,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
       const enabled = e.type !== 'off' && !e.parameterOff
       const segments = ledSegments(e.ledMode ?? ringMode, value, e.minimum, e.maximum, enabled, known)
       return <div key={e.id} className={zoomed && screenControl.kind !== 'buttons' && screenControl.id === e.id ? 'zoomed-encoder' : undefined} style={{ transformOrigin: `${x / 1717 * 100}% ${y / 1440 * 100}%` }}>
-        <span className="encoder-number" style={region(x - 22, y - 107, 44, 28)} aria-hidden="true">{e.id}</span>
+        {showNumbers && <span className="encoder-number" style={region(x - 22, y - 107, 44, 28)} aria-hidden="true">{e.id}</span>}
         <button className="panel-hit name-hit" style={region(x - 78, y + 74, 156, 27)} aria-label={`${t('Encoder label')} ${e.id} ${customLabels.encoders[e.id - 1] || encoderNames[e.id - 1]}`}
           title={t('Click: select. Double-click or F2: rename.')}
           onClick={event => select({ kind: 'encoders', id: e.id },gesture(event))} onDoubleClick={() => startRename({ kind: 'encoders', id: e.id })}
