@@ -5,6 +5,8 @@ export const mmcCommands = ['Play', 'Pause', 'Stop', 'Forward', 'Rewind', 'Locat
 export interface ControllerSettings {
   startupMode: 'ctrl' | 'zqr'; deviceId: number; operationMode: 'usb' | 'stdl' | 'mixed'
   footswitchModes: ('ctrl' | 'zaq')[]; outputRouting: string; thruSource: 'off' | 'midi' | 'usb'; thruDestination: string; thruFiltered: boolean
+  // Other global settings read from (or chosen for) the controller, by SysEx command in hex (src/device-globals.ts).
+  deviceValues?: Record<string, number>
 }
 export const routingOptions = ['USB', 'MIDI A', 'MIDI B', 'MIDI A & B', 'USB & MIDI A', 'USB & MIDI B', 'USB & MIDI A & B']
 // The controller output can also be Off (device value 0).
@@ -82,6 +84,7 @@ export function parseProfile(value: unknown): Bcr32Profile {
   if (!valid(p.encoders, Array.from({ length: 32 }, (_, i) => i + 1))) throw new Error('Invalid encoders')
   if (Number(p.schemaVersion) === 2 && (!valid(p.pushes, Array.from({ length: 32 }, (_, i) => i + 1)) || !valid(p.buttons, p.buttons?.length === 20 ? buttonIds.slice(0, 20) : buttonIds))) throw new Error('Invalid buttons')
   const settings = { ...defaultSettings(), ...p.settings }
+  if (settings.deviceValues !== undefined && (typeof settings.deviceValues !== 'object' || settings.deviceValues === null || Object.entries(settings.deviceValues).some(([k, v]) => !/^[0-9a-f]{2}$/.test(k) || !Number.isInteger(v) || v < 0 || v > 127))) throw new Error('Invalid settings')
   if (!['ctrl','zqr'].includes(settings.startupMode) || !['usb','stdl','mixed'].includes(settings.operationMode) || !Number.isInteger(settings.deviceId) || settings.deviceId < 1 || settings.deviceId > 255 || !outputRoutingOptions.includes(settings.outputRouting) || !['off','midi','usb'].includes(settings.thruSource) || !['Off',...routingOptions].includes(settings.thruDestination) || typeof settings.thruFiltered !== 'boolean' || !Array.isArray(settings.footswitchModes) || settings.footswitchModes.length !== 2 || !settings.footswitchModes.every(m => ['ctrl','zaq'].includes(m))) throw new Error('Invalid settings')
   return { ...createProfile(), ...p, schemaVersion: 2, device: { model: 'BCR-32', firmwareObserved: typeof p.device?.firmwareObserved === 'string' && /^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(p.device.firmwareObserved) ? p.device.firmwareObserved : null },
     pushes: Number(p.schemaVersion) === 1 ? createProfile().pushes : p.pushes,

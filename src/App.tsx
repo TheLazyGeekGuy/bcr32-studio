@@ -23,7 +23,8 @@ import { applyLearn, createLearnSession, describeApplied, type LearnResult } fro
 import { createDisplayArbiter, followSettled, type ActiveControl } from './display-arbiter'
 import { cubaseFolder, cubaseMidiRemoteScript } from './cubase-export'
 import { displayStyleKey, displayStyles, validDisplayStyle, type DisplayStyle } from './display-styles'
-import { createGlobalsReader, settingsFromDevice, type GlobalResult } from './device-globals'
+import { createGlobalsReader, settingsFromDevice, withValue, type GlobalResult } from './device-globals'
+import { DeviceSettings } from './DeviceSettings'
 import { DisplayPreview } from './OledDisplay'
 
 const storageKey = 'bcr32-studio.profile.v1'
@@ -624,7 +625,7 @@ function App() {
           <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
           <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
           <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
-          <div className="device-globals" role="group" aria-label="Device settings"><h3>Device settings</h3><p className="surface-help">Read-only: values reported by the BCR32, nothing is written.</p><label className="zoom-option"><input type="checkbox" checked={autoLoadDevice} onChange={event => setAutoLoadDevice(event.target.checked)} />Load the settings from the BCR32 at connection</label>{!autoLoadDevice && <button onClick={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }}>Reset to editor defaults</button>}<button disabled={!brightnessEnabled || deviceSettingsBusy} onClick={() => { void loadDeviceSettings() }}>{deviceSettingsBusy ? 'Reading…' : 'Read from the BCR32'}</button>{deviceSettings && <table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>{deviceSettings.map(g => <tr key={g.cmd}><td>{g.name}</td><td data-i18n-skip>{g.status === 'value' ? `${g.value}${g.label ? ` · ${g.label}` : ''}` : g.status}</td></tr>)}</tbody></table>}</div>
+          <DeviceSettings results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings()) }))} autoLoad={autoLoadDevice} setAutoLoad={setAutoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} />
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>

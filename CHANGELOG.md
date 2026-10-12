@@ -3,6 +3,15 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.8.0] — 2026-10-12
+
+- Config "Device settings" reworked: stacked layout (option, buttons, then a full-width table) instead of a row.
+- Every setting is now a choice list with all its values (official labels where known), next to a "BCR32" column with
+  the value read; a row whose choice differs from the controller is marked. Footswitches, startup mode, operating
+  mode, output port and MIDI thru are the same values as the Config fields (changing one changes the other); the
+  other settings (clock, sync, scale, transpose, trigger, quantization) are kept in the profile (`deviceValues`).
+- Still nothing written to the controller apart from the LED brightness.
+
 ## [0.7.0] — 2026-10-12
 
 - The controller's global settings are **loaded automatically at connection** (Config option "Load the settings from
