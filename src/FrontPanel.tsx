@@ -50,7 +50,7 @@ function InlineName({ initial, style, name, commit, cancel }: { initial: string;
     onKeyDown={event => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); finish() } else if (event.key === 'Escape') { event.preventDefault(); finished.current = true; cancel() } }} />
 }
 
-export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = false }: {
+export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = false, displayStyle = 'ice' }: {
   profile: Bcr32Profile; selection: Selection; selections?: Selection[]; select: (value: Selection, gesture?: SelectionGesture) => void; action: (name: string) => void
   values?: LiveValues; setValue?: (id: number, value: number) => void; ringMode?: LedMode
   compact?: boolean
@@ -59,6 +59,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
   autoZoom?: boolean
   showNumbers?: boolean
   nameScreen?: boolean
+  displayStyle?: string
   customLabels?: VisualLabels
   rename?: (control: Selection, name: string) => void
   activity?: Activity
@@ -104,7 +105,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
       {showNumbers && id < 21 && <span className="key-number" aria-hidden="true">{id - 4}</span>}
     </button>
 
-  return <div className="panel-scroll"><div className="panel-viewport"><div className={`front-panel${zoomed ? ' auto-zoom-active' : ''}${mouseMulti?' mouse-multi':''}`} tabIndex={-1} aria-label={t('Interactive BCR32 front panel')}
+  return <div className="panel-scroll"><div className="panel-viewport"><div className={`front-panel${zoomed ? ' auto-zoom-active' : ''}${mouseMulti?' mouse-multi':''}`} data-display={displayStyle} tabIndex={-1} aria-label={t('Interactive BCR32 front panel')}
     onDragStart={event=>{if(!(event.target instanceof HTMLInputElement))event.preventDefault()}}
     onPointerDown={event=>{
       if(!mouseMulti||event.button!==0||(event.target as Element).closest('button,input'))return

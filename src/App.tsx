@@ -22,6 +22,8 @@ import { applySelectionChange, selectControls, selectedControls, selectionKey, s
 import { applyLearn, createLearnSession, describeApplied, type LearnResult } from './midi-learn'
 import { createDisplayArbiter, followSettled, type ActiveControl } from './display-arbiter'
 import { cubaseFolder, cubaseMidiRemoteScript } from './cubase-export'
+import { displayStyleKey, displayStyles, validDisplayStyle, type DisplayStyle } from './display-styles'
+import { DisplayPreview } from './OledDisplay'
 
 const storageKey = 'bcr32-studio.profile.v1'
 // Log lines keep hex and description apart so translatedTree can translate the description alone.
@@ -80,6 +82,9 @@ function App() {
   // Label screen above the OLED: off unless the user turned it on.
   const [nameScreen, setNameScreen] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.name-screen') === 'true' } catch { return false } })
   useEffect(() => { try { window.localStorage.setItem('bcr32-studio.name-screen', String(nameScreen)) } catch { /* Optional preference. */ } }, [nameScreen])
+  // Screen style of the OLED and the label screen (Config), remembered per browser.
+  const [displayStyle, setDisplayStyle] = useState<DisplayStyle>(() => { try { const v = window.localStorage.getItem(displayStyleKey); return validDisplayStyle(v) ? v : 'ice' } catch { return 'ice' } })
+  useEffect(() => { try { window.localStorage.setItem(displayStyleKey, displayStyle) } catch { /* Optional preference. */ } }, [displayStyle])
   const [showNumbers, setShowNumbers] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.show-numbers') !== 'false' } catch { return true } })
   useEffect(() => { try { window.localStorage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
   const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files'>('control')
@@ -564,7 +569,7 @@ function App() {
   return translatedTree(<main className="studio compact" data-theme={theme} onKeyDown={event=>{if(event.key!=='Escape')return;if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
-        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} profile={profile} screenControl={screenControl} screenValue={screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
+        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
@@ -584,6 +589,7 @@ function App() {
           <label className="zoom-option"><input type="checkbox" checked={autoZoom} onChange={event => setAutoZoom(event.target.checked)} />Zoom while adjusting</label>
           <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
           <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
+          <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>

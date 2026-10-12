@@ -9,6 +9,8 @@ incompatible change, new feature, fix. `0.x` versions are experimental.
 - Config option "Show control numbers" hides or shows the numbers above encoders and keys (remembered per browser).
 - Optional label screen (Config, off by default): a half-height dot-matrix display above the OLED shows the label of
   the control on screen (your label, else the name printed on the panel, α and β included); it zooms with the OLED.
+- Config "Display style": five screen styles for the OLED and the label screen (Ice OLED, Amber VFD, Green LCD, Red LED,
+  White OLED), each shown as a live preview; remembered per browser.
 - A selected key is drawn at full brightness while it is selected, even when unassigned, then returns to its dimmed state.
 
 ## [0.5.0] — 2026-10-11
