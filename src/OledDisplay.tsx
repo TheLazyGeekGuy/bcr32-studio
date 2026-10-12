@@ -90,3 +90,15 @@ export function NameDisplay({ text, style, blank = false }: { text: string; styl
     </svg>
   </div>
 }
+
+// Miniature screen for Config: drawn with the same CSS variables as the panel, so it shows exactly the chosen style.
+export function DisplayPreview({ style }: { style: string }) {
+  return <div className="display-preview" data-display={style} aria-hidden="true">
+    <div className="oled-glass" />
+    <svg className="oled-pixels" viewBox="0 0 280 112">
+      <Dots text="ENC" x={15} y={10} size={2.2} /><Dots text="1" x={24} y={37} size={5.3} />
+      <Dots text="CC 16:ABS" x={265} y={10} size={2.2} right /><Dots text="64" x={265} y={37} size={5.3} right />
+      <g className="oled-meta"><Dots text="CH 1" x={15} y={94} size={1.4} /><Dots text="MIDI" x={265} y={94} size={1.4} right /></g>
+    </svg>
+  </div>
+}

@@ -245,9 +245,9 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .oled-display { position:absolute; z-index:3; overflow:hidden; border-radius:8%; background:#000; box-shadow:inset 0 0 0 1px #24272a,inset 0 0 0 3px #08090a; transform-origin:left center; transition:transform .12s ease; }
 .oled-display:hover,.oled-display:focus-within { transform:scale(1.55); z-index:8; }
 @media(prefers-reduced-motion:reduce) { .oled-display { transition:none; } }
-.oled-glass { position:absolute; inset:4% 2%; background:#000; border-radius:5%; }
-.oled-pixels { position:absolute; inset:5% 3%; width:94%; height:90%; fill:#e9faff; filter:drop-shadow(0 0 .12cqw #62b7e8); }
-.oled-meta { fill:#80aec7; }
+.oled-glass { position:absolute; inset:4% 2%; background:var(--oled-bg, #000); border-radius:5%; }
+.oled-pixels { position:absolute; inset:5% 3%; width:94%; height:90%; fill:var(--oled-ink, #e9faff); filter:drop-shadow(0 0 .12cqw var(--oled-glow, #62b7e8)); }
+.oled-meta { fill:var(--oled-meta, #80aec7); }
 .oled-display button { position:absolute; padding:0; border:1px solid transparent; border-radius:3%; background:transparent; }
 .oled-display button:not(:disabled):hover { transform:none; background:#80cfff0a; border-color:transparent; }
 .oled-display button:focus-visible { outline:1px solid #77ccff; outline-offset:-1px; }
@@ -453,3 +453,14 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .name-display { position:absolute; z-index:3; overflow:hidden; border-radius:8%/16%; background:#000; box-shadow:inset 0 0 0 1px #24272a,inset 0 0 0 3px #08090a; transform-origin:left bottom; transition:transform .12s ease; pointer-events:none; }
 .auto-zoom-active .name-display { transform:translateY(-55%) scale(1.55); z-index:8; }
 @media(prefers-reduced-motion:reduce) { .name-display { transition:none; } }
+/* Screen styles (Config > Display style): the OLED, the label screen and the Config previews read these variables. */
+[data-display="ice"] { --oled-ink:#e9faff; --oled-glow:#62b7e8; --oled-meta:#80aec7; --oled-bg:#000; }
+[data-display="amber"] { --oled-ink:#ffbf5a; --oled-glow:#ff8a00; --oled-meta:#c48a3c; --oled-bg:#0a0602; }
+[data-display="green"] { --oled-ink:#17240a; --oled-glow:transparent; --oled-meta:#2d4214; --oled-bg:#93b33a; }
+[data-display="red"] { --oled-ink:#ff5442; --oled-glow:#ff1a00; --oled-meta:#b04a40; --oled-bg:#060000; }
+[data-display="white"] { --oled-ink:#ffffff; --oled-glow:#9a9a9a; --oled-meta:#a3a3a3; --oled-bg:#000; }
+.display-styles { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; margin:6px 0 14px; }
+.display-styles h3 { grid-column:1 / -1; margin:8px 0 0; font-size:13px; }
+.display-style-option { display:grid; gap:5px; padding:6px; border-radius:6px; text-align:center; font-size:11px; }
+.studio .display-style-option[aria-pressed=true] { border-color:var(--theme-accent); background:var(--theme-selected); }
+.display-preview { position:relative; aspect-ratio:192 / 98; border-radius:8%; overflow:hidden; background:#000; box-shadow:inset 0 0 0 1px #24272a,inset 0 0 0 3px #08090a; container-type:inline-size; }
