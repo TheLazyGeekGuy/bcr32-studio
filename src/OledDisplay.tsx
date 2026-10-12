@@ -21,7 +21,14 @@ const glyphs: Record<string, string> = {
   '3':'11110/00001/00001/01110/00001/00001/11110', '4':'00010/00110/01010/10010/11111/00010/00010', '5':'11111/10000/10000/11110/00001/00001/11110',
   '6':'01110/10000/10000/11110/10001/10001/01110', '7':'11111/00001/00010/00100/01000/01000/01000', '8':'01110/10001/10001/01110/10001/10001/01110',
   '9':'01110/10001/10001/01111/00001/00001/01110', ':':'00000/00100/00100/00000/00100/00100/00000', '-':'00000/00000/00000/11111/00000/00000/00000',
+  '.':'00000/00000/00000/00000/00000/01100/01100', ',':'00000/00000/00000/00000/01100/00100/01000', '+':'00000/00100/00100/11111/00100/00100/00000',
+  '(':'00010/00100/01000/01000/01000/00100/00010', ')':'01000/00100/00010/00010/00010/00100/01000', '&':'01100/10010/10100/01000/10101/10010/01101',
+  '#':'01010/01010/11111/01010/11111/01010/01010', "'":'00100/00100/01000/00000/00000/00000/00000', '!':'00100/00100/00100/00100/00100/00000/00100',
+  '?':'01110/10001/00001/00010/00100/00000/00100', '=':'00000/00000/11111/00000/11111/00000/00000', '%':'11001/11010/00010/00100/01000/01011/10011',
 }
+export const glyphChars = Object.keys(glyphs).join('')
+// Text for the dot matrix: upper case, accents folded, unknown characters as spaces, at most 24 characters.
+export const dotText = (text: string) => Array.from(text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()).map(c => glyphs[c] ? c : ' ').join('').replace(/\s+/g, ' ').trim().slice(0, 24)
 function Dots({ text, x, y, size, right = false }: { text: string; x: number; y: number; size: number; right?: boolean }) {
   const start = right ? x - (text.length * 6 - 1) * size : x
   return <g>{Array.from(text).flatMap((c, i) => (glyphs[c] || '').split('/').flatMap((row, j) => Array.from(row).flatMap((v, k) => v === '1' ? [<rect key={`${i}-${j}-${k}`} x={start + (i * 6 + k) * size} y={y + j * size} width={size * .84} height={size * .84} rx={size * .18} />] : [])))}</g>
@@ -67,5 +74,17 @@ export function OledDisplay({ control, config, value, source, style, inspect, se
         if (event.key === 'Enter') { event.preventDefault(); setEditing(true) }
       }} />
     {editing && <ValueInput key={`${control.kind}-${control.id}`} config={config} value={value} save={v => { setValue(v); setEditing(false) }} cancel={() => setEditing(false)} />}
+  </div>
+}
+
+// Half-height dot-matrix screen above the OLED: the name of the parameter the OLED shows (option, off by default).
+export function NameDisplay({ text, style, blank = false }: { text: string; style: CSSProperties; blank?: boolean }) {
+  const language = useLanguage()
+  const shown = dotText(text), size = Math.min(3, 250 / (Math.max(shown.length, 1) * 6))
+  return <div className="name-display" style={style} aria-label={`${translate('Parameter name', language)}: ${text}`} data-name={text}>
+    <div className="oled-glass" />
+    <svg className="oled-pixels" style={{ visibility: blank ? 'hidden' : 'visible' }} viewBox="0 0 280 56" aria-hidden="true">
+      <Dots text={shown} x={140 - (shown.length * 6 - 1) * size / 2} y={28 - 3.5 * size} size={size} />
+    </svg>
   </div>
 }

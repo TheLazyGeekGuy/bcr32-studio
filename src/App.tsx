@@ -10,7 +10,7 @@ import { Icon } from './Icon'
 import { ledModes, ledModeLabel, type LedMode } from './led-modes'
 import { LanguagePicker, translatedTree, useLanguage, translate } from './i18n'
 import { ParameterPicker, ParameterTable } from './ParameterNames'
-import { loadNames, namesFile, parameterNamesKey, type ParameterName } from './parameter-names'
+import { loadNames, namesFile, parameterLabel, parameterNamesKey, type ParameterName } from './parameter-names'
 import { cleanLabel, controlIndex, draftStorageKey, emptyLabels, emptyValues, libraryFile, makePreset, parseControllerState, parseLibrary, parsePreset, presetStorageKey, sameState, type ControllerPreset, type ControllerState } from './presets'
 import { idleActivity, type Activity } from './ActivityLeds'
 import { modeText, controlForChanges } from './oled-model'
@@ -77,6 +77,9 @@ function App() {
   const [autoZoom, setAutoZoom] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.auto-zoom') === 'true' } catch { return false } })
   useEffect(() => { try { window.localStorage.setItem('bcr32-studio.auto-zoom', String(autoZoom)) } catch { /* Optional preference. */ } }, [autoZoom])
   // Numbers above encoders and keys: shown unless the user turned them off.
+  // Parameter name screen above the OLED: off unless the user turned it on.
+  const [nameScreen, setNameScreen] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.name-screen') === 'true' } catch { return false } })
+  useEffect(() => { try { window.localStorage.setItem('bcr32-studio.name-screen', String(nameScreen)) } catch { /* Optional preference. */ } }, [nameScreen])
   const [showNumbers, setShowNumbers] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.show-numbers') !== 'false' } catch { return true } })
   useEffect(() => { try { window.localStorage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
   const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files'>('control')
@@ -561,7 +564,7 @@ function App() {
   return translatedTree(<main className="studio compact" data-theme={theme} onKeyDown={event=>{if(event.key!=='Escape')return;if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
-        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} profile={profile} screenControl={screenControl} screenValue={screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
+        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen ? parameterLabel(profile[screenControl.kind].find(e => e.id === screenControl.id)!, parameterNames, customLabels[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)]) : null} profile={profile} screenControl={screenControl} screenValue={screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
@@ -580,6 +583,7 @@ function App() {
           <div className="theme-swatches" role="group" aria-label="Controller and interface theme"><Icon name="palette" />{themes.map(t => <button key={t.id} className={`theme-swatch swatch-${t.id}`} aria-label={`Theme ${t.name}`} aria-pressed={theme === t.id} title={t.name} onClick={() => setTheme(parseTheme(t.id))}><span className="sr-only">{t.name}</span><span className="swatch-tooltip" aria-hidden="true">{t.name}</span></button>)}</div>
           <label className="zoom-option"><input type="checkbox" checked={autoZoom} onChange={event => setAutoZoom(event.target.checked)} />Zoom while adjusting</label>
           <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
+          <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Parameter name screen</label>
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>

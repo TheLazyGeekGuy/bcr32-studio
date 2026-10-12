@@ -3,7 +3,7 @@ import type { Bcr32Profile } from './profile'
 import { cleanLabel, controlIndex, emptyLabels, type VisualLabels } from './presets'
 import { buttonPosition, encoderNames, encoderPosition } from './panel-layout'
 import { ActivityLeds, idleActivity, type Activity } from './ActivityLeds'
-import { OledDisplay } from './OledDisplay'
+import { NameDisplay, OledDisplay } from './OledDisplay'
 import { receiveControlCC, type LiveValue } from './controller-midi'
 import { ledSegments, type LedMode } from './led-modes'
 import { controlsInRectangle, type SelectionGesture, type SelectionRectangle } from './multi-selection'
@@ -40,7 +40,7 @@ function InlineName({ initial, style, name, commit, cancel }: { initial: string;
     onKeyDown={event => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); finish() } else if (event.key === 'Escape') { event.preventDefault(); finished.current = true; cancel() } }} />
 }
 
-export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true }: {
+export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = null }: {
   profile: Bcr32Profile; selection: Selection; selections?: Selection[]; select: (value: Selection, gesture?: SelectionGesture) => void; action: (name: string) => void
   values?: LiveValues; setValue?: (id: number, value: number) => void; ringMode?: LedMode
   compact?: boolean
@@ -48,6 +48,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
   selectMany?: (controls:Selection[])=>void
   autoZoom?: boolean
   showNumbers?: boolean
+  nameScreen?: string | null
   customLabels?: VisualLabels
   rename?: (control: Selection, name: string) => void
   activity?: Activity
@@ -169,6 +170,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
     })}
     <button style={region(1168, 124, 140, 55)} className="panel-hit key-hit zaq-toggle" aria-label="ZQR / CTRL"
       onClick={() => action('Editor Controller mode only. No hardware change.')}><span className="silver-key-label">ZQR / CTRL</span></button>
+    {nameScreen !== null && <NameDisplay text={nameScreen} blank={displayed.display === false} style={region(1374, 463, 192, 49)} />}
     <OledDisplay control={screenControl} config={displayed} value={displayValue.value} source={displayValue.source} style={region(1374, 518, 192, 98)}
       inspect={() => select(screenControl)} setValue={v => { if (setScreenValue) setScreenValue(v); else if (screenControl.kind === 'encoders') setValue(screenControl.id, v) }} />
     <button style={region(1583, 518, 96, 96)} className="panel-hit rotation-hit select-knob" aria-label={t('SELECT rotation and push')}

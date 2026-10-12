@@ -50,6 +50,8 @@ const rows = [
   'Create preset|Créer le preset|Crea preset|Preset erstellen|プリセットを作成|Crear preset|Создать пресет|创建预设',
   'Save / rename|Sauvegarder / renommer|Salva / rinomina|Speichern / umbenennen|保存 / 名前変更|Guardar / renombrar|Сохранить / переименовать|保存 / 重命名',
   'Save as new|Sauver comme nouveau|Salva come nuovo|Als neu speichern|新規として保存|Guardar como nuevo|Сохранить как новый|另存为新预设',
+  'Parameter name screen|Écran du nom de paramètre|Schermo del nome del parametro|Anzeige des Parameternamens|パラメーター名ディスプレイ|Pantalla del nombre del parámetro|Экран имени параметра|参数名称显示屏',
+  'Parameter name|Nom du paramètre|Nome del parametro|Parametername|パラメーター名|Nombre del parámetro|Имя параметра|参数名称',
   'Show control numbers|Afficher les numéros des contrôles|Mostra i numeri dei controlli|Nummern der Bedienelemente anzeigen|コントロール番号を表示|Mostrar los números de los controles|Показывать номера элементов|显示控件编号',
   'Zoom while adjusting|Zoom à la manipulation|Zoom durante la regolazione|Zoom beim Einstellen|操作時にズーム|Zoom al ajustar|Увеличение при настройке|调节时放大',
   'Export draft JSON|Exporter le brouillon JSON|Esporta bozza JSON|Entwurf als JSON exportieren|下書きをJSONで書き出す|Exportar borrador JSON|Экспорт черновика JSON|导出草稿JSON',
