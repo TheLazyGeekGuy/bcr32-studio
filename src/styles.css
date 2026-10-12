@@ -449,7 +449,7 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .cubase-export button { justify-self:start; }
 /* A selected key is shown at full brightness while it is active, even when unassigned (dimmed at rest). */
 .studio .front-panel .key-hit.control-off.active .silver-key-label,.studio .front-panel .key-hit.control-off.active .custom-key-label { opacity:1; }
-/* Parameter name screen: half-height OLED above the main one. Zoomed with it (auto-zoom) and lifted so it stays above. */
+/* Label screen: half-height OLED above the main one. Zoomed with it (auto-zoom) and lifted so it stays above. */
 .name-display { position:absolute; z-index:3; overflow:hidden; border-radius:8%/16%; background:#000; box-shadow:inset 0 0 0 1px #24272a,inset 0 0 0 3px #08090a; transform-origin:left bottom; transition:transform .12s ease; pointer-events:none; }
 .auto-zoom-active .name-display { transform:translateY(-55%) scale(1.55); z-index:8; }
 @media(prefers-reduced-motion:reduce) { .name-display { transition:none; } }
