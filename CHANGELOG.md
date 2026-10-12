@@ -3,8 +3,13 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
-## [Unreleased]
+## [0.6.0] — 2026-10-12
 
+- Config "Device settings": reads the 18 global settings of the BCR32 (operating mode, controller output port, LED
+  brightness, MIDI thru, clock, scale…) with the same short read-only requests the official editor sends at each
+  connection; raw value shown, with its label when the option list is known; echoes and silences are reported as
+  such. Nothing is written. Verified on hardware on 2026-10-12 (three values differ from the 2026-10-09 capture,
+  matching the changes made on the device: real reads, not echoes).
 - Numbers above the encoders are centred on the knobs.
 - Config option "Show control numbers" hides or shows the numbers above encoders and keys (remembered per browser).
 - Optional label screen (Config, off by default): a half-height dot-matrix display above the OLED shows the label of

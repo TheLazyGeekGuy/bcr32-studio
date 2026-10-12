@@ -23,6 +23,7 @@ import { applyLearn, createLearnSession, describeApplied, type LearnResult } fro
 import { createDisplayArbiter, followSettled, type ActiveControl } from './display-arbiter'
 import { cubaseFolder, cubaseMidiRemoteScript } from './cubase-export'
 import { displayStyleKey, displayStyles, validDisplayStyle, type DisplayStyle } from './display-styles'
+import { createGlobalsReader, type GlobalResult } from './device-globals'
 import { DisplayPreview } from './OledDisplay'
 
 const storageKey = 'bcr32-studio.profile.v1'
@@ -150,6 +151,10 @@ function App() {
   const [brightnessDraft, setBrightnessDraft] = useState(5)
   const [brightnessStatus, setBrightnessStatus] = useState('')
   const brightnessTransport = useRef<ReturnType<typeof createBrightnessTransport>|null>(null)
+  // Read-only global settings (src/device-globals.ts): the official editor's short reads, one at a time.
+  const globalsReader = useRef<ReturnType<typeof createGlobalsReader>|null>(null)
+  const [deviceSettings, setDeviceSettings] = useState<GlobalResult[] | null>(null)
+  const [deviceSettingsBusy, setDeviceSettingsBusy] = useState(false)
 
   const inputs = useMemo(() => access ? Array.from(access.inputs.values()) : [], [access, portVersion])
   const outputs = useMemo(() => access ? Array.from(access.outputs.values()) : [], [access, portVersion])
@@ -330,6 +335,7 @@ function App() {
         setEvents((current) => [{ hex: asHex(data), text: describeMessage(data) }, ...current].slice(0, 12))
       }
       brightnessTransport.current?.receive(data)
+      globalsReader.current?.receive(data)
       // While Learn is armed the message feeds the learn parser first and the selection does not follow MIDI,
       // so the learned parameters land on the control the user chose, not on one that already matched the CC.
       const learned = learnReceive.current(data)
@@ -536,6 +542,18 @@ function App() {
     return ()=>{transport.close();if(brightnessTransport.current===transport)brightnessTransport.current=null}
   },[access,inputId,output,brightnessEnabled,portVersion])
   useEffect(()=>{if(tab==='config'&&brightness===null)brightnessTransport.current?.read()},[tab])
+  useEffect(() => {
+    if (!brightnessEnabled || !output?.send) { globalsReader.current = null; return }
+    const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes))
+    globalsReader.current = reader
+    return () => { reader.close(); if (globalsReader.current === reader) globalsReader.current = null }
+  }, [access, inputId, output, brightnessEnabled, portVersion])
+  const readDeviceSettings = async () => {
+    const reader = globalsReader.current
+    if (!reader || deviceSettingsBusy) return
+    setDeviceSettingsBusy(true)
+    try { setDeviceSettings(await reader.read()) } finally { setDeviceSettingsBusy(false) }
+  }
 
   // Cubase MIDI Remote script: surface + exact MIDI of each assigned control, no Cubase function mapped.
   const exportCubase = () => {
@@ -590,6 +608,7 @@ function App() {
           <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
           <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
           <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
+          <div className="device-globals" role="group" aria-label="Device settings"><h3>Device settings</h3><p className="surface-help">Read-only: values reported by the BCR32, nothing is written.</p><button disabled={!brightnessEnabled || deviceSettingsBusy} onClick={() => { void readDeviceSettings() }}>{deviceSettingsBusy ? 'Reading…' : 'Read from the BCR32'}</button>{deviceSettings && <table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>{deviceSettings.map(g => <tr key={g.cmd}><td>{g.name}</td><td data-i18n-skip>{g.status === 'value' ? `${g.value}${g.label ? ` · ${g.label}` : ''}` : g.status}</td></tr>)}</tbody></table>}</div>
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>

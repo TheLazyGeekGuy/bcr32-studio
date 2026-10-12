@@ -464,3 +464,9 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .display-style-option { display:grid; gap:5px; padding:6px; border-radius:6px; text-align:center; font-size:11px; }
 .studio .display-style-option[aria-pressed=true] { border-color:var(--theme-accent); background:var(--theme-selected); }
 .display-preview { position:relative; aspect-ratio:192 / 98; border-radius:8%; overflow:hidden; background:#000; box-shadow:inset 0 0 0 1px #24272a,inset 0 0 0 3px #08090a; container-type:inline-size; }
+.device-globals { display:grid; gap:6px; margin:6px 0 14px; }
+.device-globals h3 { margin:8px 0 0; font-size:13px; }
+.device-globals .surface-help { margin:0; }
+.device-globals button { justify-self:start; }
+.device-globals table { border-collapse:collapse; font-size:11px; width:100%; }
+.device-globals td, .device-globals th { padding:3px 6px; border-bottom:1px solid var(--theme-line); text-align:left; }

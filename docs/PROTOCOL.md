@@ -31,11 +31,18 @@ F0 00 20 32 7F 64 <command> <data...> F7
 | `0C` | Controller mode / page | observed | Precedes the reads of the controller fields. |
 | `07` | Export request | observed | No reply seen from firmware 0.56.0 when sent alone. |
 | `04` | Dump | observed | Sub-family byte after `04`: `0C` = controller, `0B` = Zaquencer sequencer. Format below. |
-| `17`–`30` | Global settings | observed | Names: `17` StartOn, `18` ClockRateOut, `1B`/`1C` FootSwitch1/2, `1D` MidiThruDest, `1E` MidiThruSource, `1F` OperatingMode, `20` SyncMode, `21` ClockOutPort, `23` Scale, `24` ScaleBase, `25` TransposeMode, `26` TriggerMode, `27` QuantizationMode, `28` QuantizationMixer, `30` ControllerOutPort. Reads without padding return a value. |
+| `17`–`30` | Global settings | **verified (read)** | Names: `17` StartOn, `18` ClockRateOut, `1B`/`1C` FootSwitch1/2, `1D` MidiThruDest, `1E` MidiThruSource, `1F` OperatingMode, `20` SyncMode, `21` ClockOutPort, `23` Scale, `24` ScaleBase, `25` TransposeMode, `26` TriggerMode, `27` QuantizationMode, `28` QuantizationMixer, `30` ControllerOutPort. Reads without padding return a value. |
 | `29`–`2D` | Track parameters | observed | Track Mode, Port, Channel, Ctrl α, Ctrl β, indexed by track 0–3. |
 | `31`–`38` | Controller fields | observed | Eight indexed fields per control (type, channel, parameter, minimum, maximum, mode, option, display: **hypothesis** for the order). |
 | `72` | STORE | **forbidden** | Never send. |
 | `77` | Bootloader / firmware update | **forbidden** | Never send. |
+
+### Global settings are real reads
+
+Short reads (`F0 00 20 32 7F 64 <cmd> F7`, no padding) return `… <cmd> <value> F7`. On 2026-10-12 the 18 reads the
+official editor sends at connection were repeated on the same unit: OperatingMode (`1F`) 2 → 0, LED brightness (`40`)
+15 → 7 and ControllerOutPort (`30`) 5 → 4 had changed since 2026-10-09, in line with changes made on the device; the
+other values were unchanged. These are reads, not echoes. Writing them is **not** established (only `40` is).
 
 ### Indexed reads are echoed, not answered
 
