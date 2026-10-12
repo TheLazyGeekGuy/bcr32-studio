@@ -3,6 +3,12 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [Unreleased]
+
+- Numbers above the encoders are centred on the knobs.
+- Config option "Show control numbers" hides or shows the numbers above encoders and keys (remembered per browser).
+- A selected key is drawn at full brightness while it is selected, even when unassigned, then returns to its dimmed state.
+
 ## [0.5.0] — 2026-10-11
 
 First public release.
