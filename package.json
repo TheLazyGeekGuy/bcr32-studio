@@ -1,6 +1,6 @@
 {
   "name": "bcr32-studio",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "Browser editor for the Behringer BCR32 MIDI controller (Web MIDI): live front panel, assignments, MIDI Learn, presets, PDF overlays, Cubase MIDI Remote export.",
   "scripts": {

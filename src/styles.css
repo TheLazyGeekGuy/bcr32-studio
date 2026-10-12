@@ -467,8 +467,15 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .device-globals { display:grid; gap:6px; margin:6px 0 14px; }
 .device-globals h3 { margin:8px 0 0; font-size:13px; }
 .device-globals .surface-help { margin:0; }
-.device-globals button { justify-self:start; }
+.device-globals-actions { display:flex; flex-wrap:wrap; gap:8px; }
 .device-globals table { border-collapse:collapse; font-size:11px; width:100%; }
 .device-globals td, .device-globals th { padding:3px 6px; border-bottom:1px solid var(--theme-line); text-align:left; }
 .device-differs { color:var(--theme-accent); font-size:10px; margin-left:4px; }
 .device-read-status { margin:4px 0 8px; }
+.device-globals { grid-template-columns:minmax(0,1fr); }
+.device-globals table { table-layout:fixed; }
+.device-globals th:nth-child(1) { width:40%; } .device-globals th:nth-child(3) { width:25%; }
+.device-globals select { width:100%; font-size:11px; padding:2px 4px; }
+.device-row-differs td:first-child { color:var(--theme-accent); }
+.profile-actions > .device-globals { display:grid; align-items:stretch; grid-template-columns:minmax(0,1fr); gap:8px; }
+.profile-actions > .device-globals .zoom-option { display:flex; align-items:center; gap:6px; }

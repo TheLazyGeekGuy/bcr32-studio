@@ -14,7 +14,8 @@ function load(name) {
   const code = ts.transpileModule(readFileSync(existsSync(`${base}.tsx`) ? `${base}.tsx` : `${base}.ts`, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText
   const exports = {}; cache.set(name, exports); new Function('require', 'exports', code)(load, exports); return exports
 }
-const { deviceGlobals, globalQuery, createGlobalsReader, settingsFromDevice, differingFields } = load('./device-globals')
+const { deviceGlobals, globalQuery, createGlobalsReader, settingsFromDevice, differingFields, valueOf, withValue, editableGlobals } = load('./device-globals')
+const { DeviceSettings } = load('./DeviceSettings')
 const { StudioConfig } = load('./StudioConfig')
 const { createProfile, defaultSettings } = load('./profile')
 const { catalog } = load('./i18n')
@@ -55,11 +56,33 @@ for (const g of deviceGlobals) if (g.choices) assert.ok(new Set(g.choices).size 
 
 // 2c. Read values become Config fields: the 2026-10-12 hardware values (operating mode 0, controller port 4).
 const fields = settingsFromDevice(results)
-assert.deepEqual(fields, { startupMode: 'ctrl', footswitchModes: ['ctrl', 'ctrl'], operationMode: 'usb', outputRouting: 'USB', thruSource: 'off', thruDestination: 'Off', thruFiltered: false })
+assert.deepEqual(fields, { startupMode: 'ctrl', footswitchModes: ['ctrl', 'ctrl'], operationMode: 'usb', outputRouting: 'USB', thruSource: 'off', thruDestination: 'Off', thruFiltered: false,
+  deviceValues: { '18': 3, '20': 0, '21': 0, '23': 0, '24': 0, '27': 10, '28': 0 } }, 'other settings kept by command; echo (25) and silence (26) left out')
 const mixed = settingsFromDevice([{ cmd: 0x1f, value: 2, status: 'value' }, { cmd: 0x30, value: 5, status: 'value' }, { cmd: 0x1d, value: 2, status: 'value' }, { cmd: 0x1b, value: 1, status: 'value' }, { cmd: 0x1c, value: 0, status: 'value' }])
 assert.deepEqual(mixed, { operationMode: 'mixed', outputRouting: 'USB & MIDI A', thruDestination: 'MIDI B', thruFiltered: true, footswitchModes: ['zaq', 'ctrl'] }, 'Oct 9 values, filtered thru, ZAQ footswitch')
 assert.deepEqual(settingsFromDevice([{ cmd: 0x1f, value: null, status: 'echo' }]), {}, 'an echo never becomes a setting')
 assert.deepEqual(differingFields({ ...defaultSettings(), operationMode: 'mixed' }, { operationMode: 'usb', outputRouting: 'USB' }), ['operationMode'])
+
+// 2e. One value per setting, read and changed where Config keeps it: footswitch 2 alone, thru destination with its
+// filter flag, clock rate in deviceValues; every editable setting round-trips through withValue/valueOf.
+const base = { ...defaultSettings(), ...fields }
+assert.deepEqual(withValue(0x1c, 1, base).footswitchModes, ['ctrl', 'zaq'])
+const thru = withValue(0x1d, 2, base); assert.deepEqual([thru.thruDestination, thru.thruFiltered, valueOf(0x1d, thru)], ['MIDI B', true, 2])
+assert.equal(withValue(0x18, 4, base).deviceValues['18'], 4)
+for (const g of editableGlobals) for (const v of [0, Math.min(1, g.max), g.cmd === 0x1d ? 6 : g.max]) assert.equal(valueOf(g.cmd, withValue(g.cmd, v, base)), v, `${g.name} = ${v}`)
+assert.ok(!editableGlobals.some(g => g.cmd === 0x40 || g.cmd === 0x74), 'brightness and bootloader status are not edited here')
+
+// 2f. The table: one choice list per editable setting, the device column, a marker on a changed value.
+const table = props => renderToStaticMarkup(React.createElement(DeviceSettings, { results, settings: base, change() {}, autoLoad: true, setAutoLoad() {}, canRead: true, busy: false, read() {}, reset() {}, ...props }))
+const t1 = table({})
+assert.equal((t1.match(/<select /g) ?? []).length, editableGlobals.length, 'one select per editable setting')
+assert.match(t1, /<option value="3" selected="">24 PPQ<\/option>/, 'clock rate shows the value read, labelled')
+assert.equal((t1.match(/class="device-row-differs"/g) ?? []).length, 0, 'nothing differs right after a read')
+assert.equal((table({ settings: withValue(0x1f, 2, base) }).match(/class="device-row-differs"/g) ?? []).length, 1, 'a changed operating mode is marked')
+assert.ok(!table({ results: null }).includes('device-row-differs') && table({ results: null }).includes('<select'), 'choices available before any read, nothing marked')
+const order = t1.indexOf('Read from the BCR32') < t1.indexOf('<table'); assert.ok(order, 'buttons above the table')
+const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+assert.match(css, /\.profile-actions > \.device-globals\s*\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\)/, 'stacked vertically, overriding the generic Config row layout')
 
 // 2d. Config shows the read time and marks a field edited after the read.
 const profile = { ...createProfile(), settings: { ...defaultSettings(), operationMode: 'mixed' } }
@@ -74,8 +97,8 @@ assert.match(html, /<button[^>]*disabled=""[^>]*>Read from the BCR32<\/button>/,
 assert.ok(html.includes('Device settings'))
 assert.match(html, /<input type="checkbox" checked=""[^>]*\/>Load the settings from the BCR32 at connection/, 'automatic load on by default')
 assert.ok(!html.includes('Reset to editor defaults'), 'reset offered only when automatic load is off')
-for (const k of ['Load the settings from the BCR32 at connection', 'Reset to editor defaults', 'Read from the BCR32 at {detail}.', 'Differs from the value read on the BCR32', 'Device settings', 'Read from the BCR32', 'Read-only: values reported by the BCR32, nothing is written.', ...deviceGlobals.map(g => g.name)]) assert.ok(catalog[k], 'catalog: ' + k)
+for (const k of ['Load the settings from the BCR32 at connection', 'Reset to editor defaults', 'Read from the BCR32 at {detail}.', 'Differs from the value read on the BCR32', 'Device settings', 'Read from the BCR32', 'Values read from the BCR32 and chosen here. Only the LED brightness is written to the device for now.', ...deviceGlobals.map(g => g.name)]) assert.ok(catalog[k], 'catalog: ' + k)
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 assert.ok(app.includes('globalsReader.current?.receive(data)'), 'replies reach the reader')
 assert.ok(app.includes('if (autoLoadRef.current) void loadDeviceSettings(reader)') && app.includes('settingsFromDevice(results)'), 'read at connection and applied to Config')
-console.log('PASS: device globals — official labels, read values mapped to Config fields with edit markers, automatic load at connection (default on), the official editor\'s 18 short reads only, sequential, values decoded, echo and silence reported, read-only UI disabled without a BCR32, translated')
+console.log('PASS: device globals — editable choice lists linked to Config (round trip for every setting), device column and change markers, official labels, read values mapped to Config fields with edit markers, automatic load at connection (default on), the official editor\'s 18 short reads only, sequential, values decoded, echo and silence reported, read-only UI disabled without a BCR32, translated')

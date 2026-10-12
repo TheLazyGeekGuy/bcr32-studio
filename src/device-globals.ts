@@ -11,27 +11,27 @@ const notes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 const channels = Array.from({ length: 16 }, (_, i) => `CH ${i + 1}`)
 const chRanges = Array.from({ length: 13 }, (_, i) => `CH ${i + 1}-${i + 4}`)
 
-// Order = the official editor's own read order. Settings without a reliable list (range and list sizes differ) show
+// Order = the official editor's own read order; max = the value range of the official editor's parameter table. Settings without a reliable list (range and list sizes differ) show
 // their raw value only.
-export const deviceGlobals: { cmd: number; name: string; choices?: string[] }[] = [
+export const deviceGlobals: { cmd: number; name: string; max?: number; choices?: string[] }[] = [
   { cmd: 0x74, name: 'Bootloader status' },
-  { cmd: 0x1b, name: 'Footswitch 1', choices: ['CTRL', 'ZAQ'] },
-  { cmd: 0x1c, name: 'Footswitch 2', choices: ['CTRL', 'ZAQ'] },
-  { cmd: 0x1e, name: 'MIDI thru source', choices: ['Off', 'MIDI in', 'USB in'] },
-  { cmd: 0x1d, name: 'MIDI thru destination', choices: ['Off', 'MIDI A (filtered)', 'MIDI B (filtered)', 'MIDI A & B (filtered)', 'MIDI A', 'MIDI B', 'MIDI A & B'] },
-  { cmd: 0x1f, name: 'Operating mode', choices: ['USB', 'Standalone', 'Mixed'] },
-  { cmd: 0x40, name: 'LED brightness' },
-  { cmd: 0x30, name: 'Controller output port', choices: routing },
-  { cmd: 0x17, name: 'Start on', choices: ['CTRL', 'ZAQ'] },
-  { cmd: 0x18, name: 'Clock rate out', choices: ['1 PPQ', '2 PPQ', '4 PPQ', '24 PPQ', '48 PPQ'] },
-  { cmd: 0x20, name: 'Sync mode', choices: ['Internal', 'Sync in', 'MIDI in', 'USB in'] },
-  { cmd: 0x21, name: 'Clock output port' },
-  { cmd: 0x23, name: 'Scale' },
-  { cmd: 0x24, name: 'Scale base', choices: notes },
-  { cmd: 0x25, name: 'Transpose mode', choices: ['Off', ...channels, 'Track', ...chRanges] },
-  { cmd: 0x26, name: 'Trigger mode', choices: ['Off', ...channels] },
-  { cmd: 0x27, name: 'Quantization mode', choices: ['96', 't32', '32', 't16', '16', 't8', '8', 't4', '4', 't2', '2', 't1bar', '1bar', 't2bar', '2bar', '4bar'] },
-  { cmd: 0x28, name: 'Quantization mixer' },
+  { cmd: 0x1b, name: 'Footswitch 1', max: 1, choices: ['CTRL', 'ZAQ'] },
+  { cmd: 0x1c, name: 'Footswitch 2', max: 1, choices: ['CTRL', 'ZAQ'] },
+  { cmd: 0x1e, name: 'MIDI thru source', max: 2, choices: ['Off', 'MIDI in', 'USB in'] },
+  { cmd: 0x1d, name: 'MIDI thru destination', max: 15, choices: ['Off', 'MIDI A (filtered)', 'MIDI B (filtered)', 'MIDI A & B (filtered)', 'MIDI A', 'MIDI B', 'MIDI A & B'] },
+  { cmd: 0x1f, name: 'Operating mode', max: 2, choices: ['USB', 'Standalone', 'Mixed'] },
+  { cmd: 0x40, name: 'LED brightness', max: 15 },
+  { cmd: 0x30, name: 'Controller output port', max: 7, choices: routing },
+  { cmd: 0x17, name: 'Start on', max: 1, choices: ['CTRL', 'ZAQ'] },
+  { cmd: 0x18, name: 'Clock rate out', max: 4, choices: ['1 PPQ', '2 PPQ', '4 PPQ', '24 PPQ', '48 PPQ'] },
+  { cmd: 0x20, name: 'Sync mode', max: 3, choices: ['Internal', 'Sync in', 'MIDI in', 'USB in'] },
+  { cmd: 0x21, name: 'Clock output port', max: 8 },
+  { cmd: 0x23, name: 'Scale', max: 127 },
+  { cmd: 0x24, name: 'Scale base', max: 11, choices: notes },
+  { cmd: 0x25, name: 'Transpose mode', max: 30, choices: ['Off', ...channels, 'Track', ...chRanges] },
+  { cmd: 0x26, name: 'Trigger mode', max: 16, choices: ['Off', ...channels] },
+  { cmd: 0x27, name: 'Quantization mode', max: 15, choices: ['96', 't32', '32', 't16', '16', 't8', '8', 't4', '4', 't2', '2', 't1bar', '1bar', 't2bar', '2bar', '4bar'] },
+  { cmd: 0x28, name: 'Quantization mixer', max: 1 },
 ]
 // Hard safety rule: never STORE (0x72) nor bootloader/firmware (0x77).
 if (deviceGlobals.some(g => g.cmd === 0x72 || g.cmd === 0x77)) throw Error('Forbidden SysEx command in the global reads')
@@ -79,6 +79,9 @@ export function settingsFromDevice(results: GlobalResult[]): Partial<ControllerS
   const start = v(0x17); if (start === 0 || start === 1) out.startupMode = start ? 'zqr' : 'ctrl'
   const f1 = v(0x1b), f2 = v(0x1c)
   if ((f1 === 0 || f1 === 1) && (f2 === 0 || f2 === 1)) out.footswitchModes = [f1 ? 'zaq' : 'ctrl', f2 ? 'zaq' : 'ctrl']
+  const extra: Record<string, number> = {}
+  for (const g of editableGlobals) { const value = v(g.cmd); if (!mapped.has(g.cmd) && value !== null && value <= (g.max ?? 127)) extra[hexKey(g.cmd)] = value }
+  if (Object.keys(extra).length) out.deviceValues = extra
   const mode = v(0x1f); if (mode !== null && mode <= 2) out.operationMode = (['usb', 'stdl', 'mixed'] as const)[mode]
   const port = v(0x30); if (port !== null && port <= 7) out.outputRouting = routing[port]
   const source = v(0x1e); if (source !== null && source <= 2) out.thruSource = (['off', 'midi', 'usb'] as const)[source]
@@ -92,4 +95,41 @@ export function settingsFromDevice(results: GlobalResult[]): Partial<ControllerS
 // Config fields whose current value differs from what was read on the device.
 export function differingFields(current: ControllerSettings, device: Partial<ControllerSettings>): (keyof ControllerSettings)[] {
   return (Object.keys(device) as (keyof ControllerSettings)[]).filter(k => JSON.stringify(current[k]) !== JSON.stringify(device[k]))
+}
+
+// Settings the editor keeps in its own Config fields (StudioConfig); the others live in settings.deviceValues.
+const mapped = new Set([0x17, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x30])
+// Not edited here: the bootloader status is informative; the LED brightness has its own verified control.
+export const editableGlobals = deviceGlobals.filter(g => g.cmd !== 0x74 && g.cmd !== 0x40)
+export const hexKey = (cmd: number) => cmd.toString(16).padStart(2, '0')
+
+// Value of a setting as currently held by the editor (Config fields or deviceValues), null when unknown.
+export function valueOf(cmd: number, s: ControllerSettings): number | null {
+  switch (cmd) {
+    case 0x17: return s.startupMode === 'zqr' ? 1 : 0
+    case 0x1b: return s.footswitchModes[0] === 'zaq' ? 1 : 0
+    case 0x1c: return s.footswitchModes[1] === 'zaq' ? 1 : 0
+    case 0x1e: return ['off', 'midi', 'usb'].indexOf(s.thruSource)
+    case 0x1f: return ['usb', 'stdl', 'mixed'].indexOf(s.operationMode)
+    case 0x30: { const i = routing.indexOf(s.outputRouting); return i < 0 ? null : i }
+    case 0x1d: {
+      if (s.thruDestination === 'Off') return 0
+      const i = ['MIDI A', 'MIDI B', 'MIDI A & B'].indexOf(s.thruDestination)
+      return i < 0 ? null : (s.thruFiltered ? 1 : 4) + i
+    }
+    default: return s.deviceValues?.[hexKey(cmd)] ?? null
+  }
+}
+// Settings with one value changed, written to the same place valueOf reads it from.
+export function withValue(cmd: number, value: number, s: ControllerSettings): ControllerSettings {
+  const fromDevice = settingsFromDevice([{ cmd, name: '', value, label: null, status: 'value' }])
+  if (mapped.has(cmd)) {
+    if (cmd === 0x1b || cmd === 0x1c) {
+      const modes = [...s.footswitchModes] as ControllerSettings['footswitchModes']
+      modes[cmd === 0x1b ? 0 : 1] = value ? 'zaq' : 'ctrl'
+      return { ...s, footswitchModes: modes }
+    }
+    return { ...s, ...fromDevice }
+  }
+  return { ...s, deviceValues: { ...s.deviceValues, [hexKey(cmd)]: value } }
 }
