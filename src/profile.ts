@@ -7,6 +7,8 @@ export interface ControllerSettings {
   footswitchModes: ('ctrl' | 'zaq')[]; outputRouting: string; thruSource: 'off' | 'midi' | 'usb'; thruDestination: string; thruFiltered: boolean
 }
 export const routingOptions = ['USB', 'MIDI A', 'MIDI B', 'MIDI A & B', 'USB & MIDI A', 'USB & MIDI B', 'USB & MIDI A & B']
+// The controller output can also be Off (device value 0).
+export const outputRoutingOptions = ['Off', ...routingOptions]
 export const defaultSettings = (): ControllerSettings => ({ startupMode: 'ctrl', deviceId: 1, operationMode: 'mixed', footswitchModes: ['ctrl', 'ctrl'], outputRouting: 'USB', thruSource: 'off', thruDestination: 'Off', thruFiltered: false })
 export type EncoderMode = 'absolute' | 'abs_14' | 'rel1' | 'rel2' | 'rel3' | 'r1_14' | 'r2_14' | 'r3_14' | 'inc_dec' | 'toggle' | 'momentary'
 export const rotationModes: EncoderMode[] = ['absolute', 'abs_14', 'rel1', 'rel2', 'rel3', 'r1_14', 'r2_14', 'r3_14', 'inc_dec']
@@ -80,7 +82,7 @@ export function parseProfile(value: unknown): Bcr32Profile {
   if (!valid(p.encoders, Array.from({ length: 32 }, (_, i) => i + 1))) throw new Error('Invalid encoders')
   if (Number(p.schemaVersion) === 2 && (!valid(p.pushes, Array.from({ length: 32 }, (_, i) => i + 1)) || !valid(p.buttons, p.buttons?.length === 20 ? buttonIds.slice(0, 20) : buttonIds))) throw new Error('Invalid buttons')
   const settings = { ...defaultSettings(), ...p.settings }
-  if (!['ctrl','zqr'].includes(settings.startupMode) || !['usb','stdl','mixed'].includes(settings.operationMode) || !Number.isInteger(settings.deviceId) || settings.deviceId < 1 || settings.deviceId > 255 || !routingOptions.includes(settings.outputRouting) || !['off','midi','usb'].includes(settings.thruSource) || !['Off',...routingOptions].includes(settings.thruDestination) || typeof settings.thruFiltered !== 'boolean' || !Array.isArray(settings.footswitchModes) || settings.footswitchModes.length !== 2 || !settings.footswitchModes.every(m => ['ctrl','zaq'].includes(m))) throw new Error('Invalid settings')
+  if (!['ctrl','zqr'].includes(settings.startupMode) || !['usb','stdl','mixed'].includes(settings.operationMode) || !Number.isInteger(settings.deviceId) || settings.deviceId < 1 || settings.deviceId > 255 || !outputRoutingOptions.includes(settings.outputRouting) || !['off','midi','usb'].includes(settings.thruSource) || !['Off',...routingOptions].includes(settings.thruDestination) || typeof settings.thruFiltered !== 'boolean' || !Array.isArray(settings.footswitchModes) || settings.footswitchModes.length !== 2 || !settings.footswitchModes.every(m => ['ctrl','zaq'].includes(m))) throw new Error('Invalid settings')
   return { ...createProfile(), ...p, schemaVersion: 2, device: { model: 'BCR-32', firmwareObserved: typeof p.device?.firmwareObserved === 'string' && /^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(p.device.firmwareObserved) ? p.device.firmwareObserved : null },
     pushes: Number(p.schemaVersion) === 1 ? createProfile().pushes : p.pushes,
     buttons: Number(p.schemaVersion) === 1 ? createProfile().buttons : [...p.buttons, ...createProfile().buttons.slice(p.buttons.length)], settings }

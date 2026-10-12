@@ -1,29 +1,36 @@
+import type { ControllerSettings } from './profile'
+
 // Read-only view of the BCR32 global settings (docs/PROTOCOL.md, "Global settings").
 // Each read is the exact request the official editor sends at every connection: F0 00 20 32 7F 64 <cmd> F7.
 // The device answers F0 00 20 32 7F 64 <cmd> <value> F7. Nothing here writes to the device.
 const prefix = [0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64]
-const routing = ['Off', 'A', 'B', 'A+B', 'USB', 'USB+A', 'USB+B', 'USB+A+B']
+// Option lists: the official editor's BCR32 lists, matched to each setting by value range and meaning (2026-10-12).
+// Abbreviations spelled out: U = USB, A/B = MIDI A/B, F = filtered (thru), STDL = standalone.
+const routing = ['Off', 'MIDI A', 'MIDI B', 'MIDI A & B', 'USB', 'USB & MIDI A', 'USB & MIDI B', 'USB & MIDI A & B']
+const notes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+const channels = Array.from({ length: 16 }, (_, i) => `CH ${i + 1}`)
+const chRanges = Array.from({ length: 13 }, (_, i) => `CH ${i + 1}-${i + 4}`)
 
-// Order = the official editor's own read order. Choice labels come from the editor's option lists; they are not
-// hardware-verified one by one, so the raw value is always shown next to them.
+// Order = the official editor's own read order. Settings without a reliable list (range and list sizes differ) show
+// their raw value only.
 export const deviceGlobals: { cmd: number; name: string; choices?: string[] }[] = [
   { cmd: 0x74, name: 'Bootloader status' },
-  { cmd: 0x1b, name: 'Footswitch 1' },
-  { cmd: 0x1c, name: 'Footswitch 2' },
+  { cmd: 0x1b, name: 'Footswitch 1', choices: ['CTRL', 'ZAQ'] },
+  { cmd: 0x1c, name: 'Footswitch 2', choices: ['CTRL', 'ZAQ'] },
   { cmd: 0x1e, name: 'MIDI thru source', choices: ['Off', 'MIDI in', 'USB in'] },
-  { cmd: 0x1d, name: 'MIDI thru destination' },
+  { cmd: 0x1d, name: 'MIDI thru destination', choices: ['Off', 'MIDI A (filtered)', 'MIDI B (filtered)', 'MIDI A & B (filtered)', 'MIDI A', 'MIDI B', 'MIDI A & B'] },
   { cmd: 0x1f, name: 'Operating mode', choices: ['USB', 'Standalone', 'Mixed'] },
   { cmd: 0x40, name: 'LED brightness' },
   { cmd: 0x30, name: 'Controller output port', choices: routing },
-  { cmd: 0x17, name: 'Start on' },
-  { cmd: 0x18, name: 'Clock rate out' },
-  { cmd: 0x20, name: 'Sync mode' },
-  { cmd: 0x21, name: 'Clock output port', choices: routing },
+  { cmd: 0x17, name: 'Start on', choices: ['CTRL', 'ZAQ'] },
+  { cmd: 0x18, name: 'Clock rate out', choices: ['1 PPQ', '2 PPQ', '4 PPQ', '24 PPQ', '48 PPQ'] },
+  { cmd: 0x20, name: 'Sync mode', choices: ['Internal', 'Sync in', 'MIDI in', 'USB in'] },
+  { cmd: 0x21, name: 'Clock output port' },
   { cmd: 0x23, name: 'Scale' },
-  { cmd: 0x24, name: 'Scale base' },
-  { cmd: 0x25, name: 'Transpose mode' },
-  { cmd: 0x26, name: 'Trigger mode' },
-  { cmd: 0x27, name: 'Quantization mode' },
+  { cmd: 0x24, name: 'Scale base', choices: notes },
+  { cmd: 0x25, name: 'Transpose mode', choices: ['Off', ...channels, 'Track', ...chRanges] },
+  { cmd: 0x26, name: 'Trigger mode', choices: ['Off', ...channels] },
+  { cmd: 0x27, name: 'Quantization mode', choices: ['96', 't32', '32', 't16', '16', 't8', '8', 't4', '4', 't2', '2', 't1bar', '1bar', 't2bar', '2bar', '4bar'] },
   { cmd: 0x28, name: 'Quantization mixer' },
 ]
 // Hard safety rule: never STORE (0x72) nor bootloader/firmware (0x77).
@@ -63,4 +70,26 @@ export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs =
     },
     close() { closed = true; if (pending) { timers.clear(pending.timer); pending.settle({ value: null, status: 'no reply' }) } },
   }
+}
+
+// Values read from the device, expressed as the editor's Config fields (only the fields the editor has).
+export function settingsFromDevice(results: GlobalResult[]): Partial<ControllerSettings> {
+  const v = (cmd: number) => results.find(r => r.cmd === cmd && r.status === 'value')?.value ?? null
+  const out: Partial<ControllerSettings> = {}
+  const start = v(0x17); if (start === 0 || start === 1) out.startupMode = start ? 'zqr' : 'ctrl'
+  const f1 = v(0x1b), f2 = v(0x1c)
+  if ((f1 === 0 || f1 === 1) && (f2 === 0 || f2 === 1)) out.footswitchModes = [f1 ? 'zaq' : 'ctrl', f2 ? 'zaq' : 'ctrl']
+  const mode = v(0x1f); if (mode !== null && mode <= 2) out.operationMode = (['usb', 'stdl', 'mixed'] as const)[mode]
+  const port = v(0x30); if (port !== null && port <= 7) out.outputRouting = routing[port]
+  const source = v(0x1e); if (source !== null && source <= 2) out.thruSource = (['off', 'midi', 'usb'] as const)[source]
+  const dest = v(0x1d)
+  if (dest !== null && dest <= 6) {
+    out.thruDestination = ['Off', 'MIDI A', 'MIDI B', 'MIDI A & B', 'MIDI A', 'MIDI B', 'MIDI A & B'][dest]
+    out.thruFiltered = dest >= 1 && dest <= 3
+  }
+  return out
+}
+// Config fields whose current value differs from what was read on the device.
+export function differingFields(current: ControllerSettings, device: Partial<ControllerSettings>): (keyof ControllerSettings)[] {
+  return (Object.keys(device) as (keyof ControllerSettings)[]).filter(k => JSON.stringify(current[k]) !== JSON.stringify(device[k]))
 }

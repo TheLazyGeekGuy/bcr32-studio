@@ -44,6 +44,12 @@ official editor sends at connection were repeated on the same unit: OperatingMod
 15 → 7 and ControllerOutPort (`30`) 5 → 4 had changed since 2026-10-09, in line with changes made on the device; the
 other values were unchanged. These are reads, not echoes. Writing them is **not** established (only `40` is).
 
+Meaning of the values: the official editor carries the BCR32 option lists in a fixed order; matched to each setting by
+value range, they give for example `1B`/`1C`/`17` = CTRL, ZAQ; `1E` = Off, MIDI in, USB in; `1D` = Off, filtered A, filtered
+B, filtered A+B, A, B, A+B; `1F` = USB, standalone, mixed; `30` = Off, A, B, A+B, USB, USB+A, USB+B, USB+A+B; `18` = 1, 2, 4,
+24, 48 PPQ; `20` = internal, sync in, MIDI in, USB in. `21` (range 0–8), `23` (0–127) and `28` (0–1) have no list that
+matches their range and are shown raw. See `src/device-globals.ts`.
+
 ### Indexed reads are echoed, not answered
 
 Indexed reads sent with an extra padding byte (`29 00 00` … `2D 03 00`, `31 30 00` … `38 31 00`) come back

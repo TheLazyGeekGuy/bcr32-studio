@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { version as studioVersion } from '../package.json'
-import { createProfile, parseProfile, valueLimit, parameterLimit, is14Bit, isRelative, modesFor, typesFor, mmcCommands, defaultSettings, type Bcr32Profile, type Encoder, type EncoderMode, type EncoderType } from './profile'
+import { createProfile, parseProfile, valueLimit, parameterLimit, is14Bit, isRelative, modesFor, typesFor, mmcCommands, defaultSettings, type Bcr32Profile, type ControllerSettings, type Encoder, type EncoderMode, type EncoderType } from './profile'
 import { FrontPanel, type Selection, type LiveValues } from './FrontPanel'
 import { encoderMessages, createCcSender, isBcrOutput } from './cc-transport'
 import { asHex, describeMessage, isSystemRealtime, parseFirmwareReply, productQuery, supportsWebMidi, type MidiAccess, type MidiPort } from './web-midi'
@@ -23,7 +23,7 @@ import { applyLearn, createLearnSession, describeApplied, type LearnResult } fro
 import { createDisplayArbiter, followSettled, type ActiveControl } from './display-arbiter'
 import { cubaseFolder, cubaseMidiRemoteScript } from './cubase-export'
 import { displayStyleKey, displayStyles, validDisplayStyle, type DisplayStyle } from './display-styles'
-import { createGlobalsReader, type GlobalResult } from './device-globals'
+import { createGlobalsReader, settingsFromDevice, type GlobalResult } from './device-globals'
 import { DisplayPreview } from './OledDisplay'
 
 const storageKey = 'bcr32-studio.profile.v1'
@@ -155,6 +155,12 @@ function App() {
   const globalsReader = useRef<ReturnType<typeof createGlobalsReader>|null>(null)
   const [deviceSettings, setDeviceSettings] = useState<GlobalResult[] | null>(null)
   const [deviceSettingsBusy, setDeviceSettingsBusy] = useState(false)
+  // Values read from the controller, as Config fields, with the time of the read (src/device-globals.ts settingsFromDevice).
+  const [deviceSnapshot, setDeviceSnapshot] = useState<{ at: string; settings: Partial<ControllerSettings> } | null>(null)
+  // Load the controller's settings automatically at each connection (default on, remembered per browser).
+  const [autoLoadDevice, setAutoLoadDevice] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.device-autoload') !== 'false' } catch { return true } })
+  useEffect(() => { try { window.localStorage.setItem('bcr32-studio.device-autoload', String(autoLoadDevice)) } catch { /* Optional preference. */ } }, [autoLoadDevice])
+  const autoLoadRef = useRef(autoLoadDevice); autoLoadRef.current = autoLoadDevice
 
   const inputs = useMemo(() => access ? Array.from(access.inputs.values()) : [], [access, portVersion])
   const outputs = useMemo(() => access ? Array.from(access.outputs.values()) : [], [access, portVersion])
@@ -546,14 +552,24 @@ function App() {
     if (!brightnessEnabled || !output?.send) { globalsReader.current = null; return }
     const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes))
     globalsReader.current = reader
+    if (autoLoadRef.current) void loadDeviceSettings(reader)
     return () => { reader.close(); if (globalsReader.current === reader) globalsReader.current = null }
   }, [access, inputId, output, brightnessEnabled, portVersion])
-  const readDeviceSettings = async () => {
-    const reader = globalsReader.current
-    if (!reader || deviceSettingsBusy) return
+  // Read the controller's settings and put them into the Config fields (the values stay editable; nothing is written).
+  async function loadDeviceSettings(reader = globalsReader.current) {
+    if (!reader) return
     setDeviceSettingsBusy(true)
-    try { setDeviceSettings(await reader.read()) } finally { setDeviceSettingsBusy(false) }
+    try {
+      const results = await reader.read()
+      if (globalsReader.current !== reader) return // port changed meanwhile: these results are stale
+      setDeviceSettings(results)
+      const fromDevice = settingsFromDevice(results)
+      if (!Object.keys(fromDevice).length) return
+      setDeviceSnapshot({ at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), settings: fromDevice })
+      setProfile(current => ({ ...current, settings: { ...(current.settings ?? defaultSettings()), ...fromDevice } }))
+    } finally { setDeviceSettingsBusy(false) }
   }
+  useEffect(() => { if (autoLoadDevice && globalsReader.current && !deviceSnapshot) void loadDeviceSettings() }, [autoLoadDevice])
 
   // Cubase MIDI Remote script: surface + exact MIDI of each assigned control, no Cubase function mapped.
   const exportCubase = () => {
@@ -608,7 +624,7 @@ function App() {
           <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
           <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
           <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
-          <div className="device-globals" role="group" aria-label="Device settings"><h3>Device settings</h3><p className="surface-help">Read-only: values reported by the BCR32, nothing is written.</p><button disabled={!brightnessEnabled || deviceSettingsBusy} onClick={() => { void readDeviceSettings() }}>{deviceSettingsBusy ? 'Reading…' : 'Read from the BCR32'}</button>{deviceSettings && <table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>{deviceSettings.map(g => <tr key={g.cmd}><td>{g.name}</td><td data-i18n-skip>{g.status === 'value' ? `${g.value}${g.label ? ` · ${g.label}` : ''}` : g.status}</td></tr>)}</tbody></table>}</div>
+          <div className="device-globals" role="group" aria-label="Device settings"><h3>Device settings</h3><p className="surface-help">Read-only: values reported by the BCR32, nothing is written.</p><label className="zoom-option"><input type="checkbox" checked={autoLoadDevice} onChange={event => setAutoLoadDevice(event.target.checked)} />Load the settings from the BCR32 at connection</label>{!autoLoadDevice && <button onClick={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }}>Reset to editor defaults</button>}<button disabled={!brightnessEnabled || deviceSettingsBusy} onClick={() => { void loadDeviceSettings() }}>{deviceSettingsBusy ? 'Reading…' : 'Read from the BCR32'}</button>{deviceSettings && <table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>{deviceSettings.map(g => <tr key={g.cmd}><td>{g.name}</td><td data-i18n-skip>{g.status === 'value' ? `${g.value}${g.label ? ` · ${g.label}` : ''}` : g.status}</td></tr>)}</tbody></table>}</div>
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
@@ -674,7 +690,7 @@ function App() {
 
     <section className="lower">
       <section className="ports" hidden={tab !== 'config'}>
-        <StudioConfig profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled} brightnessStatus={brightnessStatus} />
+        <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled} brightnessStatus={brightnessStatus} />
         <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
         <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
           <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
