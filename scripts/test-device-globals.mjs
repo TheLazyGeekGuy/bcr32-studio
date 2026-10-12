@@ -14,7 +14,9 @@ function load(name) {
   const code = ts.transpileModule(readFileSync(existsSync(`${base}.tsx`) ? `${base}.tsx` : `${base}.ts`, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText
   const exports = {}; cache.set(name, exports); new Function('require', 'exports', code)(load, exports); return exports
 }
-const { deviceGlobals, globalQuery, createGlobalsReader } = load('./device-globals')
+const { deviceGlobals, globalQuery, createGlobalsReader, settingsFromDevice, differingFields } = load('./device-globals')
+const { StudioConfig } = load('./StudioConfig')
+const { createProfile, defaultSettings } = load('./profile')
 const { catalog } = load('./i18n')
 
 // 1. Exactly the official editor's 18 reads, in its order; never STORE or bootloader.
@@ -47,11 +49,33 @@ assert.equal(by(0x25).status, 'echo', 'an echo is reported as such, not as a val
 assert.equal(by(0x26).status, 'no reply', 'silence is reported after the timeout')
 assert.equal(reader.receive([0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64, 0x1f, 0x02, 0xf7]), false, 'no stray reply accepted when nothing is pending')
 
+// 2b. Labels from the official editor's BCR32 lists, matched by range (clock 3 = 24 PPQ, quantization 10 = "2").
+assert.equal(by(0x18).label, '24 PPQ'); assert.equal(by(0x27).label, '2')
+for (const g of deviceGlobals) if (g.choices) assert.ok(new Set(g.choices).size === g.choices.length || g.cmd === 0x1d, `no duplicate label in ${g.name}`)
+
+// 2c. Read values become Config fields: the 2026-10-12 hardware values (operating mode 0, controller port 4).
+const fields = settingsFromDevice(results)
+assert.deepEqual(fields, { startupMode: 'ctrl', footswitchModes: ['ctrl', 'ctrl'], operationMode: 'usb', outputRouting: 'USB', thruSource: 'off', thruDestination: 'Off', thruFiltered: false })
+const mixed = settingsFromDevice([{ cmd: 0x1f, value: 2, status: 'value' }, { cmd: 0x30, value: 5, status: 'value' }, { cmd: 0x1d, value: 2, status: 'value' }, { cmd: 0x1b, value: 1, status: 'value' }, { cmd: 0x1c, value: 0, status: 'value' }])
+assert.deepEqual(mixed, { operationMode: 'mixed', outputRouting: 'USB & MIDI A', thruDestination: 'MIDI B', thruFiltered: true, footswitchModes: ['zaq', 'ctrl'] }, 'Oct 9 values, filtered thru, ZAQ footswitch')
+assert.deepEqual(settingsFromDevice([{ cmd: 0x1f, value: null, status: 'echo' }]), {}, 'an echo never becomes a setting')
+assert.deepEqual(differingFields({ ...defaultSettings(), operationMode: 'mixed' }, { operationMode: 'usb', outputRouting: 'USB' }), ['operationMode'])
+
+// 2d. Config shows the read time and marks a field edited after the read.
+const profile = { ...createProfile(), settings: { ...defaultSettings(), operationMode: 'mixed' } }
+const cfg = renderToStaticMarkup(React.createElement(StudioConfig, { profile, update() {}, select() {}, brightness: 7, draft: 7, setDraft() {}, brightnessEnabled: true, brightnessStatus: '', deviceSnapshot: { at: '19:42', settings: { operationMode: 'usb', outputRouting: 'USB' } } }))
+assert.ok(cfg.includes('Read from the BCR32 at 19:42.'), 'read time shown')
+assert.equal((cfg.match(/class="device-differs"/g) ?? []).length, 1, 'only the edited field is marked')
+assert.ok(!renderToStaticMarkup(React.createElement(StudioConfig, { profile, update() {}, select() {}, brightness: 7, draft: 7, setDraft() {}, brightnessEnabled: true, brightnessStatus: '' })).includes('device-differs'), 'no marker without a read')
+
 // 3. UI: Config section, read button disabled without a BCR32, strings in the catalog.
 const html = renderToStaticMarkup(React.createElement(load('./App').default))
 assert.match(html, /<button[^>]*disabled=""[^>]*>Read from the BCR32<\/button>/, 'read button disabled while no BCR32 is connected')
 assert.ok(html.includes('Device settings'))
-for (const k of ['Device settings', 'Read from the BCR32', 'Read-only: values reported by the BCR32, nothing is written.', ...deviceGlobals.map(g => g.name)]) assert.ok(catalog[k], 'catalog: ' + k)
+assert.match(html, /<input type="checkbox" checked=""[^>]*\/>Load the settings from the BCR32 at connection/, 'automatic load on by default')
+assert.ok(!html.includes('Reset to editor defaults'), 'reset offered only when automatic load is off')
+for (const k of ['Load the settings from the BCR32 at connection', 'Reset to editor defaults', 'Read from the BCR32 at {detail}.', 'Differs from the value read on the BCR32', 'Device settings', 'Read from the BCR32', 'Read-only: values reported by the BCR32, nothing is written.', ...deviceGlobals.map(g => g.name)]) assert.ok(catalog[k], 'catalog: ' + k)
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 assert.ok(app.includes('globalsReader.current?.receive(data)'), 'replies reach the reader')
-console.log('PASS: device globals — the official editor\'s 18 short reads only, sequential, values decoded, echo and silence reported, read-only UI disabled without a BCR32, translated')
+assert.ok(app.includes('if (autoLoadRef.current) void loadDeviceSettings(reader)') && app.includes('settingsFromDevice(results)'), 'read at connection and applied to Config')
+console.log('PASS: device globals — official labels, read values mapped to Config fields with edit markers, automatic load at connection (default on), the official editor\'s 18 short reads only, sequential, values decoded, echo and silence reported, read-only UI disabled without a BCR32, translated')

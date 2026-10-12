@@ -470,3 +470,5 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .device-globals button { justify-self:start; }
 .device-globals table { border-collapse:collapse; font-size:11px; width:100%; }
 .device-globals td, .device-globals th { padding:3px 6px; border-bottom:1px solid var(--theme-line); text-align:left; }
+.device-differs { color:var(--theme-accent); font-size:10px; margin-left:4px; }
+.device-read-status { margin:4px 0 8px; }

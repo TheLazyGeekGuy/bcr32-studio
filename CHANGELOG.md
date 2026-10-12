@@ -3,6 +3,18 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.7.0] — 2026-10-12
+
+- The controller's global settings are **loaded automatically at connection** (Config option "Load the settings from
+  the BCR32 at connection", on by default; when off, "Reset to editor defaults" is offered) and put into the Config
+  fields: footswitches, startup mode, operating mode, controller output routing (now with Off), MIDI thru source,
+  destination and filter. Fields stay editable; a "≠ BCR32" marker shows a field changed after the read, since
+  nothing is written to the device yet. Read time shown.
+- Device settings table: every value with a known meaning is labelled from the official editor's BCR32 option lists
+  (CTRL/ZAQ, USB/STDL/MIXED, output and thru ports, 1–48 PPQ, sync source, scale base, transpose, trigger,
+  quantization). Clock output port, scale and quantization mixer stay raw (list and range do not match).
+- Verified against a real BCR32 in Chromium with MIDI permission: 18 settings read and applied at connection.
+
 ## [0.6.0] — 2026-10-12
 
 - Config "Device settings": reads the 18 global settings of the BCR32 (operating mode, controller output port, LED
