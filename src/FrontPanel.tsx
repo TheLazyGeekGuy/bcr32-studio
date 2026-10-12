@@ -20,6 +20,16 @@ export function receiveCC(profile: Bcr32Profile, current: LiveValues, data: numb
 }
 const labels = ['PITCH', 'VELOCITY', 'MUTE', 'DELAY', 'LENGTH', 'MIDI CTRL α', 'MIDI CTRL β', 'WAVE GEN', 'CHORD', 'STEP SKIP', 'SEQ START', 'SEQ LENGTH', 'SEQ OFFSET', 'CLK DIVIDER', 'SHUFFLE', 'DIRECTION']
 const globals = ['EDIT / GLOBAL', 'EXIT', 'STORE', 'LD / LRN', 'TAP DELETE', 'TAP WRITE', 'INST SEL', 'MIXER', 'LOOP', 'PLAY / STOP']
+// Name printed on the panel for a control (a push takes its encoder's name).
+export function printedName(kind: Selection['kind'], id: number): string {
+  if (kind !== 'buttons') return encoderNames[id - 1] ?? `${id}`
+  if (id >= 5 && id <= 20) return labels[id - 5]
+  if (id >= 21 && id <= 24) return `T${id - 20}`
+  if (id >= 65 && id <= 68) return globals[id - 65 + 6]
+  return id === 74 || id === 75 ? `FOOTSW ${id - 73}` : `${id}`
+}
+// Label of a control as shown on the panel: the user's label, else the printed name.
+export const controlLabel = (kind: Selection['kind'], id: number, custom: VisualLabels) => custom[kind][controlIndex(kind, id)]?.trim() || printedName(kind, id)
 // Percentages of the panel coordinate space (1717 × 1440).
 const region = (x: number, y: number, width: number, height: number): CSSProperties => ({
   left: `${x / 1717 * 100}%`, top: `${y / 1440 * 100}%`,
@@ -40,7 +50,7 @@ function InlineName({ initial, style, name, commit, cancel }: { initial: string;
     onKeyDown={event => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); finish() } else if (event.key === 'Escape') { event.preventDefault(); finished.current = true; cancel() } }} />
 }
 
-export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = null }: {
+export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = false }: {
   profile: Bcr32Profile; selection: Selection; selections?: Selection[]; select: (value: Selection, gesture?: SelectionGesture) => void; action: (name: string) => void
   values?: LiveValues; setValue?: (id: number, value: number) => void; ringMode?: LedMode
   compact?: boolean
@@ -48,7 +58,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
   selectMany?: (controls:Selection[])=>void
   autoZoom?: boolean
   showNumbers?: boolean
-  nameScreen?: string | null
+  nameScreen?: boolean
   customLabels?: VisualLabels
   rename?: (control: Selection, name: string) => void
   activity?: Activity
@@ -170,7 +180,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
     })}
     <button style={region(1168, 124, 140, 55)} className="panel-hit key-hit zaq-toggle" aria-label="ZQR / CTRL"
       onClick={() => action('Editor Controller mode only. No hardware change.')}><span className="silver-key-label">ZQR / CTRL</span></button>
-    {nameScreen !== null && <NameDisplay text={nameScreen} blank={displayed.display === false} style={region(1374, 463, 192, 49)} />}
+    {nameScreen && <NameDisplay text={controlLabel(screenControl.kind, screenControl.id, customLabels)} blank={displayed.display === false} style={region(1374, 463, 192, 49)} />}
     <OledDisplay control={screenControl} config={displayed} value={displayValue.value} source={displayValue.source} style={region(1374, 518, 192, 98)}
       inspect={() => select(screenControl)} setValue={v => { if (setScreenValue) setScreenValue(v); else if (screenControl.kind === 'encoders') setValue(screenControl.id, v) }} />
     <button style={region(1583, 518, 96, 96)} className="panel-hit rotation-hit select-knob" aria-label={t('SELECT rotation and push')}

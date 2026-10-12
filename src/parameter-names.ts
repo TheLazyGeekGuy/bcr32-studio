@@ -1,4 +1,4 @@
-import type { Encoder, EncoderType } from './profile'
+import type { EncoderType } from './profile'
 export type ParameterName = { type: EncoderType; parameter: number; name: string }
 export const parameterNamesKey = 'bcr32-studio.parameter-names.v2'
 const legacyNamesKey = 'bcr32-studio.parameter-names.v1'
@@ -42,21 +42,3 @@ export function mergeNames(base: ParameterName[], incoming: ParameterName[]): Pa
   return result.sort((a, b) => a.type.localeCompare(b.type) || a.parameter - b.parameter)
 }
 
-// Name shown on the parameter name screen: the control's own label first, then the parameter-name table, then the raw
-// MIDI parameter. An unassigned control (or Parameter Off) shows OFF.
-export function parameterLabel(config: Pick<Encoder, 'type' | 'parameter' | 'parameterOff'> & { mmc?: Encoder['mmc'] }, names: ParameterName[], custom?: string): string {
-  if (config.type === 'off' || config.parameterOff) return 'OFF'
-  if (custom?.trim()) return custom.trim()
-  const named = names.find(n => n.type === config.type && n.parameter === config.parameter)
-  if (named) return named.name
-  switch (config.type) {
-    case 'cc': return `CC ${config.parameter}`
-    case 'nrpn': return `NRPN ${config.parameter}`
-    case 'note': return `Note ${config.parameter}`
-    case 'pc': return `Program ${config.parameter}`
-    case 'pb': return 'Pitch bend'
-    case 'at': return 'Aftertouch'
-    case 'gs': return `GS/XG ${config.parameter}`
-    case 'mmc': return `MMC ${config.mmc?.command ?? ''}`.trim()
-  }
-}

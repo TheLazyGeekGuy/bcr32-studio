@@ -24,6 +24,8 @@ const glyphs: Record<string, string> = {
   '.':'00000/00000/00000/00000/00000/01100/01100', ',':'00000/00000/00000/00000/01100/00100/01000', '+':'00000/00100/00100/11111/00100/00100/00000',
   '(':'00010/00100/01000/01000/01000/00100/00010', ')':'01000/00100/00010/00010/00010/00100/01000', '&':'01100/10010/10100/01000/10101/10010/01101',
   '#':'01010/01010/11111/01010/11111/01010/01010', "'":'00100/00100/01000/00000/00000/00000/00000', '!':'00100/00100/00100/00100/00100/00000/00100',
+  // Greek alpha and beta of the printed names (CTRL α / β), keyed by their upper-case forms (dotText upper-cases).
+  'Α':'00000/01101/10010/10010/10010/01101/00000', 'Β':'01100/10010/10100/10010/10001/11110/10000',
   '?':'01110/10001/00001/00010/00100/00000/00100', '=':'00000/00000/11111/00000/11111/00000/00000', '%':'11001/11010/00010/00100/01000/01011/10011',
 }
 export const glyphChars = Object.keys(glyphs).join('')
@@ -77,11 +79,11 @@ export function OledDisplay({ control, config, value, source, style, inspect, se
   </div>
 }
 
-// Half-height dot-matrix screen above the OLED: the name of the parameter the OLED shows (option, off by default).
+// Half-height dot-matrix screen above the OLED: the label of the control the OLED shows (option, off by default).
 export function NameDisplay({ text, style, blank = false }: { text: string; style: CSSProperties; blank?: boolean }) {
   const language = useLanguage()
   const shown = dotText(text), size = Math.min(3, 250 / (Math.max(shown.length, 1) * 6))
-  return <div className="name-display" style={style} aria-label={`${translate('Parameter name', language)}: ${text}`} data-name={text}>
+  return <div className="name-display" style={style} aria-label={`${translate('Label', language)}: ${text}`} data-name={text}>
     <div className="oled-glass" />
     <svg className="oled-pixels" style={{ visibility: blank ? 'hidden' : 'visible' }} viewBox="0 0 280 56" aria-hidden="true">
       <Dots text={shown} x={140 - (shown.length * 6 - 1) * size / 2} y={28 - 3.5 * size} size={size} />

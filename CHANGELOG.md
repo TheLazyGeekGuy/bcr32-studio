@@ -7,9 +7,8 @@ incompatible change, new feature, fix. `0.x` versions are experimental.
 
 - Numbers above the encoders are centred on the knobs.
 - Config option "Show control numbers" hides or shows the numbers above encoders and keys (remembered per browser).
-- Optional parameter name screen (Config, off by default): a half-height dot-matrix display above the OLED shows the
-  name of the parameter on screen (control label, else the parameter-name table, else the raw MIDI parameter); it
-  zooms with the OLED.
+- Optional label screen (Config, off by default): a half-height dot-matrix display above the OLED shows the label of
+  the control on screen (your label, else the name printed on the panel, α and β included); it zooms with the OLED.
 - A selected key is drawn at full brightness while it is selected, even when unassigned, then returns to its dimmed state.
 
 ## [0.5.0] — 2026-10-11
