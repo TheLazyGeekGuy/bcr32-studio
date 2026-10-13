@@ -484,3 +484,11 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .device-write-status { display:block; font-size:10px; margin-top:2px; }
 .device-write-status.ok { color:#6fcf8f; }
 .device-write-status.mismatch, .device-write-status.no\ reply { color:#ef7a6b; }
+.profile-actions > .export-import { display:grid; grid-template-columns:minmax(0,1fr); gap:6px; margin:6px 0 14px; align-items:stretch; }
+.export-import h3 { margin:8px 0 0; font-size:13px; }
+.export-import .surface-help { margin:0; }
+.export-import table { border-collapse:collapse; font-size:11px; width:100%; table-layout:fixed; }
+.export-import td, .export-import th { padding:3px 5px; border-bottom:1px solid var(--theme-line); text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.export-import th:nth-child(1) { width:8%; } .export-import th:nth-child(2) { width:24%; } .export-import th:nth-child(4) { width:20%; }
+.export-import .export-noise td { opacity:.45; }
+.export-import button { padding:2px 8px; font-size:11px; }

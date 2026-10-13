@@ -25,6 +25,8 @@ import { cubaseFolder, cubaseMidiRemoteScript } from './cubase-export'
 import { displayStyleKey, displayStyles, validDisplayStyle, type DisplayStyle } from './display-styles'
 import { createGlobalsReader, settingsFromDevice, valueOf, withValue, type GlobalResult } from './device-globals'
 import { DeviceSettings, type WriteStatus } from './DeviceSettings'
+import { applyRecord, decodeControllerDump, knownRecords, type ControllerDump, type DumpRecord } from './controller-dump'
+import { ExportImport } from './ExportImport'
 import { DisplayPreview } from './OledDisplay'
 
 const storageKey = 'bcr32-studio.profile.v1'
@@ -158,6 +160,8 @@ function App() {
   const [deviceSettingsBusy, setDeviceSettingsBusy] = useState(false)
   const deviceSettingsRef = useRef(deviceSettings); deviceSettingsRef.current = deviceSettings
   const [writeStatus, setWriteStatus] = useState<Record<number, WriteStatus>>({})
+  // Front-panel exports received while the editor listens (src/controller-dump.ts), newest first, last 8 kept.
+  const [dumps, setDumps] = useState<ControllerDump[]>([])
   // Values read from the controller, as Config fields, with the time of the read (src/device-globals.ts settingsFromDevice).
   const [deviceSnapshot, setDeviceSnapshot] = useState<{ at: string; settings: Partial<ControllerSettings> } | null>(null)
   // Load the controller's settings automatically at each connection (default on, remembered per browser).
@@ -345,6 +349,8 @@ function App() {
       }
       brightnessTransport.current?.receive(data)
       globalsReader.current?.receive(data)
+      const dump = decodeControllerDump(data)
+      if (dump) { setDumps(list => [dump, ...list].slice(0, 8)); setNotice(dump.checksumOk ? `Front-panel export received: block ${dump.block}.` : 'Front-panel export received with a checksum error.') }
       // While Learn is armed the message feeds the learn parser first and the selection does not follow MIDI,
       // so the learned parameters land on the control the user chose, not on one that already matched the CC.
       const learned = learnReceive.current(data)
@@ -573,6 +579,13 @@ function App() {
     } finally { setDeviceSettingsBusy(false) }
   }
   useEffect(() => { if (autoLoadDevice && globalsReader.current && !deviceSnapshot) void loadDeviceSettings() }, [autoLoadDevice])
+  // Apply one record of a front-panel export to the control it is known to describe (type, channel, parameter, range).
+  function applyExportRecord(record: DumpRecord) {
+    const target = knownRecords[record.index]
+    if (!target) return
+    setProfile(current => ({ ...current, encoders: current.encoders.map(e => e.id === target.id ? applyRecord(e, record) : e) }))
+    setNotice(`Encoder ${target.id} updated from the front-panel export.`)
+  }
   // Write the editor's value of one setting to the BCR32, then show what the read-back says (src/device-globals.ts).
   async function writeDeviceSetting(cmd: number) {
     const reader = globalsReader.current, value = valueOf(cmd, profileRef.current.settings ?? defaultSettings())
@@ -644,6 +657,7 @@ function App() {
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
+          <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} />
           <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} />
           <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
           <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
