@@ -31,7 +31,7 @@ F0 00 20 32 7F 64 <command> <data...> F7
 | `0C` | Controller mode / page | observed | Precedes the reads of the controller fields. |
 | `07` | Export request | observed | No reply seen from firmware 0.56.0 when sent alone. |
 | `04` | Dump | observed | Sub-family byte after `04`: `0C` = controller, `0B` = Zaquencer sequencer. Format below. |
-| `17`–`30` | Global settings | **verified (read)** | Names: `17` StartOn, `18` ClockRateOut, `1B`/`1C` FootSwitch1/2, `1D` MidiThruDest, `1E` MidiThruSource, `1F` OperatingMode, `20` SyncMode, `21` ClockOutPort, `23` Scale, `24` ScaleBase, `25` TransposeMode, `26` TriggerMode, `27` QuantizationMode, `28` QuantizationMixer, `30` ControllerOutPort. Reads without padding return a value. |
+| `17`–`30` | Global settings | **verified (read, write `18`)** | Names: `17` StartOn, `18` ClockRateOut, `1B`/`1C` FootSwitch1/2, `1D` MidiThruDest, `1E` MidiThruSource, `1F` OperatingMode, `20` SyncMode, `21` ClockOutPort, `23` Scale, `24` ScaleBase, `25` TransposeMode, `26` TriggerMode, `27` QuantizationMode, `28` QuantizationMixer, `30` ControllerOutPort. Reads without padding return a value. |
 | `29`–`2D` | Track parameters | observed | Track Mode, Port, Channel, Ctrl α, Ctrl β, indexed by track 0–3. |
 | `31`–`38` | Controller fields | observed | Eight indexed fields per control (type, channel, parameter, minimum, maximum, mode, option, display: **hypothesis** for the order). |
 | `72` | STORE | **forbidden** | Never send. |
@@ -42,7 +42,10 @@ F0 00 20 32 7F 64 <command> <data...> F7
 Short reads (`F0 00 20 32 7F 64 <cmd> F7`, no padding) return `… <cmd> <value> F7`. On 2026-10-12 the 18 reads the
 official editor sends at connection were repeated on the same unit: OperatingMode (`1F`) 2 → 0, LED brightness (`40`)
 15 → 7 and ControllerOutPort (`30`) 5 → 4 had changed since 2026-10-09, in line with changes made on the device; the
-other values were unchanged. These are reads, not echoes. Writing them is **not** established (only `40` is).
+other values were unchanged. These are reads, not echoes. **Writing** uses `F0 00 20 32 7F 64 <cmd> <value> F7`: the official editor builds every global (the 17 settings `17`–`30`
+and `40`) through one code path with this layout. Verified on hardware on 2026-10-13 with Clock rate out (`18`): 3 → 4 → 3,
+each write answered by `… 18 <value> F7` and confirmed by an independent read. BCR32 Studio always reads back after a
+write. Persistence across a power cycle has not been checked yet.
 
 Meaning of the values: the official editor carries the BCR32 option lists in a fixed order; matched to each setting by
 value range, they give for example `1B`/`1C`/`17` = CTRL, ZAQ; `1E` = Off, MIDI in, USB in; `1D` = Off, filtered A, filtered
