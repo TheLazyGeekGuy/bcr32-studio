@@ -27,6 +27,9 @@ import { createGlobalsReader, settingsFromDevice, valueOf, withValue, type Globa
 import { DeviceSettings, type WriteStatus } from './DeviceSettings'
 import { applyRecord, decodeControllerDump, knownRecords, type ControllerDump, type DumpRecord } from './controller-dump'
 import { ExportImport } from './ExportImport'
+import { createPortal } from 'react-dom'
+import { FloatingDisplay, delegatingTimers, floatingSupported, openFloatingWindow } from './FloatingDisplay'
+import { controlLabel } from './FrontPanel'
 import { DisplayPreview } from './OledDisplay'
 
 const storageKey = 'bcr32-studio.profile.v1'
@@ -121,7 +124,10 @@ function App() {
   // selection follows `settled`, the activity strip shows `active`. Created once with real timers; onChange fires at a tick, or
   // once with the empty state on reset()/stop() so the strip empties with the arbiter.
   const [activeControls, setActiveControls] = useState<ActiveControl[]>([])
-  const [arbiter] = useState(() => createDisplayArbiter({ onChange: state => {
+  // Floating display window (src/FloatingDisplay.tsx): while open, the arbiter's timers run in it (visible, not throttled).
+  const [pipWindow, setPipWindow] = useState<Window | null>(null)
+  const pipRef = useRef<Window | null>(null); pipRef.current = pipWindow
+  const [arbiter] = useState(() => createDisplayArbiter({ timers: delegatingTimers(() => pipRef.current), onChange: state => {
     setActiveControls(current => current.length === 0 && state.active.length === 0 ? current : state.active)
     const shown = state.shown
     if (shown) setScreenControl(current => selectionKey(current) === selectionKey(shown) ? current : shown)
@@ -131,6 +137,15 @@ function App() {
     if (settled) { selectionRef.current = settled; setSelection(settled); setSelections([settled]); selectionsRef.current = [settled] }
   } }))
   useEffect(() => () => arbiter.stop(), [arbiter])
+  useEffect(() => () => { pipRef.current?.close() }, [])
+  async function toggleFloatingDisplay() {
+    if (pipRef.current) { pipRef.current.close(); return }
+    try {
+      const pip = await openFloatingWindow()
+      pip.addEventListener('pagehide', () => setPipWindow(current => current === pip ? null : current))
+      setPipWindow(pip)
+    } catch (error) { setNotice(error instanceof Error ? error.message : String(error)) }
+  }
   const [values, setValues] = useState<LiveValues>(() => Object.fromEntries(initial.values.encoders.flatMap((v, i) => v === null ? [] : [[i + 1, { value: v, source: 'local' as const }]])))
   const liveRef = useRef(values); liveRef.current = values
   const auxRef = useRef(auxValues); auxRef.current = auxValues
@@ -630,14 +645,16 @@ function App() {
     }
   }
 
+  const screenValue = screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }
   return translatedTree(<main className="studio compact" data-theme={theme} onKeyDown={event=>{if(event.key!=='Escape')return;if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
-        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
+        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
-        <div className="connection"><div className="connection-state"><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span><span className="firmware-status studio-version" data-i18n-skip>Studio v{studioVersion}</span>{profile.device.firmwareObserved && <span className="firmware-status"><span>Firmware:</span> {profile.device.firmwareObserved}</span>}</div><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button><LanguagePicker /></div>
+        <div className="connection"><div className="connection-state"><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span><span className="firmware-status studio-version" data-i18n-skip>Studio v{studioVersion}</span>{profile.device.firmwareObserved && <span className="firmware-status"><span>Firmware:</span> {profile.device.firmwareObserved}</span>}</div><button className="floating-toggle" aria-pressed={!!pipWindow} disabled={!floatingSupported()} title={floatingSupported() ? 'Small always-on-top window with the screen, movable and resizable' : 'Needs Chrome or Edge 116 or later'} onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close floating display' : 'Floating display'}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button><LanguagePicker /></div>
+        {pipWindow && createPortal(<FloatingDisplay theme={theme} displayStyle={displayStyle} control={screenControl} config={profile[screenControl.kind].find(e => e.id === screenControl.id)!} label={controlLabel(screenControl.kind, screenControl.id, customLabels)} value={screenValue.value} source={screenValue.source} inspect={() => selectUi(screenControl, {}, true)} setValue={setScreenValue} />, pipWindow.document.body)}
         <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
         <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'files', 'config', 'log'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Files', 'Config', 'Log'][i]} onClick={() => setTab(item)}><Icon name={(['sliders', 'folder', 'import', 'sliders', 'log'] as const)[i]} />{['Control', 'Presets', 'Files', 'Config', 'Log'][i]}</button>)}</nav>
         <div className="sidebar-content">
