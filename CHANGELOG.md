@@ -3,6 +3,14 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.11.1] — 2026-10-13
+
+Documentation:
+- `docs/USER-GUIDE.md`: every tab, option and procedure (assignments, MIDI Learn, screens, presets, files, front-panel
+  export, Cubase export, device settings, languages), safety and privacy, troubleshooting.
+- `docs/ARCHITECTURE.md`: source map, data flow, device protocol in the code, i18n, storage keys, tests, build.
+- README documentation table; CONTRIBUTING links and the rule on disabled global writes.
+
 ## [0.11.0] — 2026-10-13
 
 From the review of the official user manual (Rev. 1):

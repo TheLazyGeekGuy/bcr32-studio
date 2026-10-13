@@ -37,12 +37,17 @@ npm run build      # production build in dist/
 `npm run midi -- ports|probe|monitor` is a small command-line tool to list ports, send the read-only product query and
 log incoming MIDI with millisecond timestamps.
 
+How the code is organised: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What the app does, screen by screen:
+[docs/USER-GUIDE.md](docs/USER-GUIDE.md).
+
 ## Rules that protect users' hardware
 
 The BCR32 protocol is only partly known. A wrong write can corrupt a preset or worse.
 
 - Never add code that sends **STORE (`0x72`)** or anything of the **bootloader / firmware update (`0x77`)** family. A
   test fails the build if the bundle contains them.
+- Global-setting writes are disabled (`globalWritesEnabled`): one froze a controller. Do not re-enable them without a
+  reproduced, explained test.
 - Do not add a SysEx **write** that has not been verified on hardware and documented in
   [docs/PROTOCOL.md](docs/PROTOCOL.md), with the capture that proves it.
 - Do not "scan" unknown commands on a device. Observation of the device's own traffic is the preferred method.
