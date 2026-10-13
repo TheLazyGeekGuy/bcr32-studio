@@ -19,7 +19,7 @@ export function StudioConfig({ profile, update, select, brightness, draft, setDr
     {deviceSnapshot && <p className="muted device-read-status" role="status">{t(`Read from the BCR32 at ${deviceSnapshot.at}.`)} {t('Changes here stay in the editor: writing to the BCR32 is not available yet.')}</p>}
     <details open><summary>{t('Controls & footswitches')}</summary>
       <div className="config-extra-controls">{profile.buttons.filter(b => b.id >= 65).map(b => <button key={b.id} onClick={() => select({kind:'buttons',id:b.id})}>{buttonNames[profile.buttons.indexOf(b)]} · {b.type.toUpperCase()}</button>)}</div>
-      {[0, 1].map(i => <label key={i}>{t(`FOOTSW ${i + 1} function`)}{mark('footswitchModes')}<select value={s.footswitchModes[i]} onChange={e => update({footswitchModes:s.footswitchModes.map((m,j)=>j===i?e.target.value as 'ctrl'|'zaq':m)})}><option value="ctrl">{t('CTRL · programmable')}</option><option value="zaq">ZAQ</option></select></label>)}
+      {[0, 1].map(i => <label key={i}>{t(`FOOTSW ${i + 1} function`)}{mark('footswitchModes')}<select value={s.footswitchModes[i]} onChange={e => update({footswitchModes:s.footswitchModes.map((m,j)=>j===i?e.target.value as 'ctrl'|'zaq':m)})}><option value="ctrl">{t('CTRL · programmable')}</option><option value="zaq">{t(i === 0 ? 'ZAQ · start/stop' : 'ZAQ · next pattern')}</option></select></label>)}
     </details>
     <details open><summary>{t('LED brightness · hardware')}</summary>
       <output>{t('Read-back:')} {brightness ?? 'N/A'} / 15</output>

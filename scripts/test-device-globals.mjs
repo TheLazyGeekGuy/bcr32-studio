@@ -71,6 +71,7 @@ const thru = withValue(0x1d, 2, base); assert.deepEqual([thru.thruDestination, t
 assert.equal(withValue(0x18, 4, base).deviceValues['18'], 4)
 for (const g of editableGlobals) for (const v of [0, Math.min(1, g.max), g.cmd === 0x1d ? 6 : g.max]) assert.equal(valueOf(g.cmd, withValue(g.cmd, v, base)), v, `${g.name} = ${v}`)
 assert.equal(load('./device-globals').globalWritesEnabled, false, 'global writes disabled')
+assert.deepEqual(deviceGlobals.filter(g => g.cmd === 0x1b || g.cmd === 0x1c).map(g => g.choices[1]), ['ZAQ · start/stop', 'ZAQ · next pattern'], 'footswitch ZAQ meanings from the manual')
 assert.ok(!editableGlobals.some(g => g.cmd === 0x40 || g.cmd === 0x74), 'brightness and bootloader status are not edited here')
 
 // 2f. The table: one choice list per editable setting, the device column, a marker on a changed value.
@@ -93,6 +94,7 @@ assert.match(css, /\.profile-actions > \.device-globals\s*\{[^}]*display:grid[^}
 // 2d. Config shows the read time and marks a field edited after the read.
 const profile = { ...createProfile(), settings: { ...defaultSettings(), operationMode: 'mixed' } }
 const cfg = renderToStaticMarkup(React.createElement(StudioConfig, { profile, update() {}, select() {}, brightness: 7, draft: 7, setDraft() {}, brightnessEnabled: true, brightnessStatus: '', deviceSnapshot: { at: '19:42', settings: { operationMode: 'usb', outputRouting: 'USB' } } }))
+assert.ok(cfg.includes('ZAQ · start/stop') && cfg.includes('ZAQ · next pattern'), 'Config footswitch choices say what ZAQ does')
 assert.ok(cfg.includes('Read from the BCR32 at 19:42.'), 'read time shown')
 assert.equal((cfg.match(/class="device-differs"/g) ?? []).length, 1, 'only the edited field is marked')
 assert.ok(!renderToStaticMarkup(React.createElement(StudioConfig, { profile, update() {}, select() {}, brightness: 7, draft: 7, setDraft() {}, brightnessEnabled: true, brightnessStatus: '' })).includes('device-differs'), 'no marker without a read')

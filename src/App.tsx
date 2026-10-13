@@ -160,7 +160,7 @@ function App() {
   const [deviceSettingsBusy, setDeviceSettingsBusy] = useState(false)
   const deviceSettingsRef = useRef(deviceSettings); deviceSettingsRef.current = deviceSettings
   const [writeStatus, setWriteStatus] = useState<Record<number, WriteStatus>>({})
-  // Front-panel exports received while the editor listens (src/controller-dump.ts), newest first, last 8 kept.
+  // Front-panel exports received while the editor listens (src/controller-dump.ts), newest first (all 64 presets fit).
   const [dumps, setDumps] = useState<ControllerDump[]>([])
   // Values read from the controller, as Config fields, with the time of the read (src/device-globals.ts settingsFromDevice).
   const [deviceSnapshot, setDeviceSnapshot] = useState<{ at: string; settings: Partial<ControllerSettings> } | null>(null)
@@ -350,7 +350,8 @@ function App() {
       brightnessTransport.current?.receive(data)
       globalsReader.current?.receive(data)
       const dump = decodeControllerDump(data)
-      if (dump) { setDumps(list => [dump, ...list].slice(0, 8)); setNotice(dump.checksumOk ? `Front-panel export received: block ${dump.block}.` : 'Front-panel export received with a checksum error.') }
+      // Up to 64 presets × 8 blocks are kept; the notice counts messages instead of announcing each block.
+      if (dump) setDumps(list => { const next = [dump, ...list].slice(0, 600); setNotice(dump.checksumOk ? `Front-panel export received: ${next.length} messages.` : 'Front-panel export received with a checksum error.'); return next })
       // While Learn is armed the message feeds the learn parser first and the selection does not follow MIDI,
       // so the learned parameters land on the control the user chose, not on one that already matched the CC.
       const learned = learnReceive.current(data)
@@ -657,7 +658,7 @@ function App() {
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
-          <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} />
+          <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} saveAll={list => download(new Uint8Array([...list].reverse().flatMap(d => d.raw)), `bcr32-exports-${list.length}.syx`, 'application/octet-stream')} />
           <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} />
           <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
           <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
