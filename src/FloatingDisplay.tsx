@@ -11,20 +11,24 @@ type PipApi = { requestWindow: (options: { width: number; height: number }) => P
 const pipApi = (): PipApi | null => typeof window !== 'undefined' && 'documentPictureInPicture' in window ? (window as unknown as { documentPictureInPicture: PipApi }).documentPictureInPicture : null
 export const floatingSupported = () => pipApi() !== null
 
-// Opens the window (must follow a user click) and copies the page's styles into it.
+// Opens the window (must follow a user click) and gives it the page's styles. The floating document inherits the page's
+// Content-Security-Policy (style-src 'self'), which blocks inline <style>: a stylesheet file is linked again by its URL;
+// only sheets without a file (the dev server injects them, without CSP) are copied as text.
+export function copyStyles(from: Document, to: Document) {
+  for (const sheet of Array.from(from.styleSheets)) {
+    if (sheet.href) { const link = to.createElement('link'); link.rel = 'stylesheet'; link.href = sheet.href; to.head.append(link); continue }
+    try {
+      const style = to.createElement('style')
+      style.textContent = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n')
+      to.head.append(style)
+    } catch { /* Unreadable sheet without a URL: nothing to copy. */ }
+  }
+}
 export async function openFloatingWindow(width = 380, height = 290): Promise<Window> {
   const api = pipApi()
   if (!api) throw Error('Floating window not supported by this browser')
   const pip = await api.requestWindow({ width, height })
-  for (const sheet of Array.from(document.styleSheets)) {
-    try {
-      const style = pip.document.createElement('style')
-      style.textContent = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n')
-      pip.document.head.append(style)
-    } catch {
-      if (sheet.href) { const link = pip.document.createElement('link'); link.rel = 'stylesheet'; link.href = sheet.href; pip.document.head.append(link) }
-    }
-  }
+  copyStyles(document, pip.document)
   pip.document.title = 'BCR32 Studio'
   pip.document.body.className = 'floating-body'
   return pip

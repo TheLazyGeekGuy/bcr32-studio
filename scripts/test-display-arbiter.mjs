@@ -120,7 +120,15 @@ for (const rule of ['last', 'share']) { reset(); const { a, changes } = make({ r
 
 
 // --- Defaults: rule 'share', 300 ms slots, 600 ms window. Regressions measured end to end on an earlier rule set. ---
-assert.deepEqual({ ...arbiterDefaults }, { tickMs: 50, dwellMs: 300, windowMs: 600, holdMs: 1500, settleMs: 250, rule: 'share' })
+assert.deepEqual({ ...arbiterDefaults }, { tickMs: 50, dwellMs: 300, windowMs: 600, holdMs: 1500, settleMs: 250, idleMs: 100, rule: 'share' })
+// One knob stops, another starts: the screen switches once the first has been silent for idleMs (next tick), not after its
+// window and slot (about 390 ms measured in the floating window before idleMs), and never comes back to the stopped knob.
+{ reset(); const { a, changes } = make()
+  run(1000, t => { if (t % 10 === 0) a.push(A, t) }) // A until t = 1000
+  const start = now; run(600, t => { if (t % 10 === 0) a.push(B, t) })
+  const switchAt = changes.find(c => c.at > start && c.shown === 'encoders:17')?.at
+  assert.ok(switchAt !== undefined && switchAt - start <= arbiterDefaults.idleMs + arbiterDefaults.tickMs, `switch to the new knob after ${switchAt - start} ms (max ${arbiterDefaults.idleMs + arbiterDefaults.tickMs})`)
+  assert.ok(changes.filter(c => c.at > switchAt).every(c => c.shown === 'encoders:17'), 'the stopped knob does not take the screen back') }
 const views = changes => { const runs = []; for (const c of changes) if (!runs.length || runs.at(-1).shown !== c.shown) runs.push({ shown: c.shown, at: c.at }); return runs }
 // Two encoders at the same rate whose messages land in the same order before every tick (A then B, every 20 ms): the former 'last'/100 ms defaults gave
 // 100 % of the screen to B. Default config must alternate, near 50/50, every view lasting at least one slot.

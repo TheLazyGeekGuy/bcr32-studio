@@ -97,7 +97,8 @@ Press Learn again or Escape to cancel. A value out of range for the control is r
 - **OLED**: shows the control being moved — type, number, value, channel, and where the value comes from (MIDI
   received, local, estimated for relative modes).
 - **Several encoders at once**: like the hardware, the screen is shared between the controls being turned, in
-  proportion to their messages, in readable slots of 300 ms. The inspector only follows once the movement settles.
+  proportion to their messages, in readable slots of 300 ms. A knob you stop turning gives the screen up after 100 ms
+  of silence, so the screen follows the next knob at once. The inspector only follows once the movement settles.
 - **Activity strip** (Control tab): up to four controls currently moving, with value and share of messages; click one
   to select it.
 - **Label screen** (Config, off by default): a half-height screen above the OLED with the label of the control shown

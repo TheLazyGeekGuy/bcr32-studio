@@ -14,7 +14,7 @@ function load(name) {
   const code = ts.transpileModule(readFileSync(existsSync(`${base}.tsx`) ? `${base}.tsx` : `${base}.ts`, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText
   const exports = {}; cache.set(name, exports); new Function('require', 'exports', code)(load, exports); return exports
 }
-const { FloatingDisplay, delegatingTimers, floatingSupported } = load('./FloatingDisplay')
+const { FloatingDisplay, copyStyles, delegatingTimers, floatingSupported } = load('./FloatingDisplay')
 const { createEncoder } = load('./profile')
 const { catalog, translate } = load('./i18n')
 
@@ -29,6 +29,15 @@ current = fakeWin('pip'); const b = timers.set(() => {}, 50)
 current = null; timers.clear(b); timers.clear(a)
 assert.deepEqual(calls, ['main.set 50', 'pip.set 50', 'pip.clear 7', 'main.clear 7'], 'set in the current window, clear in the creating one')
 delete globalThis.window
+
+// 1b. Styles: the floating document inherits style-src 'self', which blocks inline <style> (no style at all in the built
+// app, seen on 2026-10-13): a stylesheet file is linked by its URL; only a sheet without a file (dev server) is copied as text.
+{
+  const made = [], doc = { createElement: tag => ({ tag }), head: { append: node => made.push(node) } }
+  const from = { styleSheets: [{ href: 'https://example.test/assets/index.css', get cssRules() { return [{ cssText: '.a{}' }] } }, { href: null, cssRules: [{ cssText: '.dev{color:red}' }] }, { href: null, get cssRules() { throw Error('blocked') } }] }
+  copyStyles(from, doc)
+  assert.deepEqual(made, [{ tag: 'link', rel: 'stylesheet', href: 'https://example.test/assets/index.css' }, { tag: 'style', textContent: '.dev{color:red}' }], 'built stylesheet linked, never inlined; dev sheet copied')
+}
 
 // 2. The floating content: label screen and OLED filling the window, in the chosen theme and screen style.
 const config = { ...createEncoder(1), type: 'cc', parameter: 74 }

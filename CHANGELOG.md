@@ -3,6 +3,17 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.12.1] — 2026-10-13
+
+Fixes:
+- **Floating display without styles** in the published app: the floating window inherits the page's
+  Content-Security-Policy (`style-src 'self'`), which blocked the copied inline styles. The stylesheet is now linked by
+  its URL; theme and screen style are kept.
+- **Screen slow to follow a new knob** (floating window and panel OLED): a knob that stopped kept the screen until its
+  counting window and slot ran out (about 390 ms measured). A control silent for 100 ms no longer competes, and a shown
+  control that idle gives the screen up at the next tick: about 120 ms measured. Sharing between knobs turned together
+  is unchanged (end-to-end check 1:1 and 3:1).
+
 ## [0.12.0] — 2026-10-13
 
 - **Floating display**: a button opens the label screen and the OLED in a small always-on-top window (Document
