@@ -42,6 +42,9 @@ export const globalQuery = (cmd: number) => [...prefix, cmd, 0xf7]
 // Settings whose wrong value can cut the USB link with the editor (standalone mode, controller output Off or MIDI only):
 // the UI asks for a second confirmation before writing them.
 export const riskyGlobals = new Set([0x1f, 0x30])
+// DISABLED on 2026-10-13: writing global settings froze the owner's BCR32 (firmware 0.56.0). The verified test on
+// Clock rate out did not freeze it, but the cause is not understood. Re-enable only after a reproduced, explained test.
+export const globalWritesEnabled = false
 export function globalWrite(cmd: number, value: number) {
   const g = deviceGlobals.find(x => x.cmd === cmd)
   if (!g || cmd === 0x74 || cmd === 0x72 || cmd === 0x77 || g.max === undefined) throw Error('Not a writable global setting')
@@ -78,6 +81,7 @@ export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs =
     }),
     // Write one setting, then read it back: the read-back is the truth shown to the user.
     write: (cmd: number, value: number): Promise<{ value: number | null; status: GlobalResult['status'] }> => serial(async () => {
+      if (!globalWritesEnabled) throw Error('Writing global settings is disabled')
       const bytes = globalWrite(cmd, value)
       await exchange(cmd, bytes)
       return closed ? { value: null, status: 'no reply' as const } : ask(cmd)

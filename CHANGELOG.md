@@ -3,6 +3,12 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.10.1] — 2026-10-13
+
+- **Writing the controller's global settings is disabled**: it froze the owner's BCR32 (firmware 0.56.0). The
+  Write buttons are gone and the reader refuses any write; values can still be read and chosen in the editor. The
+  LED brightness slider, verified separately, is unchanged. If a BCR32 is frozen, switch it off and on.
+
 ## [0.10.0] — 2026-10-13
 
 - Files > **Front-panel export**: BCR32 Studio listens while you export a preset from the controller (STORE, hold

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { deviceGlobals, editableGlobals, riskyGlobals, valueOf, type GlobalResult } from './device-globals'
+import { deviceGlobals, editableGlobals, globalWritesEnabled, riskyGlobals, valueOf, type GlobalResult } from './device-globals'
 import type { ControllerSettings } from './profile'
 import { translate, useLanguage } from './i18n'
 
@@ -26,12 +26,12 @@ export function DeviceSettings({ results, settings, change, autoLoad, setAutoLoa
   const statusText: Record<WriteStatus, string> = { busy: t('Writing…'), ok: t('Written and read back'), mismatch: t('Read-back differs'), 'no reply': t('No reply') }
   return <div className="device-globals" role="group" aria-label={t('Device settings')}>
     <h3>{t('Device settings')}</h3>
-    <p className="surface-help">{t('Values read from the BCR32 and chosen here. Write sends a changed value to the BCR32, then reads it back.')}</p>
+    <p className="surface-help">{t(globalWritesEnabled ? 'Values read from the BCR32 and chosen here. Write sends a changed value to the BCR32, then reads it back.' : 'Values read from the BCR32 and chosen here. Writing to the BCR32 is disabled: it froze the controller.')}</p>
     <label className="zoom-option"><input type="checkbox" checked={autoLoad} onChange={event => setAutoLoad(event.target.checked)} />{t('Load the settings from the BCR32 at connection')}</label>
     <div className="device-globals-actions">
       <button disabled={!canRead || busy} onClick={read}>{busy ? t('Reading…') : t('Read from the BCR32')}</button>
       {!autoLoad && <button onClick={reset}>{t('Reset to editor defaults')}</button>}
-      {canRead && safeChanges.length > 0 && <button className="primary" onClick={() => safeChanges.forEach(g => write(g.cmd))}>{t('Write all changes')}</button>}
+      {globalWritesEnabled && canRead && safeChanges.length > 0 && <button className="primary" onClick={() => safeChanges.forEach(g => write(g.cmd))}>{t('Write all changes')}</button>}
     </div>
     <table>
       <thead><tr><th>{t('Setting')}</th><th>{t('Value')}</th><th>BCR32</th></tr></thead>
@@ -47,7 +47,7 @@ export function DeviceSettings({ results, settings, change, autoLoad, setAutoLoa
               {options.map(i => <option key={i} value={i}>{g.choices?.[i] ?? i}</option>)}
             </select></td>
             <td><span data-i18n-skip>{label(g.cmd, device)}</span>{differs && <span className="device-differs" title={t('Differs from the value read on the BCR32')}> ≠</span>}
-              {differs && canRead && writeStatus[g.cmd] !== 'busy' && (riskyGlobals.has(g.cmd) && confirming !== g.cmd
+              {globalWritesEnabled && differs && canRead && writeStatus[g.cmd] !== 'busy' && (riskyGlobals.has(g.cmd) && confirming !== g.cmd
                 ? <button className="device-write" onClick={() => setConfirming(g.cmd)}>{t('Write…')}</button>
                 : <button className="device-write" onClick={() => { setConfirming(null); write(g.cmd) }}>{riskyGlobals.has(g.cmd) ? t('Confirm') : t('Write')}</button>)}
               {confirming === g.cmd && differs && <small className="device-risk">{t('This setting can cut the USB link with the editor; it can be restored from the front panel.')}</small>}
