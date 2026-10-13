@@ -31,7 +31,7 @@ F0 00 20 32 7F 64 <command> <data...> F7
 | `0C` | Controller mode / page | observed | Precedes the reads of the controller fields. |
 | `07` | Export request | observed | No reply seen from firmware 0.56.0 when sent alone. |
 | `04` | Dump | observed | Sub-family byte after `04`: `0C` = controller, `0B` = Zaquencer sequencer. Format below. |
-| `17`–`30` | Global settings | **verified (read, write `18`)** | Names: `17` StartOn, `18` ClockRateOut, `1B`/`1C` FootSwitch1/2, `1D` MidiThruDest, `1E` MidiThruSource, `1F` OperatingMode, `20` SyncMode, `21` ClockOutPort, `23` Scale, `24` ScaleBase, `25` TransposeMode, `26` TriggerMode, `27` QuantizationMode, `28` QuantizationMixer, `30` ControllerOutPort. Reads without padding return a value. |
+| `17`–`30` | Global settings | **verified (read)**; write froze the device — disabled | Names: `17` StartOn, `18` ClockRateOut, `1B`/`1C` FootSwitch1/2, `1D` MidiThruDest, `1E` MidiThruSource, `1F` OperatingMode, `20` SyncMode, `21` ClockOutPort, `23` Scale, `24` ScaleBase, `25` TransposeMode, `26` TriggerMode, `27` QuantizationMode, `28` QuantizationMixer, `30` ControllerOutPort. Reads without padding return a value. |
 | `29`–`2D` | Track parameters | observed | Track Mode, Port, Channel, Ctrl α, Ctrl β, indexed by track 0–3. |
 | `31`–`38` | Controller fields | observed | Eight indexed fields per control (type, channel, parameter, minimum, maximum, mode, option, display: **hypothesis** for the order). |
 | `72` | STORE | **forbidden** | Never send. |
@@ -46,6 +46,9 @@ other values were unchanged. These are reads, not echoes. **Writing** uses `F0 0
 and `40`) through one code path with this layout. Verified on hardware on 2026-10-13 with Clock rate out (`18`): 3 → 4 → 3,
 each write answered by `… 18 <value> F7` and confirmed by an independent read. BCR32 Studio always reads back after a
 write. Persistence across a power cycle has not been checked yet.
+
+**Warning (2026-10-13):** writing global settings later **froze** the same BCR32 when used from BCR32 Studio. Writes are
+disabled in the app until the cause is understood (which setting, which value, which sequence). Do not write globals.
 
 Meaning of the values: the official editor carries the BCR32 option lists in a fixed order; matched to each setting by
 value range, they give for example `1B`/`1C`/`17` = CTRL, ZAQ; `1E` = Off, MIDI in, USB in; `1D` = Off, filtered A, filtered

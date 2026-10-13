@@ -4,7 +4,7 @@ A browser editor for the **Behringer BCR32** MIDI controller: see what the contr
 overlay sheets and export a ready-made Cubase surface. It runs entirely in the browser through Web MIDI. Nothing to
 install, no account, nothing leaves your machine.
 
-Current version: **0.10.0** · [Changelog](CHANGELOG.md)
+Current version: **0.10.1** · [Changelog](CHANGELOG.md)
 
 **Try it now: https://bcr32-studio.github.io/** (Chrome, Edge, Brave or Opera; plug in the BCR32 over USB
 and allow MIDI access). Without a controller the editor still opens: presets, PDF sheets and the Cubase export work offline.
@@ -31,7 +31,7 @@ and allow MIDI access). Without a controller the editor still opens: presets, PD
 - **Eight languages**: English, French, Italian, German, Japanese, Spanish, Russian, Chinese.
 - **LED brightness** read and write over SysEx (verified on hardware).
 - **Device settings** loaded from the controller at connection (operating mode, output ports, thru, footswitches,
-  clock, scale…) into Config, with labels; changes are written back to the controller and verified by a read-back.
+  clock, scale…) into Config, with labels; writing them back is disabled (it froze a controller).
 
 ## What it does not do (yet)
 
