@@ -19,6 +19,7 @@ export type ArbiterOptions = {
   windowMs?: number // sliding window over which pulse shares are counted
   holdMs?: number // silence after which the arbiter freezes on the last shown control and stops ticking
   settleMs?: number // silence from *other* controls after which the shown control becomes `settled`
+  idleMs?: number // silence after which a control stops competing for the screen; a shown control that idle gives it up at once
   rule?: ArbiterRule // 'last': the most recent event wins at each tick; 'share': stride scheduling on window shares
   timers?: ArbiterTimers
   clock?: () => number // time base of the ticks; push() receives its own `now` from the caller on the same base
@@ -28,12 +29,14 @@ export type ArbiterOptions = {
 // (unreadable) and, with two encoders at the same rate, 100 % of the screen to the one whose message always lands last before
 // the tick (phase locking). 'share' is proportional by construction, whatever the phase; 300 ms slots keep a value readable.
 // Still provisional until the share the hardware screen itself gives is measured.
-export const arbiterDefaults = { tickMs: 50, dwellMs: 300, windowMs: 600, holdMs: 1500, settleMs: 250, rule: 'share' as ArbiterRule }
+// idleMs: a knob that stopped must not keep the screen for the rest of its window; measured 2026-10-13 in the floating window,
+// the switch to a newly turned encoder took about 390 ms without it.
+export const arbiterDefaults = { tickMs: 50, dwellMs: 300, windowMs: 600, holdMs: 1500, settleMs: 250, idleMs: 100, rule: 'share' as ArbiterRule }
 const realTimers: ArbiterTimers = { set: (fn, ms) => setTimeout(fn, ms), clear: timer => clearTimeout(timer as ReturnType<typeof setTimeout>) }
 const keyOf = (control: ControlSelection | null) => control ? selectionKey(control) : ''
 
 export function createDisplayArbiter(options: ArbiterOptions = {}) {
-  const { tickMs = arbiterDefaults.tickMs, dwellMs = arbiterDefaults.dwellMs, windowMs = arbiterDefaults.windowMs, holdMs = arbiterDefaults.holdMs, settleMs = arbiterDefaults.settleMs, rule = arbiterDefaults.rule, timers = realTimers, clock = () => performance.now(), onChange = () => {} } = options
+  const { tickMs = arbiterDefaults.tickMs, dwellMs = arbiterDefaults.dwellMs, windowMs = arbiterDefaults.windowMs, holdMs = arbiterDefaults.holdMs, settleMs = arbiterDefaults.settleMs, idleMs = arbiterDefaults.idleMs, rule = arbiterDefaults.rule, timers = realTimers, clock = () => performance.now(), onChange = () => {} } = options
   // Per control: event timestamps inside the window (pruned at each tick) and the last event seen since the last reset.
   const events = new Map<string, { control: ControlSelection; times: number[]; lastAt: number }>()
   const pass = new Map<string, number>() // stride scheduling positions, rule 'share'
@@ -60,11 +63,12 @@ export function createDisplayArbiter(options: ArbiterOptions = {}) {
       .map(entry => ({ control: entry.control, share: total ? entry.times.length / total : 0, lastAt: entry.lastAt }))
       .sort((a, b) => b.share - a.share || b.lastAt - a.lastAt || selectionKey(a.control).localeCompare(selectionKey(b.control)))
   }
-  const choose = (): ControlSelection | null => {
+  const choose = (now: number): ControlSelection | null => {
     if (rule === 'last') return last?.control ?? shown
     // Stride scheduling: each control advances by 1/share per slot; the lowest position runs next. New controls start at the
     // lowest current position so they get a slot soon; controls that left the window keep no position.
-    const candidates = active.filter(a => a.share > 0)
+    // Only controls still moving compete: one that has been silent for idleMs keeps its count in the window but gets no slot.
+    const candidates = active.filter(a => a.share > 0 && now - a.lastAt < idleMs)
     // Stream over (nothing left in the window): end on the control that sent last, as the hardware's last message would.
     if (!candidates.length) return last?.control ?? shown
     const floor = Math.min(...candidates.map(a => pass.get(selectionKey(a.control)) ?? Infinity), Infinity)
@@ -88,8 +92,12 @@ export function createDisplayArbiter(options: ArbiterOptions = {}) {
     active = computeActive(now)
     // Rule 'last' measures the dwell from the last switch (a switch may happen at any tick past it); rule 'share' runs
     // in slots of dwellMs so every scheduled slot has the same length and the display share follows the pulse share.
-    if (shown === null || now - shownSince >= dwellMs) {
-      const next = choose()
+    // The dwell protects a view only while its control is moving: once it has been silent for idleMs and another control is
+    // moving, the screen switches at this tick.
+    const shownEntry = shown ? events.get(keyOf(shown)) : undefined
+    const shownIdle = shown !== null && now - (shownEntry?.lastAt ?? -Infinity) >= idleMs && [...events.values()].some(e => now - e.lastAt < idleMs)
+    if (shown === null || now - shownSince >= dwellMs || shownIdle) {
+      const next = choose(now)
       if (next && (rule === 'share' || keyOf(next) !== keyOf(shown))) { shown = next; shownSince = now }
     }
     // Settled: the only active control, or the shown control once no other control has sent for settleMs.
