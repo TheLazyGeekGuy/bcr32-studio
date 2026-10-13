@@ -3,6 +3,16 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.10.0] — 2026-10-13
+
+- Files > **Front-panel export**: BCR32 Studio listens while you export a preset from the controller (STORE, hold
+  SELECT, encoder 1, then encoder 8) and shows it decoded: block, checksum, the 11 records of the block (type, CC,
+  channel, range; uninitialised memory shown as raw bytes). Records whose control is identified on hardware can be
+  applied to the profile (today record 0 = encoder 1: type, channel, parameter and range only); a corrupt export is
+  never applied. "Save the export (.syx)" keeps the raw dump for analysis. Nothing is sent to the controller.
+- Decoding checked against a real capture of 2026-10-12 (checksum OK, encoder 1 on CC 10); reception inside the app
+  not yet observed on the hardware.
+
 ## [0.9.0] — 2026-10-13
 
 - **Write the controller's global settings** from Config > Device settings: a "Write" button on every row whose choice
