@@ -4,7 +4,7 @@ A browser editor for the **Behringer BCR32** MIDI controller: see what the contr
 overlay sheets and export a ready-made Cubase surface. It runs entirely in the browser through Web MIDI. Nothing to
 install, no account, nothing leaves your machine.
 
-Current version: **0.11.0** · [Changelog](CHANGELOG.md)
+Current version: **0.11.1** · [Changelog](CHANGELOG.md)
 
 **Try it now: https://bcr32-studio.github.io/** (Chrome, Edge, Brave or Opera; plug in the BCR32 over USB
 and allow MIDI access). Without a controller the editor still opens: presets, PDF sheets and the Cubase export work offline.
@@ -63,6 +63,16 @@ Command-line helper: `npm run midi -- ports`, `npm run midi -- probe` (read-only
 `npm run midi -- monitor` (incoming MIDI with millisecond timestamps).
 
 Stack: React 19, TypeScript (strict), Vite, Web MIDI, pdf-lib; deployed as static assets on Cloudflare Workers.
+
+## Documentation
+
+| Document | For |
+| --- | --- |
+| [User guide](docs/USER-GUIDE.md) | every screen, option and procedure, troubleshooting |
+| [Protocol](docs/PROTOCOL.md) | what is known of the BCR32 SysEx, with confidence levels |
+| [Architecture](docs/ARCHITECTURE.md) | source map, data flow, i18n, storage, tests |
+| [Deployment](docs/DEPLOYMENT.md) | GitHub Pages, optional Cloudflare, releases |
+| [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) | contributors |
 
 ## Contribute
 
