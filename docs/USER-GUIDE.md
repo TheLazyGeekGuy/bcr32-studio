@@ -105,6 +105,25 @@ Press Learn again or Escape to cancel. A value out of range for the control is r
 - **Zoom while adjusting** (Config): the OLED, the label screen and the encoder grow while a value changes.
 - **Display style** (Config): Ice OLED, Amber VFD, Green LCD, Red LED, White OLED, each with a live preview.
 
+### Floating display
+
+**Floating display** (top of the side panel, Chrome/Edge 116+) opens a small window that stays above every other
+application — a DAW for instance. Move it anywhere, resize it: the label screen and the OLED scale with it and follow
+the controls you turn, as in the editor. Close it with the same button or its close box. Its display timers run in the
+floating window itself, so it keeps up when the editor's tab is in the background. It needs the editor page to stay
+open (any tab, any window).
+
+### Sharing the MIDI port with a DAW
+
+| System | Can the DAW and BCR32 Studio use the BCR32 at the same time? |
+| --- | --- |
+| macOS | Yes: CoreMIDI lets several applications open the same port. |
+| Linux | Yes: the ALSA sequencer is shared by design. |
+| Windows | With the MIDI service of recent Windows 11 versions, yes for class-compliant devices such as the BCR32. With older drivers a port is used by one application only: open the BCR32 in the DAW or in BCR32 Studio, not both. |
+
+The floating display shows what the controller sends (control, value, MIDI command, your label). It does not know the
+function a DAW assigned to that control.
+
 ## Presets tab
 
 - The current state (assignments, labels, values, ring mode) is kept as a **draft** in the browser and survives a

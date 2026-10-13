@@ -3,6 +3,17 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.12.0] — 2026-10-13
+
+- **Floating display**: a button opens the label screen and the OLED in a small always-on-top window (Document
+  Picture-in-Picture, Chrome/Edge 116+), movable and resizable, e.g. over a DAW; it follows the controls you turn, in
+  the chosen theme and screen style. The display arbiter's timers run in the floating window while it is open, so a
+  background editor tab does not slow it down. Disabled with the reason in other browsers.
+- User guide: floating display, sharing the MIDI port with a DAW on macOS, Linux and Windows.
+- `scripts/e2e-floating-display.cjs` (manual, headed Chromium): opens the window and measures it with a simulated
+  BCR32. Note: Chromium under automation never reports a page as hidden, so the background case is to be confirmed
+  in a normal Chrome.
+
 ## [0.11.1] — 2026-10-13
 
 Documentation:
