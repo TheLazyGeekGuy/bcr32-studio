@@ -3,6 +3,18 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.11.0] — 2026-10-13
+
+From the review of the official user manual (Rev. 1):
+- Files > Front-panel export handles the **all 64 presets** export (STORE, SELECT, encoder 1, encoder 7) as well as the
+  current preset: every received block can be shown, exports are grouped by preset, a preset whose 8 blocks arrived
+  is rebuilt (93 records), "Save all exports (.syx)" keeps the whole set. Both procedures are shown.
+- Footswitch choices say what ZAQ does (start/stop on footswitch 1, next pattern on footswitch 2), in Config and in
+  the device settings table; device-table labels are translated.
+- docs/PROTOCOL.md: what the manual adds (export variants, import mode, 15 MIDI thru destinations, sequencer settings).
+- Not implemented on purpose: preset **import** to the controller (needs the 8 blocks of a preset and the record map;
+  writes are paused since a global write froze a BCR32), sequencer (Zaquencer) settings without known commands.
+
 ## [0.10.1] — 2026-10-13
 
 - **Writing the controller's global settings is disabled**: it froze the owner's BCR32 (firmware 0.56.0). The

@@ -19,7 +19,7 @@ export function DeviceSettings({ results, settings, change, autoLoad, setAutoLoa
   const label = (cmd: number, value: number | null) => {
     if (value === null) return '—'
     const choice = deviceGlobals.find(g => g.cmd === cmd)?.choices?.[value]
-    return choice ? `${choice}` : `${value}`
+    return choice ? t(choice) : `${value}`
   }
   const differing = editableGlobals.filter(g => { const d = reported(g.cmd)?.value ?? null; return d !== null && valueOf(g.cmd, settings) !== null && valueOf(g.cmd, settings) !== d })
   const safeChanges = differing.filter(g => !riskyGlobals.has(g.cmd))
@@ -44,7 +44,7 @@ export function DeviceSettings({ results, settings, change, autoLoad, setAutoLoa
             <td>{t(g.name)}</td>
             <td><select aria-label={t(g.name)} value={current ?? ''} onChange={event => change(g.cmd, Number(event.target.value))}>
               {current === null && <option value="">—</option>}
-              {options.map(i => <option key={i} value={i}>{g.choices?.[i] ?? i}</option>)}
+              {options.map(i => <option key={i} value={i}>{g.choices?.[i] !== undefined ? t(g.choices[i]) : i}</option>)}
             </select></td>
             <td><span data-i18n-skip>{label(g.cmd, device)}</span>{differs && <span className="device-differs" title={t('Differs from the value read on the BCR32')}> ≠</span>}
               {globalWritesEnabled && differs && canRead && writeStatus[g.cmd] !== 'busy' && (riskyGlobals.has(g.cmd) && confirming !== g.cmd

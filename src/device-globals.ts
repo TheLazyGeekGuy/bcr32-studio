@@ -17,8 +17,9 @@ const chRanges = Array.from({ length: 13 }, (_, i) => `CH ${i + 1}-${i + 4}`)
 // their raw value only.
 export const deviceGlobals: { cmd: number; name: string; max?: number; choices?: string[] }[] = [
   { cmd: 0x74, name: 'Bootloader status' },
-  { cmd: 0x1b, name: 'Footswitch 1', max: 1, choices: ['CTRL', 'ZAQ'] },
-  { cmd: 0x1c, name: 'Footswitch 2', max: 1, choices: ['CTRL', 'ZAQ'] },
+  // Manual (global settings 9 and 10): ZAQ starts/stops the sequencer on footswitch 1, moves to the next pattern on 2.
+  { cmd: 0x1b, name: 'Footswitch 1', max: 1, choices: ['CTRL · programmable', 'ZAQ · start/stop'] },
+  { cmd: 0x1c, name: 'Footswitch 2', max: 1, choices: ['CTRL · programmable', 'ZAQ · next pattern'] },
   { cmd: 0x1e, name: 'MIDI thru source', max: 2, choices: ['Off', 'MIDI in', 'USB in'] },
   { cmd: 0x1d, name: 'MIDI thru destination', max: 15, choices: ['Off', 'MIDI A (filtered)', 'MIDI B (filtered)', 'MIDI A & B (filtered)', 'MIDI A', 'MIDI B', 'MIDI A & B'] },
   { cmd: 0x1f, name: 'Operating mode', max: 2, choices: ['USB', 'Standalone', 'Mixed'] },

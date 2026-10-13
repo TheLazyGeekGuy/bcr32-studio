@@ -87,6 +87,21 @@ offset 272     F7
   `6` AT, `7` GS) is a hypothesis.
 - `A5` / `F5 A5` patterns are uninitialised memory.
 
+## What the user manual adds (Rev. 1, 2026-04-06)
+
+- **Exports** (Controller mode): STORE, hold SELECT, encoder 1, then encoder 8 = current preset; encoder 7 = **all 64
+  presets**. BCR32 Studio groups an all-presets export by header bytes 8–10 and rebuilds a preset once its 8 blocks
+  arrived (1024 bytes, records crossing block boundaries).
+- **Import mode**: STORE, hold SELECT, encoder 9 — the device then accepts incoming SysEx and stores it. A single
+  block sent in this mode was acknowledged with `04 0C 01` ("continue") and did not change the preset; the official
+  editor sends every block of a preset and waits for a final status 2. Not implemented in BCR32 Studio.
+- **MIDI thru destinations**: the manual lists 15 (Off; filtered A, B, A&B, USB, A&USB, B&USB, A&B&USB; the same
+  unfiltered), consistent with the 0–15 range of `1D`. The official editor's string list has only 7 entries
+  (Off, F A, F B, F AB, A, B, AB): labels above 3 are uncertain until checked on the device.
+- **Sequencer settings** in the manual (gate out 5 V/10 V, sync in/out clock 1–48 PPQN, sync in start GATE/CLOCK) are
+  not all among the 17 globals the official editor reads; their commands are unknown.
+- **Footswitches**: ZAQ = start/stop (footswitch 1), next pattern (footswitch 2); CTRL = programmable.
+
 ## Open questions
 
 1. How to read a control's assignment (a read that is not echoed).
