@@ -23,8 +23,8 @@ import { applyLearn, createLearnSession, describeApplied, type LearnResult } fro
 import { createDisplayArbiter, followSettled, type ActiveControl } from './display-arbiter'
 import { cubaseFolder, cubaseMidiRemoteScript } from './cubase-export'
 import { displayStyleKey, displayStyles, validDisplayStyle, type DisplayStyle } from './display-styles'
-import { createGlobalsReader, settingsFromDevice, withValue, type GlobalResult } from './device-globals'
-import { DeviceSettings } from './DeviceSettings'
+import { createGlobalsReader, settingsFromDevice, valueOf, withValue, type GlobalResult } from './device-globals'
+import { DeviceSettings, type WriteStatus } from './DeviceSettings'
 import { DisplayPreview } from './OledDisplay'
 
 const storageKey = 'bcr32-studio.profile.v1'
@@ -156,6 +156,8 @@ function App() {
   const globalsReader = useRef<ReturnType<typeof createGlobalsReader>|null>(null)
   const [deviceSettings, setDeviceSettings] = useState<GlobalResult[] | null>(null)
   const [deviceSettingsBusy, setDeviceSettingsBusy] = useState(false)
+  const deviceSettingsRef = useRef(deviceSettings); deviceSettingsRef.current = deviceSettings
+  const [writeStatus, setWriteStatus] = useState<Record<number, WriteStatus>>({})
   // Values read from the controller, as Config fields, with the time of the read (src/device-globals.ts settingsFromDevice).
   const [deviceSnapshot, setDeviceSnapshot] = useState<{ at: string; settings: Partial<ControllerSettings> } | null>(null)
   // Load the controller's settings automatically at each connection (default on, remembered per browser).
@@ -571,6 +573,19 @@ function App() {
     } finally { setDeviceSettingsBusy(false) }
   }
   useEffect(() => { if (autoLoadDevice && globalsReader.current && !deviceSnapshot) void loadDeviceSettings() }, [autoLoadDevice])
+  // Write the editor's value of one setting to the BCR32, then show what the read-back says (src/device-globals.ts).
+  async function writeDeviceSetting(cmd: number) {
+    const reader = globalsReader.current, value = valueOf(cmd, profileRef.current.settings ?? defaultSettings())
+    if (!reader || value === null) return
+    setWriteStatus(s => ({ ...s, [cmd]: 'busy' }))
+    let result: { value: number | null; status: GlobalResult['status'] }
+    try { result = await reader.write(cmd, value) } catch { result = { value: null, status: 'no reply' } }
+    if (globalsReader.current !== reader) return
+    const next = deviceSettingsRef.current?.map(r => r.cmd === cmd ? { ...r, value: result.value, status: result.status } : r) ?? null
+    deviceSettingsRef.current = next; setDeviceSettings(next)
+    if (next) setDeviceSnapshot(s => ({ at: s?.at ?? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), settings: settingsFromDevice(next) }))
+    setWriteStatus(s => ({ ...s, [cmd]: result.status !== 'value' ? 'no reply' : result.value === value ? 'ok' : 'mismatch' }))
+  }
 
   // Cubase MIDI Remote script: surface + exact MIDI of each assigned control, no Cubase function mapped.
   const exportCubase = () => {
@@ -625,7 +640,7 @@ function App() {
           <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
           <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
           <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
-          <DeviceSettings results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings()) }))} autoLoad={autoLoadDevice} setAutoLoad={setAutoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} />
+          <DeviceSettings results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings()) }))} autoLoad={autoLoadDevice} setAutoLoad={setAutoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} />
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>

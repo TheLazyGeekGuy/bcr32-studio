@@ -1,8 +1,10 @@
 import type { ControllerSettings } from './profile'
 
-// Read-only view of the BCR32 global settings (docs/PROTOCOL.md, "Global settings").
-// Each read is the exact request the official editor sends at every connection: F0 00 20 32 7F 64 <cmd> F7.
-// The device answers F0 00 20 32 7F 64 <cmd> <value> F7. Nothing here writes to the device.
+// BCR32 global settings (docs/PROTOCOL.md, "Global settings").
+// Read: the exact request the official editor sends at every connection, F0 00 20 32 7F 64 <cmd> F7; the device answers
+// F0 00 20 32 7F 64 <cmd> <value> F7. Write: F0 00 20 32 7F 64 <cmd> <value> F7, the layout the official editor builds
+// for all 17 globals (one code path, LED brightness included); verified on hardware on 2026-10-13 (Clock rate out
+// 3 -> 4 -> 3, each acknowledged and read back). Every write is followed by a read-back.
 const prefix = [0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64]
 // Option lists: the official editor's BCR32 lists, matched to each setting by value range and meaning (2026-10-12).
 // Abbreviations spelled out: U = USB, A/B = MIDI A/B, F = filtered (thru), STDL = standalone.
@@ -37,6 +39,15 @@ export const deviceGlobals: { cmd: number; name: string; max?: number; choices?:
 if (deviceGlobals.some(g => g.cmd === 0x72 || g.cmd === 0x77)) throw Error('Forbidden SysEx command in the global reads')
 
 export const globalQuery = (cmd: number) => [...prefix, cmd, 0xf7]
+// Settings whose wrong value can cut the USB link with the editor (standalone mode, controller output Off or MIDI only):
+// the UI asks for a second confirmation before writing them.
+export const riskyGlobals = new Set([0x1f, 0x30])
+export function globalWrite(cmd: number, value: number) {
+  const g = deviceGlobals.find(x => x.cmd === cmd)
+  if (!g || cmd === 0x74 || cmd === 0x72 || cmd === 0x77 || g.max === undefined) throw Error('Not a writable global setting')
+  if (!Number.isInteger(value) || value < 0 || value > g.max) throw Error(`${g.name}: 0–${g.max}`)
+  return [...prefix, cmd, value, 0xf7]
+}
 export type GlobalResult = { cmd: number; name: string; value: number | null; label: string | null; status: 'value' | 'echo' | 'no reply' }
 type Timers = { set: (fn: () => void, ms: number) => unknown; clear: (t: unknown) => void }
 const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: t => clearTimeout(t as ReturnType<typeof setTimeout>) }
@@ -46,13 +57,17 @@ const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: t => cl
 export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs = 400, timers: Timers = realTimers) {
   let pending: { cmd: number; settle: (r: { value: number | null; status: GlobalResult['status'] }) => void; timer: unknown } | null = null
   let closed = false
-  const ask = (cmd: number) => new Promise<{ value: number | null; status: GlobalResult['status'] }>(resolve => {
+  // One exchange at a time: a message out, the reply carrying the same command (or the timeout).
+  const exchange = (cmd: number, bytes: number[]) => new Promise<{ value: number | null; status: GlobalResult['status'] }>(resolve => {
     const timer = timers.set(() => { pending = null; resolve({ value: null, status: 'no reply' }) }, timeoutMs)
     pending = { cmd, timer, settle: r => { timers.clear(timer); pending = null; resolve(r) } }
-    send(globalQuery(cmd))
+    send(bytes)
   })
+  const ask = (cmd: number) => exchange(cmd, globalQuery(cmd))
+  let queue: Promise<unknown> = Promise.resolve()
+  function serial<T>(job: () => Promise<T>): Promise<T> { const next = queue.then(job, job); queue = next.catch(() => {}); return next }
   return {
-    async read(): Promise<GlobalResult[]> {
+    read: (): Promise<GlobalResult[]> => serial(async () => {
       const results: GlobalResult[] = []
       for (const g of deviceGlobals) {
         if (closed) break
@@ -60,7 +75,13 @@ export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs =
         results.push({ cmd: g.cmd, name: g.name, value: r.value, status: r.status, label: r.value !== null && g.choices ? g.choices[r.value] ?? null : null })
       }
       return results
-    },
+    }),
+    // Write one setting, then read it back: the read-back is the truth shown to the user.
+    write: (cmd: number, value: number): Promise<{ value: number | null; status: GlobalResult['status'] }> => serial(async () => {
+      const bytes = globalWrite(cmd, value)
+      await exchange(cmd, bytes)
+      return closed ? { value: null, status: 'no reply' as const } : ask(cmd)
+    }),
     receive(bytes: number[]): boolean {
       if (!pending || !prefix.every((v, i) => bytes[i] === v) || bytes[6] !== pending.cmd || bytes.at(-1) !== 0xf7) return false
       if (bytes.length === 9 && bytes[7] <= 0x7f) pending.settle({ value: bytes[7], status: 'value' })

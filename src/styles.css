@@ -479,3 +479,8 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .device-row-differs td:first-child { color:var(--theme-accent); }
 .profile-actions > .device-globals { display:grid; align-items:stretch; grid-template-columns:minmax(0,1fr); gap:8px; }
 .profile-actions > .device-globals .zoom-option { display:flex; align-items:center; gap:6px; }
+.device-write { margin-left:6px; padding:2px 6px; font-size:10px; }
+.device-risk { display:block; color:var(--theme-accent); font-size:10px; margin-top:3px; }
+.device-write-status { display:block; font-size:10px; margin-top:2px; }
+.device-write-status.ok { color:#6fcf8f; }
+.device-write-status.mismatch, .device-write-status.no\ reply { color:#ef7a6b; }

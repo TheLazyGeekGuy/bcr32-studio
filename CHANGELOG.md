@@ -3,6 +3,15 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## [0.9.0] — 2026-10-13
+
+- **Write the controller's global settings** from Config > Device settings: a "Write" button on every row whose choice
+  differs from the BCR32, "Write all changes" for the safe ones; each write is acknowledged by the device and **read
+  back**, and the row shows "Written and read back", "Read-back differs" or "No reply". Operating mode and controller
+  output need a second click (a wrong value can cut the USB link; restorable from the front panel).
+- Write format verified on hardware on 2026-10-13: `F0 00 20 32 7F 64 <cmd> <value> F7`, the single layout the
+  official editor builds for all 17 globals; Clock rate out 24 → 48 → 24 PPQ, by script and through the app.
+
 ## [0.8.0] — 2026-10-12
 
 - Config "Device settings" reworked: stacked layout (option, buttons, then a full-width table) instead of a row.

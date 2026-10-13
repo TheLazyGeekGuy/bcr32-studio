@@ -14,7 +14,7 @@ function load(name) {
   const code = ts.transpileModule(readFileSync(existsSync(`${base}.tsx`) ? `${base}.tsx` : `${base}.ts`, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText
   const exports = {}; cache.set(name, exports); new Function('require', 'exports', code)(load, exports); return exports
 }
-const { deviceGlobals, globalQuery, createGlobalsReader, settingsFromDevice, differingFields, valueOf, withValue, editableGlobals } = load('./device-globals')
+const { deviceGlobals, globalQuery, globalWrite, riskyGlobals, createGlobalsReader, settingsFromDevice, differingFields, valueOf, withValue, editableGlobals } = load('./device-globals')
 const { DeviceSettings } = load('./DeviceSettings')
 const { StudioConfig } = load('./StudioConfig')
 const { createProfile, defaultSettings } = load('./profile')
@@ -81,6 +81,15 @@ assert.equal((t1.match(/class="device-row-differs"/g) ?? []).length, 0, 'nothing
 assert.equal((table({ settings: withValue(0x1f, 2, base) }).match(/class="device-row-differs"/g) ?? []).length, 1, 'a changed operating mode is marked')
 assert.ok(!table({ results: null }).includes('device-row-differs') && table({ results: null }).includes('<select'), 'choices available before any read, nothing marked')
 const order = t1.indexOf('Read from the BCR32') < t1.indexOf('<table'); assert.ok(order, 'buttons above the table')
+assert.ok(!t1.includes('Write all changes') && !t1.includes('device-write"'), 'no write button when nothing differs')
+const changed = withValue(0x18, 4, withValue(0x1f, 2, base))
+const t2 = table({ settings: changed })
+assert.equal((t2.match(/class="device-write"/g) ?? []).length, 2, 'a write button on each differing row')
+assert.match(t2, />Write…<\/button>/, 'risky operating mode: first click only asks for confirmation')
+assert.match(t2, />Write<\/button>/, 'clock rate: direct write')
+assert.ok(t2.includes('Write all changes'), 'bulk write offered for the safe change')
+assert.ok(!table({ settings: withValue(0x1f, 2, base) }).includes('Write all changes'), 'bulk write never includes a risky setting')
+assert.ok(table({ settings: changed, writeStatus: { 0x18: 'ok' } }).includes('Written and read back'))
 const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 assert.match(css, /\.profile-actions > \.device-globals\s*\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\)/, 'stacked vertically, overriding the generic Config row layout')
 
@@ -91,14 +100,29 @@ assert.ok(cfg.includes('Read from the BCR32 at 19:42.'), 'read time shown')
 assert.equal((cfg.match(/class="device-differs"/g) ?? []).length, 1, 'only the edited field is marked')
 assert.ok(!renderToStaticMarkup(React.createElement(StudioConfig, { profile, update() {}, select() {}, brightness: 7, draft: 7, setDraft() {}, brightnessEnabled: true, brightnessStatus: '' })).includes('device-differs'), 'no marker without a read')
 
+// 2g. Writes: the hardware-verified layout, guarded; a write is acknowledged, then read back.
+assert.deepEqual(globalWrite(0x18, 4), [0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64, 0x18, 0x04, 0xf7], 'Clock rate out = 48 PPQ, as verified on 2026-10-13')
+for (const [cmd, v] of [[0x18, 5], [0x18, -1], [0x18, 1.5], [0x74, 0], [0x72, 0], [0x77, 0], [0x99, 0]]) assert.throws(() => globalWrite(cmd, v), `refused: ${cmd.toString(16)}=${v}`)
+assert.deepEqual([...riskyGlobals].sort(), [0x1f, 0x30], 'operating mode and controller output need a confirmation')
+{
+  const store = { 0x18: 3 }, out = []
+  let w
+  const dev = bytes => { out.push(bytes); const cmd = bytes[6]; if (bytes.length === 9) store[cmd] = bytes[7]; queueMicrotask(() => w.receive([...bytes.slice(0, 7), store[cmd] ?? 0, 0xf7])) }
+  w = createGlobalsReader(dev, 400, fake)
+  const p = w.write(0x18, 4); await tick(); const r = await p
+  assert.deepEqual(r, { value: 4, status: 'value' }, 'read-back after the write')
+  assert.deepEqual(out.map(b => b.length), [9, 8], 'one write, then one read')
+  const q = w.write(0x18, 9); await tick(); await assert.rejects(q, /0–4/, 'out-of-range write refused before sending'); assert.equal(out.length, 2)
+}
+
 // 3. UI: Config section, read button disabled without a BCR32, strings in the catalog.
 const html = renderToStaticMarkup(React.createElement(load('./App').default))
 assert.match(html, /<button[^>]*disabled=""[^>]*>Read from the BCR32<\/button>/, 'read button disabled while no BCR32 is connected')
 assert.ok(html.includes('Device settings'))
 assert.match(html, /<input type="checkbox" checked=""[^>]*\/>Load the settings from the BCR32 at connection/, 'automatic load on by default')
 assert.ok(!html.includes('Reset to editor defaults'), 'reset offered only when automatic load is off')
-for (const k of ['Load the settings from the BCR32 at connection', 'Reset to editor defaults', 'Read from the BCR32 at {detail}.', 'Differs from the value read on the BCR32', 'Device settings', 'Read from the BCR32', 'Values read from the BCR32 and chosen here. Only the LED brightness is written to the device for now.', ...deviceGlobals.map(g => g.name)]) assert.ok(catalog[k], 'catalog: ' + k)
+for (const k of ['Load the settings from the BCR32 at connection', 'Reset to editor defaults', 'Read from the BCR32 at {detail}.', 'Differs from the value read on the BCR32', 'Device settings', 'Read from the BCR32', 'Values read from the BCR32 and chosen here. Write sends a changed value to the BCR32, then reads it back.', 'Write all changes', 'This setting can cut the USB link with the editor; it can be restored from the front panel.', ...deviceGlobals.map(g => g.name)]) assert.ok(catalog[k], 'catalog: ' + k)
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 assert.ok(app.includes('globalsReader.current?.receive(data)'), 'replies reach the reader')
 assert.ok(app.includes('if (autoLoadRef.current) void loadDeviceSettings(reader)') && app.includes('settingsFromDevice(results)'), 'read at connection and applied to Config')
-console.log('PASS: device globals — editable choice lists linked to Config (round trip for every setting), device column and change markers, official labels, read values mapped to Config fields with edit markers, automatic load at connection (default on), the official editor\'s 18 short reads only, sequential, values decoded, echo and silence reported, read-only UI disabled without a BCR32, translated')
+console.log('PASS: device globals — guarded writes with read-back, confirmation for risky settings, bulk write of safe changes only, editable choice lists linked to Config (round trip for every setting), device column and change markers, official labels, read values mapped to Config fields with edit markers, automatic load at connection (default on), the official editor\'s 18 short reads only, sequential, values decoded, echo and silence reported, read-only UI disabled without a BCR32, translated')
