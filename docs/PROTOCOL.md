@@ -110,3 +110,14 @@ offset 272     F7
 4. Whether `7F` can be replaced by the configured device ID.
 
 Captures from the device's own traffic while editing on the front panel are the most useful contribution.
+
+
+## Firmware 1.0.2 (static analysis, 2026-10-19)
+
+See [FIRMWARE-1.0.2.md](FIRMWARE-1.0.2.md) for the implemented codecs, confidence levels and test limits.
+The 1.x dispatcher changes the wire commands for brightness (52), sync mode (50) and clock output (51), and uses
+40/41/42 for BCL requests. Product version bytes are 10..12, confirmed by the 1.0.2 code and consistent with the
+old 0.56.0 capture. The old command observations above belong to their captured firmware, not all versions.
+New reads are gated by a live product reply; saved profiles cannot activate them. No unverified device write is
+introduced. Pattern/BCL output is saved to files only. Runtime control strides of 16/22 bytes are not evidence that
+all controller dumps use the old 11-byte heuristic; type 8 and F5A5/FA5A values must not be discarded as noise.

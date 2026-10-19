@@ -79,3 +79,14 @@ install; they inject a fake Web MIDI input and never touch a real device.
 `META_CSP=1` injects the Content-Security-Policy of `public/_headers` as a meta tag for GitHub Pages. Deployment:
 [DEPLOYMENT.md](DEPLOYMENT.md). Leak scan: `scripts/leak-gate.mjs` (CI rules plus a maintainer's private denylist
 kept outside the repository).
+
+
+## Firmware workbench
+
+`FirmwareTools.tsx` is mounted in Files and consumes the existing App MIDI input via a receiver ref; it never opens
+another port. `firmware-codec.ts` supplies strict pack7, frame and parameter readers plus the sender read whitelist.
+`bcl.ts` handles line files/status/name responses; `zaquencer.ts` assembles chronological exports and immutably
+patches step fields. `zaquencer-remote.ts` holds offline CC previews. Draft pattern/BCL state is separate from the
+existing controller profile. Completed captures survive tab switches; pending reads and partial captures are
+cancelled on connection changes. The 1.x wire alias map in `device-globals.ts` preserves old stored setting keys.
+[Evidence, layout and validation limits](FIRMWARE-1.0.2.md).

@@ -1,3 +1,4 @@
+import { firmwareOne } from './firmware-codec'
 import type { ControllerSettings } from './profile'
 
 // BCR32 global settings (docs/PROTOCOL.md, "Global settings").
@@ -58,16 +59,16 @@ const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: t => cl
 
 // Sequential reader: one request at a time, the next only after the reply or the timeout. receive() returns true when
 // the message was the awaited reply (so the caller may skip other handlers if it wants).
-export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs = 400, timers: Timers = realTimers) {
+export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs = 400, timers: Timers = realTimers, firmware: string | null = null) {
   let pending: { cmd: number; settle: (r: { value: number | null; status: GlobalResult['status'] }) => void; timer: unknown } | null = null
   let closed = false
   // One exchange at a time: a message out, the reply carrying the same command (or the timeout).
   const exchange = (cmd: number, bytes: number[]) => new Promise<{ value: number | null; status: GlobalResult['status'] }>(resolve => {
     const timer = timers.set(() => { pending = null; resolve({ value: null, status: 'no reply' }) }, timeoutMs)
-    pending = { cmd, timer, settle: r => { timers.clear(timer); pending = null; resolve(r) } }
+    pending = { cmd: wireGlobalCommand(cmd, firmware), timer, settle: r => { timers.clear(timer); pending = null; resolve(r) } }
     send(bytes)
   })
-  const ask = (cmd: number) => exchange(cmd, globalQuery(cmd))
+  const ask = (cmd: number) => exchange(cmd, globalQuery(wireGlobalCommand(cmd, firmware)))
   let queue: Promise<unknown> = Promise.resolve()
   function serial<T>(job: () => Promise<T>): Promise<T> { const next = queue.then(job, job); queue = next.catch(() => {}); return next }
   return {
@@ -159,3 +160,6 @@ export function withValue(cmd: number, value: number, s: ControllerSettings): Co
   }
   return { ...s, deviceValues: { ...s.deviceValues, [hexKey(cmd)]: value } }
 }
+
+// Keep legacy logical setting IDs in stored profiles/UI; translate only on the wire.
+export const wireGlobalCommand = (cmd: number, firmware: string | null) => firmwareOne(firmware) ? ({ 32: 0x50, 33: 0x51, 64: 0x52 } as Record<number, number>)[cmd] ?? cmd : cmd

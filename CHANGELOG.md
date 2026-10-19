@@ -3,6 +3,14 @@
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 
+## Unreleased
+
+- Files: firmware workbench with BCL text/SysEx files, explicit controller and sequencer track reads, and a four-track
+  Zaquencer pattern editor with checksum validation and shared gate/velocity-bit preservation. New writes stay offline.
+- Correct firmware-major decoding and map 1.x brightness/sync/clock reads to their new wire commands, using a live
+  product response rather than imported profile metadata. Firmware 1.x brightness is read-only pending hardware tests.
+- Add the command/parameter inventories, default remote CC preview builders and protocol evidence documentation.
+
 ## [0.12.1] — 2026-10-13
 
 Fixes:

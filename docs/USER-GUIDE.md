@@ -219,3 +219,16 @@ the SysEx permission are in Config > Connection and probe.
 | A value jumps when you turn the hardware encoder | expected: the controller ignores received CCs for its own values |
 | Controller frozen | switch it off and on; global writes are disabled in the app |
 | No export received | check that the Files tab is open and the controller is in CTRL mode, then repeat the procedure |
+
+
+## Firmware tools: BCL and Zaquencer
+
+Open **Files → Firmware tools · BCL and Zaquencer**. Open an eight-block pattern `.syx`, edit a track's steps and
+save the edited `.syx`. Notes, velocities, delays, gate codes, Alpha/Beta, voice/chord words and masks are available;
+raw fields have no assumed musical label. Gate and velocity bits are preserved independently. Save before closing
+or reloading the browser. A newly opened pattern file replaces the current pattern workspace.
+
+For controller presets, open/edit `.bcl` or BCL `.syx`, and save text or a SysEx file. Capture can listen to device
+BCL exports. Explicit controller/track parameter and BCL reads become available after a live firmware 1.x product
+response. These operations do not change assignments. There is no new device-write button; saved files need the
+hardware validation described in [the integration notes](FIRMWARE-1.0.2.md) before live import is added.

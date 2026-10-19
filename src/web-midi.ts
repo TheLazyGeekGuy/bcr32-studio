@@ -47,16 +47,13 @@ export const describeMessage = (message: ArrayLike<number>) => {
   return 'Raw MIDI message'
 }
 
-// Reply to productQuery. Single observed sample:
-// F0 00 20 32 7F 64 00 01 00 00 00 38 00 F7, shown by ControlTribe as v0.56.0.
-// Payload after the 7-byte header is 01 <p1> <p2> <p3> <p4> <p5>; 0x38 = 56 is the
-// only non-zero byte, so the layout major=p1, minor=p4, patch=p5 is a hypothesis
-// that fits this one sample, not a documented field map.
+// Product reply: the 1.0.2 dispatcher writes version major/minor/patch at bytes 10..12.
+// This also decodes the captured 0.56.0 response. Bytes 8/9 are not version-major.
 export const parseFirmwareReply = (message: ArrayLike<number>): string | null => {
   const data = Array.from(message)
-  if (data.length < 14 || data[13] !== 0xf7) return null
+  if (data.length !== 14 || data[13] !== 0xf7) return null
   if (!productQuery.slice(0, 7).every((byte, index) => data[index] === byte)) return null
   const payload = data.slice(7, 13)
   if (payload[0] !== 0x01 || payload.some(byte => !Number.isInteger(byte) || byte < 0 || byte > 127)) return null
-  return `${payload[1]}.${payload[4]}.${payload[5]}`
+  return `${payload[3]}.${payload[4]}.${payload[5]}`
 }

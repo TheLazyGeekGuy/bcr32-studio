@@ -27,6 +27,8 @@ import { createGlobalsReader, settingsFromDevice, valueOf, withValue, type Globa
 import { DeviceSettings, type WriteStatus } from './DeviceSettings'
 import { applyRecord, decodeControllerDump, knownRecords, type ControllerDump, type DumpRecord } from './controller-dump'
 import { ExportImport } from './ExportImport'
+import { FirmwareTools } from './FirmwareTools'
+import { firmwareOne, isFirmwareRead } from './firmware-codec'
 import { createPortal } from 'react-dom'
 import { FloatingDisplay, delegatingTimers, floatingSupported, openFloatingWindow } from './FloatingDisplay'
 import { controlLabel } from './FrontPanel'
@@ -177,6 +179,8 @@ function App() {
   const [writeStatus, setWriteStatus] = useState<Record<number, WriteStatus>>({})
   // Front-panel exports received while the editor listens (src/controller-dump.ts), newest first (all 64 presets fit).
   const [dumps, setDumps] = useState<ControllerDump[]>([])
+  const [liveFirmware, setLiveFirmware] = useState<string | null>(null)
+  const firmwareReceive = useRef<(bytes: number[]) => void>(() => {})
   // Values read from the controller, as Config fields, with the time of the read (src/device-globals.ts settingsFromDevice).
   const [deviceSnapshot, setDeviceSnapshot] = useState<{ at: string; settings: Partial<ControllerSettings> } | null>(null)
   // Load the controller's settings automatically at each connection (default on, remembered per browser).
@@ -364,6 +368,7 @@ function App() {
       }
       brightnessTransport.current?.receive(data)
       globalsReader.current?.receive(data)
+      firmwareReceive.current(data)
       const dump = decodeControllerDump(data)
       // Up to 64 presets × 8 blocks are kept; the notice counts messages instead of announcing each block.
       if (dump) setDumps(list => { const next = [dump, ...list].slice(0, 600); setNotice(dump.checksumOk ? `Front-panel export received: ${next.length} messages.` : 'Front-panel export received with a checksum error.'); return next })
@@ -407,7 +412,10 @@ function App() {
       if (receivedControl) arbiter.push(receivedControl, performance.now())
       const firmware = parseFirmwareReply(data)
       // Same version again: keep the profile reference, no re-render cascade.
-      if (firmware) setProfile(p => p.device.firmwareObserved === firmware ? p : { ...p, device: { ...p.device, firmwareObserved: firmware } })
+      if (firmware) {
+        setLiveFirmware(firmware)
+        setProfile(p => p.device.firmwareObserved === firmware ? p : { ...p, device: { ...p.device, firmwareObserved: firmware } })
+      }
     }
     return () => { input.onmidimessage = null; arbiter.stop() }
   }, [inputId, inputs, midiKey])
@@ -493,6 +501,8 @@ function App() {
     void connect()
   }, [])
 
+  // A saved profile is not evidence of the currently connected firmware. Re-probe on port changes.
+  useEffect(() => { probedPair.current = null; setLiveFirmware(null) }, [access, inputId, outputId, portVersion])
   // Declared after the receive effect: attach the listener before probing.
   useEffect(() => {
     const input = inputs.find(p => p.id === inputId && p.state === 'connected' && /BCR[- ]?32/i.test(p.name ?? ''))
@@ -568,18 +578,18 @@ function App() {
       if(!isBcrOutput(output))throw Error('BCR32 output disconnected')
       output.send!(bytes);pulseActivity('send')
       setEvents(current=>[{hex:`→ ${asHex(bytes)}`,text:'LED brightness'},...current].slice(0,12))
-    },state=>{setBrightness(state.value);setBrightnessDraft(state.draft);setBrightnessStatus(state.status)})
+    },state=>{setBrightness(state.value);setBrightnessDraft(state.draft);setBrightnessStatus(state.status)},80,2000,firmwareOne(liveFirmware) ? 0x52 : 0x40)
     brightnessTransport.current=transport;transport.read()
     return ()=>{transport.close();if(brightnessTransport.current===transport)brightnessTransport.current=null}
-  },[access,inputId,output,brightnessEnabled,portVersion])
+  },[access,inputId,output,brightnessEnabled,portVersion,liveFirmware])
   useEffect(()=>{if(tab==='config'&&brightness===null)brightnessTransport.current?.read()},[tab])
   useEffect(() => {
     if (!brightnessEnabled || !output?.send) { globalsReader.current = null; return }
-    const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes))
+    const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes), 400, undefined, liveFirmware)
     globalsReader.current = reader
     if (autoLoadRef.current) void loadDeviceSettings(reader)
     return () => { reader.close(); if (globalsReader.current === reader) globalsReader.current = null }
-  }, [access, inputId, output, brightnessEnabled, portVersion])
+  }, [access, inputId, output, brightnessEnabled, portVersion, liveFirmware])
   // Read the controller's settings and put them into the Config fields (the values stay editable; nothing is written).
   async function loadDeviceSettings(reader = globalsReader.current) {
     if (!reader) return
@@ -676,6 +686,10 @@ function App() {
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
           <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} saveAll={list => download(new Uint8Array([...list].reverse().flatMap(d => d.raw)), `bcr32-exports-${list.length}.syx`, 'application/octet-stream')} />
+          <FirmwareTools firmware={liveFirmware} connectionKey={`${inputId}:${outputId}:${portVersion}:${!!access}:${liveFirmware}`} canRead={brightnessEnabled && !!output?.send && firmwareOne(liveFirmware)} receive={firmwareReceive} sendRead={bytes => {
+            if (!brightnessEnabled || !output?.send || !firmwareOne(liveFirmware) || !isFirmwareRead(bytes)) throw Error('Firmware read unavailable')
+            output.send(bytes)
+          }} download={download} />
           <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} />
           <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
           <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
@@ -738,7 +752,7 @@ function App() {
 
     <section className="lower">
       <section className="ports" hidden={tab !== 'config'}>
-        <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled} brightnessStatus={brightnessStatus} />
+        <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled && !firmwareOne(liveFirmware)} brightnessStatus={brightnessStatus} />
         <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
         <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
           <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
