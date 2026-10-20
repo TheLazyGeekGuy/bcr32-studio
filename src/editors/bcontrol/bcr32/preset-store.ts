@@ -65,11 +65,13 @@ export function createBclSender(send: (bytes: number[]) => void, device: number,
   }
 }
 
-export async function storeHardwarePreset({ read, transfer, backup, source, slot, name }: {
+export type HardwarePresetStorePlan = ReturnType<typeof presetStorePlan>
+export async function storeHardwarePreset({ read, transfer, backup, source, slot, name, onAcknowledged }: {
   read: (request: PresetRead) => Promise<PresetReadResult>
   transfer: (lines: readonly string[]) => Promise<void>
   backup: (contents: string) => void
   source: 'working' | number; slot: number; name: string
+  onAcknowledged?: (plan: HardwarePresetStorePlan) => void
 }) {
   async function complete(request: PresetRead) {
     const result = await read(request)
@@ -84,6 +86,7 @@ export async function storeHardwarePreset({ read, transfer, backup, source, slot
   // Storage must be durable and checked by the caller before the first import line.
   backup(JSON.stringify({ at: new Date().toISOString(), slot, working, destination, proposed: plan.expected }))
   await transfer(plan.lines)
+  onAcknowledged?.(plan)
   const stored = await complete({ kind: 'slot', slot })
   if (stored !== plan.expected) throw Error('Stored preset differs; backup retained. Working preset may have changed.')
   await transfer(working.split('\n'))
