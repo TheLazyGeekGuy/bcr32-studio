@@ -47,7 +47,7 @@ for(const m of [[],brightnessQuery,[240,0,32,50,127,100,64,16,247],[240,0,32,50,
 const html = renderToStaticMarkup(React.createElement(load('./App').default))
 const nav = html.slice(html.indexOf('<nav class="tool-tabs"'), html.indexOf('</nav>'))
 const tabs = [...nav.replace(/<svg[\s\S]*?<\/svg>/g, '').matchAll(/<button aria-pressed="(true|false)" title="[^"]*">([^<]*)<\/button>/g)].map(m => [m[2], m[1] === 'true'])
-assert.deepEqual(tabs, [['Control', true], ['Presets', false], ['Files', false], ['Config', false], ['Log', false]], 'Five tool tabs, Config before Log, no MIDI tab, Control active by default')
+assert.deepEqual(tabs, [['Control', true], ['Presets', false], ['Files', false], ['Config', false], ['Log', false], ['Help', false]], 'Six tool tabs (rail), Config before Log, Help last, no MIDI tab, Control active by default')
 assert.ok(!html.includes('Provisional push'))
 const inspector = html.indexOf('<section class="inspector" aria-label="Edit encoders 1">')
 assert.ok(inspector >= 0 && !/class="inspector" hidden/.test(html), 'Inspector shown while Control is the active tab')

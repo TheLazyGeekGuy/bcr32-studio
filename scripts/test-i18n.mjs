@@ -7,9 +7,19 @@ import { renderToStaticMarkup } from 'react-dom/server'
 const mod = {}, nativeRequire = createRequire(import.meta.url)
 const status = {}
 new Function('exports', ts.transpileModule(readFileSync(new URL('../src/i18n-status.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(status)
+const xtouch = {}
+new Function('exports', ts.transpileModule(readFileSync(new URL('../src/i18n-xtouch.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(xtouch)
+const translator = {}
+new Function('exports', ts.transpileModule(readFileSync(new URL('../src/i18n-translator.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(translator)
+const offline = {}
+new Function('exports', ts.transpileModule(readFileSync(new URL('../src/i18n-offline.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(offline)
+const library = {}
+new Function('exports', ts.transpileModule(readFileSync(new URL('../src/i18n-library.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(library)
+const bcr32 = {}
+new Function('exports', ts.transpileModule(readFileSync(new URL('../src/i18n-bcr32.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(bcr32)
 const icons = {}
 new Function('require', 'exports', ts.transpileModule(readFileSync(new URL('../src/Icon.tsx', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText)(nativeRequire, icons)
-const require = name => name === './i18n-status' ? status : name === './Icon' ? icons : nativeRequire(name)
+const require = name => name === './i18n-bcr32' ? bcr32 : name === './i18n-status' ? status : name === './i18n-xtouch' ? xtouch : name === './i18n-translator' ? translator : name === './i18n-offline' ? offline : name === './i18n-library' ? library : name === './Icon' ? icons : nativeRequire(name)
 new Function('require', 'exports', ts.transpileModule(readFileSync(new URL('../src/i18n.tsx', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText)(require, mod)
 assert.equal(mod.languages.length, 8)
 for (const row of Object.values(mod.catalog)) for (const { id } of mod.languages) assert.ok(typeof row[id] === 'string' && row[id].length, id)
@@ -55,6 +65,9 @@ const html = renderToStaticMarkup(mod.translatedTree(input, 'fr'))
 assert.ok(html.includes('value="Channel"')); assert.ok(html.includes('placeholder="Canal"'))
 const label = React.createElement('span', { 'data-i18n-skip': true }, 'Channel')
 assert.ok(renderToStaticMarkup(mod.translatedTree(label, 'fr')).endsWith('Channel</span>'))
+const fragment = React.createElement(React.Fragment, null, React.createElement('button', {key:'feedback'}, 'Enable hardware feedback'), React.createElement('span', {'data-i18n-skip':true}, 'Channel'))
+const fragmentHtml=renderToStaticMarkup(mod.translatedTree(fragment,'fr'))
+assert.ok(fragmentHtml.includes('Activer le retour matériel'));assert.ok(fragmentHtml.includes('>Channel</span>'))
 // Keys must not depend on the language: Children.map would re-key children (.0, .1…) and React would remount
 // the whole subtree on every en <-> other switch, losing field drafts, focus and open <details>.
 const keyed = React.createElement('main', null, React.createElement('section', { key: 'a' }, 'Channel'), React.createElement('section', null, [React.createElement('i', { key: 's' }, 'Channel'), React.createElement('b', { key: 'x' }, 'Channel')]), 'Channel')
@@ -70,7 +83,7 @@ assert.ok(!Object.keys(mod.catalog).some(key => key.includes('0.56.0')), 'No fir
 console.log('PASS: eight complete core catalogs, English source with French translated, Japanese headings, locale validation and English fallback, slots, labels, values and keys preserved')
 
 // Catalog completeness: every source row has exactly 8 non-empty columns and keys are unique.
-const rowLines = ['../src/i18n.tsx', '../src/i18n-status.ts'].flatMap(file => [...readFileSync(new URL(file, import.meta.url), 'utf8').matchAll(/^  '((?:[^'\\]|\\.)*)',$/gm)].map(m => m[1]))
+const rowLines = ['../src/i18n.tsx', '../src/i18n-status.ts', '../src/i18n-xtouch.ts', '../src/i18n-translator.ts', '../src/i18n-offline.ts','../src/i18n-library.ts'].flatMap(file => [...readFileSync(new URL(file, import.meta.url), 'utf8').matchAll(/^  '((?:[^'\\]|\\.)*)',?$/gm)].map(m => m[1])).concat(bcr32.bcr32Rows)
 assert.ok(rowLines.length > 100, 'catalog rows parsed from source')
 for (const row of rowLines) { const parts = row.split('|'); assert.equal(parts.length, 8, 'Row must have 8 columns: ' + row.slice(0, 60)); parts.forEach((part, i) => assert.ok(part.trim().length, `Empty column ${i} in: ${row.slice(0, 60)}`)) }
 assert.equal(new Set(rowLines.map(row => row.split('|')[0])).size, rowLines.length, 'Duplicate catalog key')
@@ -85,6 +98,7 @@ function load(name) {
   if (!name.startsWith('./')) return nativeRequire(name)
   if (cache.has(name)) return cache.get(name)
   const base = new URL(`../src/${name.slice(2)}`, import.meta.url).pathname, file = existsSync(`${base}.tsx`) ? `${base}.tsx` : `${base}.ts`
+  if (name.endsWith('.json')) return JSON.parse(readFileSync(base, 'utf8'))
   const exports = {}; cache.set(name, exports)
   new Function('require', 'exports', ts.transpileModule(readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText)(load, exports)
   return exports

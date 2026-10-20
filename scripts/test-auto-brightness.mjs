@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import ts from 'typescript'
-const exports={}
-new Function('exports',ts.transpileModule(readFileSync(new URL('../src/led-brightness.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(exports)
+// Same loader as the other suites: led-brightness.ts imports the device definition (src/devices.ts).
+const cache=new Map()
+function load(name){ if (name.endsWith('.json')) return JSON.parse(readFileSync(new URL(`../src/${name.replace(/^\.\//, '')}`, import.meta.url), 'utf8'));if(cache.has(name))return cache.get(name);const code=ts.transpileModule(readFileSync(new URL(`../src/${name.replace(/^\.\//,'')}.ts`,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;const exports={};cache.set(name,exports);new Function('require','exports',code)(load,exports);return exports}
+const exports=load('./led-brightness')
 const {createBrightnessTransport,brightnessQuery,brightnessWrite}=exports
 let now=0,id=0,timers=new Map()
 const realSet=globalThis.setTimeout,realClear=globalThis.clearTimeout

@@ -15,10 +15,13 @@
   #   style-src 'self'            only /assets/*.css; no <style>/style="" in index.html, React sets styles via CSSOM
   #   img-src 'self' blob: data:  /branding images; data: for the procedural panel grain (inline SVG in CSS); blob: for client-generated files
   #   font-src 'self'             no @font-face today (system font stack); keeps /fonts loadable
-  #   connect-src 'self'          fetch('/fonts/NotoSans-Regular.ttf') for the PDF export; Web MIDI is not network
-  #   worker-src 'self'           no worker today; forbids blob: workers
+  #   connect-src 'self' + fixed loopback companion: optional read-only native MIDI inventory; no wildcard/private LAN
+  #   worker-src 'self'           build-generated offline worker; forbids blob: workers
   #   object-src 'none'           no plugins or <object>/<embed>
   #   base-uri 'self'             no <base> hijack
   #   form-action 'self'          no form submission leaves the origin
   #   frame-ancestors 'none'      the editor must never be embedded
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' http://127.0.0.1:5181; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/sw.js
+  Cache-Control: no-cache

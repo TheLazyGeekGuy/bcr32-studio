@@ -7,7 +7,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
 const pkg=JSON.parse(read('package.json')),lock=JSON.parse(read('package-lock.json'))
-assert.match(pkg.version,/^\d+\.\d+\.\d+$/)
+assert.match(pkg.version,/^\d+\.\d+\.\d+(?:-alpha\.\d+)?$/)
 assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pkg.version)
 assert.equal(pkg.name,'bcr32-studio')
 assert.ok(read('CHANGELOG.md').split('\n').some(line=>line.startsWith(`## [${pkg.version}]`)),'CHANGELOG.md has a heading starting with ## [version]')

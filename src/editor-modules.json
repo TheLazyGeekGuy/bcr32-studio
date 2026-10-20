@@ -1,0 +1,13 @@
+[
+  {
+    "id": "bcr32-editor",
+    "module": {
+      "path": "../editors/bcontrol/bcr32/module",
+      "export": "bcr32Module"
+    },
+    "view": {
+      "path": "../editors/bcontrol/bcr32/registration",
+      "export": "bcr32View"
+    }
+  }
+]

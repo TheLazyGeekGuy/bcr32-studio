@@ -1,86 +1,48 @@
-# BCR32 Studio
+# BCR32 Studio · MIDI Studio edition
 
-A browser editor for the **Behringer BCR32** MIDI controller: see what the controller sends, design presets, print
-overlay sheets and export a ready-made Cubase surface. It runs entirely in the browser through Web MIDI. Nothing to
-install, no account, nothing leaves your machine.
+Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support and the shared MIDI Studio editor tools.
 
-Current version: **0.12.1** · [Changelog](CHANGELOG.md)
+Current version: **0.45.0-alpha.2** · [Changelog](CHANGELOG.md)
 
-**Try it now: https://thelazygeekguy.github.io/bcr32-studio/** (Chrome, Edge, Brave or Opera; plug in the BCR32 over USB
-and allow MIDI access). Without a controller the editor still opens: presets, PDF sheets and the Cubase export work offline.
+**[Open the editor](https://thelazygeekguy.github.io/bcr32-studio/)** · [Integration and limits](docs/controllers/BCR32-STUDIO-INTEGRATION.md)
 
-![BCR32 Studio: two encoders turning, OLED and activity strip following the incoming MIDI](docs/images/screenshot.webp)
+## Controller editing
 
-> BCR32 Studio is an independent community project. It is not affiliated with, endorsed or supported by Behringer or
-> Music Tribe. "Behringer" and "BCR32" are trademarks of their owners, used here only to name the hardware this editor
-> works with.
+- Firmware identity and automatic CTRL assignment read on connection: 82 controls, eight fields each.
+- Correct Program Change Bank Off and Toggle Off decoding, including encoder pushes.
+- T1–T4 preset shortcuts and per-connection UI cache. The first visit reads the preset; subsequent visits use the cached edits. Use the explicit read action to refresh from hardware.
+- Immediate CC/NRPN rotation assignment edits and Type OFF on buttons, pushes and rotations, each confirmed by an independent read. Disable immediate sending in Config to keep edits local.
+- Preset action bar: **Read**, **Save**, **Export**. Choose the hardware destination and name when saving. Backup, save readback and working-preset restoration are included. Saving remains explicit.
+- BCL import/export/capture and offline Zaquencer 4 × 32 step editing with SysEx export.
 
-## Features
+The common Studio host provides themes, language, screen/zoom settings, local history, monitor, preset library and instance-scoped storage. Documentation opens the BCR32 guide inside the editor. This repository distributes the BCR32 module only; the other MIDI Studio modules remain in their own development or release repositories.
 
-- **Interactive front panel**: 32 push encoders, programmable keys, LED rings and the OLED screen follow the MIDI the
-  controller sends, live.
-- **Assignments per control**: type (CC, NRPN, note, pitch bend, aftertouch, program change, GS/XG, MMC), channel,
-  parameter, range, absolute / 14-bit / relative modes, button modes, LED ring mode, display on/off.
-- **MIDI Learn**: select a control, press Learn, move the hardware control: its message fills the assignment.
-- **OLED multiplexing**: when several encoders turn at once, the screen is shared in proportion to their pulses, in
-  readable slots, and an activity strip lists the active controls.
-- **Floating display**: the screen in a small always-on-top window you can place over your DAW.
-- **Presets and banks**: JSON import/export, local library, A4 PDF overlay sheet with your labels.
-- **Front-panel export reader**: decodes the current preset or all 64 presets exported from the controller, rebuilds
-  complete presets, applies the identified records, saves the raw exports.
-- **Cubase export**: a MIDI Remote script (Cubase 12 and later) describing the surface and the exact MIDI of every
-  assigned control; map functions in Cubase with its Mapping Assistant.
-- **Eight languages**: English, French, Italian, German, Japanese, Spanish, Russian, Chinese.
-- **LED brightness** read and write over SysEx (verified on hardware).
-- **Device settings** loaded from the controller at connection (operating mode, output ports, thru, footswitches,
-  clock, scale…) into Config, with labels; writing them back is disabled (it froze a controller).
+Use a current Chromium browser with Web MIDI and SysEx permission, over HTTPS or localhost. Select the controller/CTRL port, not ZAQ. Controller operations require a fresh firmware 1.0.2 identity. No account or server-side preset storage is used.
 
-## What it does not do (yet)
-
-Writing assignments to the controller's memory is **not** implemented: the SysEx needed is not fully understood, and
-a wrong write can damage a preset. The editor only ever sends MIDI *values* (CC, NRPN, notes) when you move a control
-in the UI; this is switched on automatically when a BCR32 is detected and can be turned off with the "CC sending" toggle. See
-[docs/PROTOCOL.md](docs/PROTOCOL.md) for what is known and the open questions; captures from real hardware are the
-most valuable contribution.
-
-## Use it
-
-- **Hosted**: https://thelazygeekguy.github.io/bcr32-studio/, rebuilt from `main` on every merge.
-- **Local**: `npm ci && npm run dev`, then http://127.0.0.1:5173/.
-
-A Chromium-based browser is required: Web MIDI with SysEx is not available in Firefox or Safari. Everything stays in
-your browser (local storage); there is no account and no server.
-
-## Develop
+## Local development
 
 ```sh
 npm ci
-npm run dev        # http://127.0.0.1:5173/
-npm test           # all test suites, then the TypeScript check
+npm test
+npm run dev
 npm run build
+npm run preview
 ```
 
-Command-line helper: `npm run midi -- ports`, `npm run midi -- probe` (read-only product query),
-`npm run midi -- monitor` (incoming MIDI with millisecond timestamps).
+The production build includes the BCR32 module and preset library and verifies its source inventory. The optional native MIDI dependency is used only by local tools. On Linux, install the ALSA development headers before `npm ci`.
 
-Stack: React 19, TypeScript (strict), Vite, Web MIDI, pdf-lib; deployed as static assets on Cloudflare Workers.
+Browser regression scripts in `scripts/e2e-studio-bcr32-*.cjs` use simulated Web MIDI and never access physical devices. Provide Playwright through `PLAYWRIGHT_CORE`, start the local preview, and pass its URL as the script argument. They cover automatic reads/live edits, the four captured preset push fixtures, T1–T4/cache and preset backup/save/readback/restoration.
 
-## Documentation
+## Evidence and limits
 
-| Document | For |
-| --- | --- |
-| [User guide](docs/USER-GUIDE.md) | every screen, option and procedure, troubleshooting |
-| [Protocol](docs/PROTOCOL.md) | what is known of the BCR32 SysEx, with confidence levels |
-| [Architecture](docs/ARCHITECTURE.md) | source map, data flow, i18n, storage, tests |
-| [Deployment](docs/DEPLOYMENT.md) | GitHub Pages, optional Cloudflare, releases |
-| [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) | contributors |
+Type OFF was physically tested on rotation 1, button 16 and encoder push 1 on firmware 1.0.2/device 00: independent confirmation in 163–165 ms, all original fields restored, no STORE. The explicit preset-store workflow was previously tested on the authorized preset 63. These are limited device observations, not certification of every combination or power-cycle persistence.
 
-## Contribute
+Other button/push assignment setters, MMC decoding, full global restore, factory reset and firmware upload are not enabled by this release. Unsupported assignments remain raw with a visible warning. A complete migration from the legacy checkpoint bridge to one headless state authority is still pending.
 
-Pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Merged changes go live on GitHub Pages automatically
-([docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)). Security issues:
-[SECURITY.md](SECURITY.md).
+The legacy public address https://bcr32-studio.github.io/ forwards to the editor above. Existing presets stay on their browser origin; use export/import when moving between origins.
 
-## License
+## Deployment
 
-[MIT](LICENSE). The bundled Noto Sans font is under the SIL Open Font License (`public/fonts/NotoSans-LICENSE.txt`).
+GitHub Actions runs the tests, type check, production build and generic publication-data scan. The Pages workflow deploys the resulting static files. No Cloudflare change is required for this release.
+
+[MIT license](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)

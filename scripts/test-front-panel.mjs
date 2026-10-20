@@ -19,7 +19,7 @@ assert.match(css, /\.panel-viewport\s*\{[^}]*aspect-ratio:1717 \/ 1350;[^}]*over
 assert.match(css, /\.front-panel\s*\{[^}]*aspect-ratio:1717 \/ 1440/)
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText
 const exports = {}
-const localRequire = name => {
+const localRequire = name => { if (name.endsWith('.json')) return JSON.parse(readFileSync(new URL(`../src/${name.replace(/^\.\//, '')}`, import.meta.url), 'utf8'));
   if (!name.startsWith('./')) return require(name)
   const module = { exports: {} }
   const tsx = ['./ActivityLeds', './OledDisplay', './i18n', './Icon'].includes(name)
@@ -36,8 +36,8 @@ const profile = {
 // Locked panel geometry (panel coordinate space 1717 × 1440), independent of layout helpers.
 // This is a regression oracle for the placement, not a pixel-perfect rendering oracle.
 const geometryHTML = renderToStaticMarkup(React.createElement(exports.FrontPanel, { profile, selection: { kind: 'encoders', id: 1 }, select() {}, action() {}, compact: true }))
-assert.ok(geometryHTML.includes('src="branding/bcr32-studio-logo.webp"'))
-assert.ok(geometryHTML.includes('alt="BCR32 Studio"'))
+assert.ok(geometryHTML.includes('src="branding/midi-studio-logo.svg"'))
+assert.ok(geometryHTML.includes('alt="MIDI Studio"'))
 assert.ok(!geometryHTML.includes('<strong>BCR-32</strong>'))
 assert.match(css, /\.editor-brand img\s*\{[^}]*object-fit:contain;[^}]*transform:scale\(1\.4266\)/)
 function rectangles(className) {
@@ -74,7 +74,7 @@ console.log('PASS: procedural plate (CSS gradient + inline SVG grain, no image f
 for (const selection of [{ kind: 'encoders', id: 1 }, { kind: 'pushes', id: 8 }, { kind: 'buttons', id: 24 }]) {
   const html = renderToStaticMarkup(React.createElement(exports.FrontPanel, { profile, selection, select() {}, action() {} }))
   assert.ok(html.includes('<div class="panel-plate" aria-hidden="true"></div>'), 'Procedural plate element')
-  assert.ok(!/<img\b(?![^>]*bcr32-studio-logo)/.test(html), 'No image element other than the logo')
+  assert.ok(!/<img\b(?![^>]*midi-studio-logo)/.test(html), 'No image element other than the logo')
   assert.ok(html.includes('class="chassis-frame"'))
   assert.ok(html.includes('class="panel-viewport"'))
   assert.equal((html.match(/class="knob-cap"/g) || []).length, 32)

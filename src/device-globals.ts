@@ -1,11 +1,13 @@
 import type { ControllerSettings } from './profile'
+import { currentDevice } from './devices'
+import { sysexHeader, type DeviceDefinition } from './device-definition'
 
 // BCR32 global settings (docs/PROTOCOL.md, "Global settings").
 // Read: the exact request the official editor sends at every connection, F0 00 20 32 7F 64 <cmd> F7; the device answers
 // F0 00 20 32 7F 64 <cmd> <value> F7. Write: F0 00 20 32 7F 64 <cmd> <value> F7, the layout the official editor builds
 // for all 17 globals (one code path, LED brightness included); verified on hardware on 2026-10-13 (Clock rate out
 // 3 -> 4 -> 3, each acknowledged and read back). Every write is followed by a read-back.
-const prefix = [0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64]
+const prefix = sysexHeader(currentDevice)
 // Option lists: the official editor's BCR32 lists, matched to each setting by value range and meaning (2026-10-12).
 // Abbreviations spelled out: U = USB, A/B = MIDI A/B, F = filtered (thru), STDL = standalone.
 const routing = ['Off', 'MIDI A', 'MIDI B', 'MIDI A & B', 'USB', 'USB & MIDI A', 'USB & MIDI B', 'USB & MIDI A & B']
@@ -58,7 +60,9 @@ const realTimers: Timers = { set: (fn, ms) => setTimeout(fn, ms), clear: t => cl
 
 // Sequential reader: one request at a time, the next only after the reply or the timeout. receive() returns true when
 // the message was the awaited reply (so the caller may skip other handlers if it wants).
-export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs = 400, timers: Timers = realTimers) {
+export function createGlobalsReader(send: (bytes: number[]) => void, timeoutMs = 400, timers: Timers = realTimers, device: DeviceDefinition = currentDevice) {
+  const prefix = sysexHeader(device)
+  const globalQuery = (cmd: number) => [...prefix, cmd, 0xf7]
   let pending: { cmd: number; settle: (r: { value: number | null; status: GlobalResult['status'] }) => void; timer: unknown } | null = null
   let closed = false
   // One exchange at a time: a message out, the reply carrying the same command (or the timeout).

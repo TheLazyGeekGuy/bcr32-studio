@@ -1,6 +1,7 @@
 import { defaultSettings, outputRoutingOptions, routingOptions, type Bcr32Profile, type ControllerSettings } from './profile'
 import { differingFields } from './device-globals'
-import { buttonNames } from './panel-layout'
+import { bcr32 } from './device-bcr32'
+const buttonNames = bcr32.panel.buttonNames
 import type { Selection } from './FrontPanel'
 import { translate, useLanguage } from './i18n'
 

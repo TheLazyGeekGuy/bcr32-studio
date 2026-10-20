@@ -138,6 +138,7 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .studio[data-theme=glacier] { --theme-bg:#091319; --theme-surface:#10212a; --theme-input:#0d1b23; --theme-button:#142b36; --theme-muted:#a6c2ce; --theme-line:#355260; --theme-accent:#76d6ed; --theme-accent-text:#06242b; --theme-selected:#173e4d; --panel-filter:sepia(.25) saturate(1.8) hue-rotate(155deg) brightness(1.13); }
 .studio[data-theme=amethyst] { --theme-bg:#15101c; --theme-surface:#241c30; --theme-input:#1c1426; --theme-button:#2b2039; --theme-muted:#c1afd6; --theme-line:#514263; --theme-accent:#c5a0ed; --theme-accent-text:#281539; --theme-selected:#3a2750; --panel-filter:sepia(.35) saturate(1.9) hue-rotate(220deg) brightness(1.08); }
 .studio[data-theme=brass] { --theme-bg:#19150e; --theme-surface:#282117; --theme-input:#201a12; --theme-button:#302719; --theme-muted:#c4b497; --theme-line:#61523b; --theme-accent:#e6bd73; --theme-accent-text:#2b1d08; --theme-selected:#49381e; --panel-filter:sepia(.6) saturate(1.2) brightness(1.14); }
+.studio[data-theme=midnight] { --theme-bg:#101419; --theme-surface:#171d24; --theme-input:#0d1015; --theme-button:#1c222b; --theme-text:#e1e7ed; --theme-muted:#8b99a8; --theme-line:#303c4d; --theme-accent:#ff851b; --theme-accent-text:#201308; --theme-selected:#25364d; --panel-filter:none; color-scheme:dark; }
 .studio[data-theme=silver] { --theme-bg:#e1e5e8; --theme-surface:#f0f2f4; --theme-input:#f8fafb; --theme-button:#edf0f3; --theme-text:#1a242d; --theme-muted:#465766; --theme-line:#8999a5; --theme-accent:#245b81; --theme-accent-text:#ffffff; --theme-selected:#d3e4ef; --theme-off-mask:rgba(225,229,232,.65); --panel-filter:grayscale(1) invert(.88) brightness(1.1) contrast(.88); color-scheme:light; }
 .studio[data-theme].compact { background:var(--theme-bg); }
 .editor-brand::before { filter:var(--panel-filter); transition:filter .25s ease; }
@@ -337,6 +338,7 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .theme-swatch.swatch-amethyst { background:#b98ee5; }
 .theme-swatch.swatch-brass { background:#b69b55; }
 .theme-swatch.swatch-silver { background:#e1e5e8; }
+.theme-swatch.swatch-midnight { background:linear-gradient(135deg,#20334d 65%,#ff851b 65%); }
 .studio .theme-swatch[aria-pressed=true] { outline:2px solid var(--theme-accent); outline-offset:3px; }
 .swatch-tooltip { display:none; position:absolute; bottom:calc(100% + 9px); left:50%; transform:translateX(-50%); padding:5px 8px; color:var(--theme-text); background:var(--theme-surface); border:1px solid var(--theme-line); border-radius:3px; font-size:11px; white-space:nowrap; z-index:10; pointer-events:none; }
 .theme-swatch:hover .swatch-tooltip,.theme-swatch:focus-visible .swatch-tooltip { display:block; }
@@ -501,3 +503,238 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .studio.floating-display { display:grid; gap:2vw; padding:2vw; min-height:100vh; box-sizing:border-box; align-content:center; background:#101112; container-type:inline-size; }
 .floating-display .name-display, .floating-display .oled-display { position:relative; transform:none !important; }
 .floating-toggle { padding:4px 8px; font-size:11px; }
+/* Panel drawn from a device definition (src/DevicePanel.tsx): B-Control models. */
+.device-panel { display:grid; gap:14px; padding:16px; border-radius:12px; background:linear-gradient(180deg,#2c3036,#212429); box-shadow:inset 0 0 0 1px #3b4148; color:#dde1e6; min-width:0; }
+.device-panel-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.device-panel-model { font-weight:800; letter-spacing:.08em; font-size:20px; }
+.device-panel .led4 { font:600 28px/1 ui-monospace,Menlo,monospace; letter-spacing:.12em; white-space:pre; color:#ff4a2e; text-shadow:0 0 8px #ff2a00; background:#0b0605; padding:6px 10px; border-radius:6px; box-shadow:inset 0 0 0 1px #000; min-width:5.2em; text-align:right; }
+.device-panel-section { display:grid; gap:6px; min-width:0; }
+.device-panel-section h3 { display:flex; align-items:center; gap:10px; margin:0; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#8c95a0; }
+.device-panel-section h3::after { content:""; flex:1; height:1px; background:#3b4148; }
+.encoder-groups { display:inline-flex; gap:4px; text-transform:none; letter-spacing:0; }
+.encoder-groups button { padding:1px 8px; font:600 11px ui-monospace,Menlo,monospace; color:#8c95a0; background:#1d2025; border:1px solid #3b4148; border-radius:3px; }
+.encoder-groups button[aria-pressed=true] { color:#1b1206; background:#ffa424; border-color:#ffa424; }
+.device-panel-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:6px; }
+.device-control { position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; padding:4px 2px; border:1px solid transparent; border-radius:6px; background:transparent; color:inherit; }
+.device-control:hover { background:rgba(255,255,255,.05); }
+.device-control[aria-pressed=true] { border-color:var(--theme-accent); background:var(--theme-selected); }
+.device-control svg { width:100%; max-width:58px; height:auto; }
+.device-control .seg { fill:#3c424a; } .device-control .seg.on { fill:#ffa424; }
+.device-control .knob { fill:#41474f; stroke:#000; stroke-opacity:.35; }
+.device-control.key .key-led { display:block; width:100%; max-width:58px; height:24px; border-radius:4px; background:#3a3f46; box-shadow:inset 0 -2px 0 rgba(0,0,0,.35); }
+.device-control.key .key-led.lit { background:#5a4320; box-shadow:inset 0 0 0 2px #ffa424; }
+.device-label { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:500 10px/1.2 ui-monospace,Menlo,monospace; }
+.device-control.off .device-label { color:#8c95a0; }
+.device-panel { position:relative; }
+.protocol-fields { display:grid; gap:8px; margin:10px 0; }
+.protocol-field { display:grid; gap:3px; min-width:0; }
+.protocol-field > span { font-size:11px; color:var(--theme-muted); }
+.protocol-field small { color:#ff7878; }
+.protocol-field textarea { width:100%; box-sizing:border-box; font:11px/1.4 ui-monospace,Menlo,monospace; background:var(--theme-surface); color:var(--theme-text); border:1px solid var(--theme-line); }
+.protocol-options { border-top:1px solid var(--theme-line); margin-top:12px; padding-top:8px; }
+.protocol-options summary { cursor:pointer; font-size:12px; }
+.device-selection-rectangle { position:absolute; pointer-events:none; border:1px solid var(--theme-accent); background:var(--theme-selected); z-index:3; }
+.device-encoder-cell { position:relative; min-width:0; display:grid; gap:2px; }
+.device-encoder-cell > .device-control { width:100%; }
+.device-push { min-width:0; padding:3px 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:500 9px/1.2 ui-monospace,Menlo,monospace; color:#dde1e6; background:#30353b; border:1px solid #454c55; border-radius:2px; }
+.device-push.off { color:#8c95a0; }
+.device-push::before { content:'↓ '; }
+.device-push[aria-pressed=true], .device-control[data-selected=true] { border-color:var(--theme-accent); background:var(--theme-selected); }
+.device-push[data-active=true] { color:#ffa424; }
+.device-fader-input { writing-mode:vertical-lr; direction:rtl; width:24px; height:112px; margin:4px 0; touch-action:none; accent-color:var(--theme-accent); }
+.device-fader-select { position:static; width:100%; min-width:0; padding:2px; border:0; background:transparent; color:inherit; }
+.device-push:focus-visible, .device-fader-input:focus-visible, .device-fader-select:focus-visible { outline:2px solid var(--theme-accent); outline-offset:2px; }
+.device-number { position:absolute; top:2px; left:4px; font:500 9px ui-monospace,Menlo,monospace; color:#8c95a0; }
+@media (max-width:720px) { .device-panel-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+.device-model select { margin-left:8px; }
+/* MIDI monitor (src/MidiMonitor.tsx), bottom console. */
+.console { margin-top:12px; border:1px solid var(--theme-line); border-radius:8px; background:var(--theme-surface); }
+.console > summary { cursor:pointer; padding:8px 12px; font-weight:700; color:var(--theme-muted); }
+.console[open] > summary { border-bottom:1px solid var(--theme-line); }
+.midi-monitor { display:grid; gap:6px; padding:8px 12px 12px; min-width:0; }
+.monitor-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.monitor-bar h2 { display:none; }
+.monitor-chips, .monitor-actions { display:flex; flex-wrap:wrap; gap:4px; }
+.monitor-actions { margin-left:auto; }
+.monitor-chips button { border-radius:99px; padding:2px 10px; font-size:12px; }
+.monitor-chips button[aria-pressed=true] { background:var(--theme-accent); color:var(--theme-accent-text); border-color:var(--theme-accent); }
+.monitor-count { margin:0; font-size:12px; color:var(--theme-muted); font-variant-numeric:tabular-nums; }
+.monitor-table { max-height:260px; overflow:auto; border:1px solid var(--theme-line); border-radius:6px; }
+.monitor-table table { width:100%; border-collapse:collapse; font:12px/1.4 ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums; }
+.monitor-table th { position:sticky; top:0; background:var(--theme-surface); text-align:left; font:600 11px system-ui,sans-serif; color:var(--theme-muted); padding:5px 8px; border-bottom:1px solid var(--theme-line); }
+.monitor-table td { padding:3px 8px; border-bottom:1px solid var(--theme-line); white-space:nowrap; }
+.monitor-table tbody tr { cursor:pointer; }
+.monitor-table tbody tr:hover td { background:var(--theme-selected); }
+.monitor-table tr[aria-selected=true] td { background:var(--theme-selected); box-shadow:inset 0 0 0 9999px rgba(255,255,255,.04); }
+.monitor-table tr.sub td { color:var(--theme-muted); }
+.monitor-table tr.error td { color:#ff7b6e; }
+.monitor-table .dir-in { color:#5cc58b; } .monitor-table .dir-out { color:var(--theme-accent); }
+.monitor-expand { margin-left:6px; padding:0 5px; font-size:10px; }
+.monitor-hex { color:var(--theme-muted); }
+.monitor-empty { margin:0; padding:16px; color:var(--theme-muted); }
+.history-tools { display:flex; gap:6px; margin:6px 0; }
+.history-tools button { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:4px 8px; }
+.history-count { font:500 11px ui-monospace,Menlo,monospace; color:var(--theme-muted); }
+/* Drag and drop on the panels (src/control-move.ts): middle swaps, edges insert, Alt copies. */
+.drop-swap, .drop-copy { outline:2px solid var(--theme-accent) !important; outline-offset:2px; }
+.drop-copy { outline-style:dashed !important; }
+.drop-before, .drop-after { position:relative; }
+.drop-before::before, .drop-after::after { content:""; position:absolute; top:6%; bottom:6%; width:4px; border-radius:2px; background:var(--theme-accent); z-index:20; }
+.drop-before::before { left:-5px; } .drop-after::after { right:-5px; }
+[draggable=true] { -webkit-user-drag:element; }
+
+/* ===== Flat, discreet layer (bc-studio): square corners, no shadows or gradients, thin lines, small type, controls
+   that look like text until hovered; one quiet accent for state. The hardware drawings (BCR32 plate) keep their look. */
+.studio.compact { --flat-line:rgba(255,255,255,.08); --flat-hover:rgba(255,255,255,.05); --flat-on:rgba(255,255,255,.09); padding:0; gap:0; font-size:12px; }
+.studio[data-theme=silver].compact { --flat-line:rgba(0,0,0,.12); --flat-hover:rgba(0,0,0,.05); --flat-on:rgba(0,0,0,.08); }
+.studio.compact :is(.sidebar, .console) :where(button, .file, input, select, textarea) { border-radius:2px; box-shadow:none; background-image:none; transition:none; transform:none; }
+.studio.compact :is(.sidebar, .console) :where(button, .file) { background-color:transparent; border-color:var(--flat-line); padding:4px 8px; font-size:12px; font-weight:500; }
+.studio.compact :is(.sidebar, .console) :where(button:not(:disabled):hover, .file:hover) { background-color:var(--flat-hover); border-color:var(--flat-line); transform:none; }
+.studio.compact :is(.sidebar, .console) button[aria-pressed=true] { background-color:var(--flat-on); color:var(--theme-accent); border-color:var(--flat-line); }
+.studio.compact :is(.sidebar, .console) .primary { background:transparent; color:var(--theme-accent); border-color:var(--theme-accent); }
+.studio.compact :is(.sidebar, .console) .primary:not(:disabled):hover { background:var(--flat-hover); }
+.studio.compact :is(.sidebar, .console) .primary:disabled { background:transparent; color:var(--theme-muted); border-color:var(--flat-line); }
+.studio.compact :is(.sidebar, .console) :where(input, select) { background:rgba(0,0,0,.18); border-color:var(--flat-line); padding:3px 6px; font-size:12px; }
+.studio.compact :is(.sidebar, .console) :where(input:focus, select:focus) { border-color:var(--theme-accent); outline:none; }
+.studio.compact :is(.sidebar, .console) h2 { font-size:13px; font-weight:600; letter-spacing:0; }
+.studio.compact :is(.sidebar, .console) h3 { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--theme-muted); margin:14px 0 6px; }
+.studio.compact :is(.sidebar, .console) label { font-size:10px; letter-spacing:.05em; }
+.studio.compact .surface-help, .studio.compact .muted { font-size:11px; }
+.studio.compact :where(details, .bcl-files, .cubase-export, .export-import, .device-globals) { border-radius:0; box-shadow:none; }
+
+/* Layout: panel | inspector side by side, console below, thin separators instead of boxes. */
+.studio.compact .workspace { gap:0; }
+.studio.compact .surface { padding:10px; }
+.studio.compact .sidebar { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto auto auto minmax(0,1fr); border-left:1px solid var(--flat-line); background:var(--theme-surface); }
+.studio.compact .sidebar > .connection { grid-column:1 / -1; padding:6px 8px; gap:4px; border-bottom:1px solid var(--flat-line); flex-wrap:wrap; }
+.studio.compact .sidebar > .connection button { padding:3px 6px; font-size:11px; border-color:transparent; }
+.studio.compact .sidebar > .cc-toggle { grid-column:1; margin:6px 0 6px 8px; padding:3px 8px; font-size:11px; border-color:transparent; justify-content:flex-start; }
+.studio.compact .sidebar > .history-tools { grid-column:2; margin:6px 8px 6px 0; gap:2px; }
+.studio.compact .history-tools button { flex:none; font-size:0; padding:3px 7px; border-color:transparent; }
+.studio.compact .history-tools button span { font-size:12px; }
+.studio.compact .history-tools .history-count { font-size:10px; }
+.studio.compact .sidebar > .tool-tabs { grid-column:1 / -1; gap:0; padding:0 4px; border-bottom:1px solid var(--flat-line); }
+.studio.compact .tool-tabs button { border:0; border-bottom:2px solid transparent; border-radius:0; padding:6px 2px 5px; font-size:11px; background:transparent; flex-direction:row; gap:4px; }
+.studio.compact .tool-tabs button svg { width:14px; height:14px; }
+.studio.compact .tool-tabs button[aria-pressed=true] { background:transparent; border-bottom-color:var(--theme-accent); color:var(--theme-text); }
+.studio.compact .sidebar > .sidebar-content { grid-column:1 / -1; }
+.studio.compact .inspector, .studio.compact .profile-actions, .studio.compact .lower > section { padding:10px 12px; }
+.studio.compact .action-tabs { gap:0; }
+.studio.compact .action-tabs button { flex:1; border-radius:0; padding:4px; font-size:11px; }
+.studio.compact .action-tabs button + button { border-left:0; }
+.studio.compact .action-tabs button svg { width:13px; height:13px; }
+.studio.compact .sidebar-notice { font-size:10px; }
+
+/* Console: a strip of tabs-like filters, a plain table. */
+.studio.compact .console { flex:none; margin:0; border:0; border-top:1px solid var(--flat-line); border-radius:0; background:var(--theme-surface); }
+.studio.compact .console > summary { padding:4px 10px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+.studio.compact .console[open] > summary { border-bottom:1px solid var(--flat-line); }
+.studio.compact .midi-monitor { padding:4px 10px 6px; gap:4px; }
+.studio.compact .monitor-chips button { border-radius:2px; padding:2px 7px; font-size:11px; border-color:transparent; color:var(--theme-muted); }
+.studio.compact .monitor-chips button[aria-pressed=true] { background:var(--flat-on); color:var(--theme-text); border-color:transparent; }
+.studio.compact .monitor-actions button { padding:2px 8px; font-size:11px; }
+.studio.compact .monitor-count { font-size:10px; }
+.studio.compact .monitor-table { max-height:22vh; border:0; border-top:1px solid var(--flat-line); border-radius:0; }
+.studio.compact .monitor-table th { font-size:10px; text-transform:uppercase; letter-spacing:.05em; padding:3px 8px; border-bottom-color:var(--flat-line); }
+.studio.compact .monitor-table td { padding:1px 8px; font-size:11px; border-bottom-color:var(--flat-line); }
+.studio.compact .monitor-empty { padding:8px; font-size:11px; }
+
+/* Panel drawn from a definition (B-Control): flat plate, no cell boxes, square LED keys. */
+.studio.compact .device-panel { border-radius:0; background:#1d2024; box-shadow:none; gap:10px; padding:12px; }
+.studio.compact .device-control { border:1px solid transparent; border-radius:2px; background:transparent; padding:3px 2px; }
+.studio.compact .device-control:hover { background:var(--flat-hover); }
+.studio.compact .device-control[aria-pressed=true] { border-color:var(--theme-accent); background:transparent; }
+.studio.compact .device-control.key .key-led { border-radius:1px; box-shadow:none; height:20px; background:#30343a; }
+.studio.compact .device-control .knob { stroke:none; fill:#3a3f46; }
+.studio.compact .encoder-groups button { border-radius:1px; }
+.studio.compact .device-panel .led4 { border-radius:1px; box-shadow:none; font-size:24px; }
+.studio.compact .tool-tabs button svg { display:none; }
+.studio.compact .tool-tabs button { flex:1 1 0; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.studio.compact .monitor-actions button, .studio.compact .connection button { border-color:transparent; }
+.studio.compact .hardware-note { color:var(--theme-accent); border-left:2px solid var(--theme-accent); padding-left:8px; }
+.encoder-groups button.unavailable { text-decoration:line-through; opacity:.45; }
+.midi-status { display:inline-flex; gap:2px; }
+.studio.compact .midi-light { display:inline-flex; align-items:center; gap:4px; padding:2px 5px; font:600 10px ui-monospace,Menlo,monospace; color:var(--theme-muted); border-color:transparent; }
+.midi-dot { width:7px; height:7px; border-radius:50%; background:#3a3f46; }
+.midi-light.paired .midi-dot { background:#3f7a57; }
+.midi-light.lit .midi-dot { background:var(--theme-accent); box-shadow:0 0 6px var(--theme-accent); }
+/* Inspector BCL text (src/BclText.tsx): replaces the form while shown. */
+.inspector.text-mode > :not(h2, .inspector-view, .bcl-text, .control-search, .eyebrow) { display:none !important; }
+.inspector-view { margin:6px 0 8px; }
+.bcl-text { display:grid; gap:6px; }
+.bcl-text-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.bcl-status { font:600 11px ui-monospace,Menlo,monospace; } .bcl-status.ok { color:#5cc58b; } .bcl-status.bad { color:#ff7b6e; }
+.bcl-editor { display:grid; grid-template-columns:auto minmax(0,1fr); border:1px solid var(--theme-line); font:12px/1.55 ui-monospace,Menlo,monospace; }
+.bcl-gutter { margin:0; padding:4px 0; list-style:none; text-align:right; color:var(--theme-muted); border-right:1px solid var(--theme-line); min-width:28px; user-select:none; }
+.bcl-gutter li { padding:0 6px; } .bcl-gutter li.bad { color:#ff7b6e; background:rgba(255,80,60,.12); }
+.studio .bcl-editor textarea { border:0; border-radius:0; background:transparent; color:var(--theme-text); font:inherit; line-height:inherit; padding:4px 8px; resize:vertical; white-space:pre; overflow:auto; min-width:0; }
+.studio .bcl-editor textarea:focus { outline:none; }
+.bcl-errors { margin:0; padding-left:18px; color:#ff7b6e; font-size:11px; }
+/* Built-in help (src/HelpPanel.tsx). */
+.help-panel { padding:10px 12px; display:grid; gap:8px; }
+.help-panel input[type=search] { width:100%; }
+.help-panel dl { margin:0; display:grid; gap:10px; }
+.help-panel dt { font-weight:600; font-size:12px; }
+.help-panel dd { margin:2px 0 0; font-size:12px; color:var(--theme-muted); line-height:1.45; }
+.help-panel mark { background:var(--theme-selected); color:var(--theme-accent); }
+.studio.compact .help-toggle { font-weight:700; padding:2px 7px; border-color:transparent; }
+.studio.compact .sidebar > .connection .primary { border-color:transparent; }
+/* BCF2000 faders on the definition-drawn panel. */
+.device-control .fader { position:relative; display:block; width:24px; height:110px; }
+.device-control .fader-track { position:absolute; left:11px; top:4px; bottom:4px; width:2px; background:#0f1113; }
+.device-control .fader-cap { position:absolute; left:1px; width:22px; height:14px; margin-bottom:2px; background:#c9ced4; border-radius:1px; }
+.bc-global { display:grid; gap:6px; margin:10px 0; justify-items:start; }
+.bc-global-table { border-collapse:collapse; font-size:12px; width:100%; }
+.bc-global-table th { text-align:left; font-weight:500; color:var(--theme-muted); padding:3px 8px 3px 0; }
+.bc-global-table td { font-family:ui-monospace,Menlo,monospace; padding:3px 0; border-bottom:1px solid var(--flat-line, rgba(255,255,255,.08)); }
+/* Top of the side panel in two lines: state and version, then the tools. */
+.studio.compact .sidebar > .connection { display:flex; flex-wrap:wrap; align-items:center; gap:2px 4px; }
+.studio.compact .sidebar > .connection > .connection-state { flex:1 1 100%; display:flex; gap:8px; align-items:center; font-size:11px; }
+.studio.compact .sidebar > .connection .language-icon-picker { margin-left:auto; }
+.studio.compact .sidebar > .connection .floating-toggle, .studio.compact .sidebar > .connection .primary { white-space:nowrap; }
+.studio.compact .sidebar > .connection .primary { font-size:0; padding:3px 6px; } /* icon only; the text stays the accessible name */
+.studio.compact .sidebar > .connection .primary svg { width:16px; height:16px; }
+
+/* ===== General layout (bc-studio), BCEditor-like: top bar, icon rail on the left, a tool panel that opens beside it,
+   the controller in the middle, the inspector always on the right, the console below. Desktop only; narrow screens
+   keep the stacked layout. The side panel's containers are flattened (display:contents) so their parts take places
+   in the workspace grid. */
+@media (min-width: 900px) {
+  .studio.compact .workspace { display:grid; grid-template-columns:44px 0 minmax(0,1fr) 330px; grid-template-rows:auto minmax(0,1fr) auto; gap:0; min-height:0; }
+  .studio.compact .workspace.left-open { grid-template-columns:44px 300px minmax(0,1fr) 330px; }
+  .studio.compact .sidebar, .studio.compact .sidebar-content { display:contents; }
+  /* Top bar: connection state and tools across, CC sending and undo/redo above the inspector. */
+  .studio.compact .sidebar > .connection { grid-row:1; grid-column:1 / 4; flex-wrap:nowrap; padding:4px 10px; border-bottom:1px solid var(--flat-line); background:var(--theme-surface); }
+  .studio.compact .sidebar > .connection > .connection-state { flex:0 1 auto; margin-right:auto; }
+  .studio.compact .sidebar > .connection .language-icon-picker { margin-left:0; }
+  .studio.compact .sidebar > .cc-toggle { grid-row:1; grid-column:4; justify-self:start; align-self:stretch; margin:0; padding:4px 10px; border-bottom:1px solid var(--flat-line); border-left:1px solid var(--flat-line); width:100%; }
+  .studio.compact .sidebar > .history-tools { grid-row:1; grid-column:4; justify-self:end; align-self:center; margin:0 6px 0 0; z-index:1; }
+  /* Rail: icons only, the active one marked on its left edge. */
+  .studio.compact .sidebar > .tool-tabs { grid-row:2 / 4; grid-column:1; flex-direction:column; justify-content:flex-start; gap:2px; padding:6px 0; border:0; border-right:1px solid var(--flat-line); background:var(--theme-surface); }
+  .studio.compact .tool-tabs button { flex:none; font-size:0; padding:9px 0; border:0; border-left:2px solid transparent; border-radius:0; justify-content:center; color:var(--theme-muted); }
+  .studio.compact .tool-tabs button svg { display:block; width:18px; height:18px; }
+  .studio.compact .tool-tabs button[aria-pressed=true] { border-left-color:var(--theme-accent); color:var(--theme-text); background:var(--flat-on); border-bottom:0; }
+  .studio.compact .tool-tabs button:first-child { display:none; } /* Control = no tool panel: the inspector is always shown */
+  /* Tool panel beside the rail (presets, files, config, log, help). */
+  .studio.compact .tool-panel { grid-row:2 / 4; grid-column:2; min-width:0; overflow:auto; border-right:1px solid var(--flat-line); background:var(--theme-surface); }
+  .studio.compact .workspace:not(.left-open) .tool-panel { display:none; }
+  .studio.compact .tool-panel .lower { display:block; border:0; }
+  .studio.compact .tool-panel .lower > section { border:0; padding:10px 12px; }
+  .studio.compact .tool-panel .ports-fields { grid-template-columns:1fr; }
+  /* Controller in the middle, inspector on the right, notice under them. */
+  .studio.compact .surface { grid-row:2; grid-column:3; min-height:0; padding:10px; }
+  .studio.compact .inspector { grid-row:2; grid-column:4; min-height:0; overflow:auto; border-left:1px solid var(--flat-line); background:var(--theme-surface); padding:10px 12px; }
+  .studio.compact .sidebar-meta { grid-row:3; grid-column:3 / 5; padding:3px 10px; border-top:1px solid var(--flat-line); background:var(--theme-surface); }
+  .studio.compact .sidebar-meta .sidebar-notice { margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+}
+.profile-actions > .bc-global { display:grid; justify-items:start; gap:6px; }
+.editor-preset-tools{min-width:0}.editor-preset-tools>select,.editor-preset-tools>label>input{width:100%;box-sizing:border-box}.editor-preset-tools>label{display:block}.editor-preset-tools .preset-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+/* Documentation is a separate static artifact, never an editor-runtime dependency. */
+.documentation-link { display:inline-flex;align-items:center;padding:6px 9px;border:1px solid var(--theme-line,#555);border-radius:3px;color:var(--theme-text,#ddd);background:var(--theme-surface,#171717);font:inherit;font-size:12px;text-decoration:none; }
+.documentation-link:hover,.documentation-link:focus-visible { color:var(--theme-accent,#dfa044);outline-offset:3px; }
+
+/* Autonomous editors inherit the same host controls/tokens without the legacy page geometry. */
+.studio.standalone-editor{width:100%;max-width:none;min-width:0;margin:0;padding:0;background:var(--theme-bg);color:var(--theme-text)}
+.standalone-editor>header{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:5px 12px;min-height:34px;font-size:12px;border-bottom:1px solid var(--theme-line)}
+.standalone-editor .standalone-theme{display:flex;align-items:center;gap:5px;font-size:11px}.standalone-editor .standalone-theme select{width:auto;font-size:11px;padding:4px 6px}
+.standalone-editor .language-icon-picker{margin-left:auto}.standalone-editor>.fireworx-module{min-width:0}

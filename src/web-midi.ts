@@ -1,33 +1,36 @@
+import { currentDevice } from './devices'
+import { sysexHeader, type DeviceDefinition } from './device-definition'
+import {requestMidiAccess} from './midi-permission'
+export {requestMidiAccess,supportsWebMidi} from './midi-permission'
+
 export interface MidiPort {
   id: string
   name?: string | null
   manufacturer?: string | null
   state?: string
+  connection?: 'open' | 'closed' | 'pending'
+  open?(): Promise<MidiPort>
+  type?: 'input' | 'output'
+  onstatechange?: ((event?: MidiConnectionEvent) => void) | null
+  addEventListener?(type: 'statechange', listener: (event?: MidiConnectionEvent) => void): void
+  removeEventListener?(type: 'statechange', listener: (event?: MidiConnectionEvent) => void): void
   onmidimessage: ((event: { data: Uint8Array }) => void) | null
   send?(message: number[]): void
 }
+export interface MidiConnectionEvent {port?: MidiPort | null}
 
 export interface MidiAccess {
   sysexEnabled: boolean
   inputs: Map<string, MidiPort>
   outputs: Map<string, MidiPort>
-  onstatechange: (() => void) | null
+  onstatechange: ((event?: MidiConnectionEvent) => void) | null
+  addEventListener?(type: 'statechange', listener: (event?: MidiConnectionEvent) => void): void
+  removeEventListener?(type: 'statechange', listener: (event?: MidiConnectionEvent) => void): void
 }
 
-type MidiNavigator = Navigator & {
-  requestMIDIAccess?: (options: { sysex: boolean }) => Promise<MidiAccess>
-}
+// Product and firmware request of the current model (src/device-bcr32.ts): <header> 00 F7.
+export const productQuery = [...sysexHeader(currentDevice), 0x00, 0xf7]
 
-export const productQuery = [0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64, 0x00, 0xf7]
-
-export const supportsWebMidi = () => typeof navigator !== 'undefined' &&
-  typeof (navigator as MidiNavigator).requestMIDIAccess === 'function'
-
-export const requestMidiAccess = async (sysex = false) => {
-  const request = (navigator as MidiNavigator).requestMIDIAccess
-  if (!request) throw new Error('Web MIDI is unavailable in this browser.')
-  return request.call(navigator, { sysex })
-}
 export const requestSysexAccess = () => requestMidiAccess(true)
 
 export const asHex = (message: ArrayLike<number>) =>
@@ -52,7 +55,8 @@ export const describeMessage = (message: ArrayLike<number>) => {
 // Payload after the 7-byte header is 01 <p1> <p2> <p3> <p4> <p5>; 0x38 = 56 is the
 // only non-zero byte, so the layout major=p1, minor=p4, patch=p5 is a hypothesis
 // that fits this one sample, not a documented field map.
-export const parseFirmwareReply = (message: ArrayLike<number>): string | null => {
+export const parseFirmwareReply = (message: ArrayLike<number>, device: DeviceDefinition = currentDevice): string | null => {
+  const productQuery = [...sysexHeader(device), 0x00, 0xf7]
   const data = Array.from(message)
   if (data.length < 14 || data[13] !== 0xf7) return null
   if (!productQuery.slice(0, 7).every((byte, index) => data[index] === byte)) return null

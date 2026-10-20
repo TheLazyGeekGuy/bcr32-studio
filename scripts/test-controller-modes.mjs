@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import ts from 'typescript'
 const native = createRequire(import.meta.url), cache = new Map()
-function load(name) {
+function load(name) { if (name.endsWith('.json')) return JSON.parse(readFileSync(new URL(`../src/${name.replace(/^\.\//, '')}`, import.meta.url), 'utf8'));
   if (!name.startsWith('./')) return native(name)
   if (cache.has(name)) return cache.get(name)
   const code = ts.transpileModule(readFileSync(new URL(`../src/${name.slice(2)}.ts`, import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText

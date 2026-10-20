@@ -1,14 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { version as studioVersion } from '../package.json'
 import { createProfile, parseProfile, valueLimit, parameterLimit, is14Bit, isRelative, modesFor, typesFor, mmcCommands, defaultSettings, type Bcr32Profile, type ControllerSettings, type Encoder, type EncoderMode, type EncoderType } from './profile'
 import { FrontPanel, type Selection, type LiveValues } from './FrontPanel'
 import { encoderMessages, createCcSender, isBcrOutput } from './cc-transport'
 import { asHex, describeMessage, isSystemRealtime, parseFirmwareReply, productQuery, supportsWebMidi, type MidiAccess, type MidiPort } from './web-midi'
 import { associateDefaultEncoder, automaticMidiAccess, automaticPorts } from './auto-midi'
+import { chooseDevice, currentDevice as defaultDevice, devices, scopedKey } from './devices'
+import { isDevicePort } from './device-definition'
 import { loadTheme, parseTheme, themes, themeStorageKey } from './themes'
 import { Icon } from './Icon'
 import { ledModes, ledModeLabel, type LedMode } from './led-modes'
 import { LanguagePicker, translatedTree, useLanguage, translate } from './i18n'
+import {OfflineStatus} from './OfflineStatus'
+import {MidiConnectionIndicator} from './MidiConnectionIndicator'
+import type {MidiLease} from './editor-host/midi-broker'
 import { ParameterPicker, ParameterTable } from './ParameterNames'
 import { loadNames, namesFile, parameterNamesKey, type ParameterName } from './parameter-names'
 import { cleanLabel, controlIndex, draftStorageKey, emptyLabels, emptyValues, libraryFile, makePreset, parseControllerState, parseLibrary, parsePreset, presetStorageKey, sameState, type ControllerPreset, type ControllerState } from './presets'
@@ -27,17 +32,38 @@ import { createGlobalsReader, settingsFromDevice, valueOf, withValue, type Globa
 import { DeviceSettings, type WriteStatus } from './DeviceSettings'
 import { applyRecord, decodeControllerDump, knownRecords, type ControllerDump, type DumpRecord } from './controller-dump'
 import { ExportImport } from './ExportImport'
-import { createPortal } from 'react-dom'
-import { FloatingDisplay, delegatingTimers, floatingSupported, openFloatingWindow } from './FloatingDisplay'
+import { floatingSupported, openFloatingDisplay, type FloatingScreen } from './FloatingDisplay'
+import { drawScreens, screenText, type ScreenText } from './display-canvas'
 import { controlLabel } from './FrontPanel'
 import { DisplayPreview } from './OledDisplay'
+import { DevicePanel } from './DevicePanel'
+import { bclFileLimits, bclLinesFromSyx, bclToSyx, parseBcl, presetParameterState, presetSettings, presetToProfile, profileToBcl, type BclIssue, type Unconverted } from './bcl'
+import { createBcReader, type BcIdentity, type BcReader, type PresetName } from './bc-reader'
+import { createMonitor, type MonitorRow } from './midi-monitor'
+import { MidiMonitor } from './MidiMonitor'
+import { createHistory } from './history'
+import { BclParameters, bclSchema } from './BclParameters'
+import { ParameterFields } from './ParameterFields'
+import { MidiStatus } from './MidiStatus'
+import { BclText } from './BclText'
+import { HelpPanel } from './HelpPanel'
+import { moveControl, type MoveKind, type MoveMode } from './control-move'
+import { createEditorEnvironment, type EditorEnvironment } from './editor-environment'
+import {usePresetBank} from './use-preset-bank'
+import {PresetStorageNotice} from './PresetStorageNotice'
+import {EditorPresetTools} from './EditorPresetTools'
+import {usePresetExchange} from './use-preset-exchange'
+import type {PresetExchange} from './editor-host/preset-exchange'
+import type { Theme } from './themes'
+type AppearanceOverride = { theme?: Theme | 'inherit'; displayStyle?: DisplayStyle | 'inherit' }
 
-const storageKey = 'bcr32-studio.profile.v1'
+const currentDevice = defaultDevice
+const storageKey = scopedKey('bcr32-studio.profile.v1')
 // Log lines keep hex and description apart so translatedTree can translate the description alone.
 type LogLine = { hex: string; text: string; note?: string }
 // Fetched once per page; the PDF export used to reload the 556 KB font on every export.
 let pdfFont: Promise<ArrayBuffer> | null = null
-const workspaceKey = 'bcr32-studio.workspace.v1'
+const workspaceKey = scopedKey('bcr32-studio.workspace.v1')
 
 function loadProfile(): Bcr32Profile {
   try {
@@ -73,39 +99,119 @@ function download(data: BlobPart, name: string, type = 'application/json') {
 }
 const fileStem = (name: string) => name.normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 70) || 'preset'
 
-function App() {
+export interface AppProps {
+  presetExchange?:PresetExchange
+  presetSignal?:AbortSignal
+  tools?:ReactNode
+  autoZoomOverride?:boolean
+  onAutoZoom?:(value:boolean)=>void
+  midiLease?: MidiLease
+  parameters?:import('./translator/parameters').ParameterBus
+  environment?: EditorEnvironment
+  initialState?: ControllerState
+  requestAccess?: typeof automaticMidiAccess
+  bindPair?: (input: string, output: string) => void
+  onSnapshot?: (state: ControllerState) => void
+  active?: boolean
+  locked?: boolean
+  themeOverride?: Theme
+  displayOverride?: DisplayStyle
+  onAppearance?: (change: AppearanceOverride) => void
+}
+function App({ tools, environment, initialState, requestAccess, bindPair, onSnapshot, parameters, midiLease, active = true, locked = false, themeOverride, displayOverride, onAppearance,autoZoomOverride,onAutoZoom,presetExchange,presetSignal }: AppProps = {}) {
+  const bound = useMemo(() => environment ?? createEditorEnvironment(defaultDevice), [environment])
+  const { device: currentDevice, storage, storageKey, workspaceKey, draftStorageKey, presetStorageKey,
+    createProfile, parseProfile, parseControllerState, parsePreset, parseLibrary, makePreset, sameState,
+    emptyLabels, emptyValues, controlIndex, loadDraft, loadLibrary, loadWorkspace, loadTheme, loadNames,
+    modesFor, createMidiDecoder, decoderKey, encoderMessages, buttonValue, transportIssue, createCcSender,
+    isBcrOutput, automaticPorts, productQuery, parseFirmwareReply, createBrightnessTransport, createGlobalsReader,
+    decodeControllerDump, applySelectionChange, applyLearn, controlLabel } = bound
   const language = useLanguage()
-  const [initial] = useState(loadDraft)
-  const [theme, setTheme] = useState(loadTheme)
+  const [initial] = useState(() => initialState ? parseControllerState(initialState) : loadDraft())
+  const [localTheme, setLocalTheme] = useState(loadTheme)
+  const theme = themeOverride ?? localTheme
+  const setTheme = (value: Theme) => { setLocalTheme(value); onAppearance?.({ theme: value }) }
   const [parameterNames, setParameterNames] = useState(loadNames)
   const [parameterOpen, setParameterOpen] = useState(0)
   const saveParameterNames = (entries: ParameterName[]) => {
-    try { window.localStorage.setItem(parameterNamesKey, JSON.stringify(namesFile(entries))); setParameterNames(entries) }
+    try { storage.setItem(parameterNamesKey, JSON.stringify(namesFile(entries))); setParameterNames(entries) }
     catch { setNotice('Table not saved: local storage unavailable.') }
   }
-  const [autoZoom, setAutoZoom] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.auto-zoom') === 'true' } catch { return false } })
-  useEffect(() => { try { window.localStorage.setItem('bcr32-studio.auto-zoom', String(autoZoom)) } catch { /* Optional preference. */ } }, [autoZoom])
+  const [localAutoZoom, setLocalAutoZoom] = useState(() => { try { return storage.getItem('bcr32-studio.auto-zoom') === 'true' } catch { return false } })
+  const autoZoom=autoZoomOverride??localAutoZoom
+  const setAutoZoom=(value:boolean)=>{setLocalAutoZoom(value);onAutoZoom?.(value)}
+  useEffect(() => { try { storage.setItem('bcr32-studio.auto-zoom', String(autoZoom)) } catch { /* Optional preference. */ } }, [autoZoom])
   // Numbers above encoders and keys: shown unless the user turned them off.
   // Label screen above the OLED: off unless the user turned it on.
-  const [nameScreen, setNameScreen] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.name-screen') === 'true' } catch { return false } })
-  useEffect(() => { try { window.localStorage.setItem('bcr32-studio.name-screen', String(nameScreen)) } catch { /* Optional preference. */ } }, [nameScreen])
+  const [nameScreen, setNameScreen] = useState(() => { try { return storage.getItem('bcr32-studio.name-screen') === 'true' } catch { return false } })
+  useEffect(() => { try { storage.setItem('bcr32-studio.name-screen', String(nameScreen)) } catch { /* Optional preference. */ } }, [nameScreen])
   // Screen style of the OLED and the label screen (Config), remembered per browser.
-  const [displayStyle, setDisplayStyle] = useState<DisplayStyle>(() => { try { const v = window.localStorage.getItem(displayStyleKey); return validDisplayStyle(v) ? v : 'ice' } catch { return 'ice' } })
-  useEffect(() => { try { window.localStorage.setItem(displayStyleKey, displayStyle) } catch { /* Optional preference. */ } }, [displayStyle])
-  const [showNumbers, setShowNumbers] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.show-numbers') !== 'false' } catch { return true } })
-  useEffect(() => { try { window.localStorage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
-  const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files'>('control')
+  const [localDisplayStyle, setLocalDisplayStyle] = useState<DisplayStyle>(() => { try { const v = storage.getItem(displayStyleKey); return validDisplayStyle(v) ? v : 'ice' } catch { return 'ice' } })
+  const displayStyle = displayOverride ?? localDisplayStyle
+  const setDisplayStyle = (value: DisplayStyle) => { setLocalDisplayStyle(value); onAppearance?.({ displayStyle: value }) }
+  useEffect(() => { try { storage.setItem(displayStyleKey, displayStyle) } catch { /* Optional preference. */ } }, [displayStyle])
+  const [showNumbers, setShowNumbers] = useState(() => { try { return storage.getItem('bcr32-studio.show-numbers') !== 'false' } catch { return true } })
+  useEffect(() => { try { storage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
+  const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files' | 'help'>('control')
+  const [toolsCollapsed, setToolsCollapsed] = useState(false)
   const [profile, setProfile] = useState<Bcr32Profile>(initial.profile)
   const profileRef = useRef(profile); profileRef.current = profile
   // Only the fields the MIDI decoder reads: a label or LED edit must not recreate it.
   const midiKey = useMemo(() => decoderKey(profile), [profile])
   const [customLabels, setCustomLabels] = useState(initial.labels)
   const [auxValues, setAuxValues] = useState(initial.values)
-  const [presets, setPresets] = useState(loadLibrary)
+  const bankFormat=useMemo(()=>({decode:parseLibrary,encode:(items:readonly ControllerPreset[])=>libraryFile([...items])}),[bound])
+  const bankStorage=useCallback(()=>storage,[storage]),presetBank=usePresetBank(bankStorage,presetStorageKey,bankFormat),presets=presetBank.snapshot.items
+  const lockedRef=useRef(locked);lockedRef.current=locked
   const [presetId, setPresetId] = useState(() => { const id = loadWorkspace().id; return presets.some(p => p.id === id) ? id : '' })
   const [presetName, setPresetName] = useState(() => loadWorkspace().name)
   const hasPresetRef = useRef(!!presetId); hasPresetRef.current = !!presetId
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [bclReport, setBclReport] = useState<Unconverted[]>([])
+  const bcReader = useRef<BcReader | null>(null)
+  const [bcIdentity, setBcIdentity] = useState<BcIdentity | null>(null)
+  const [bcNames, setBcNames] = useState<PresetName[]>([])
+  const [bcSlot, setBcSlot] = useState(1)
+  const [bcBusy, setBcBusy] = useState(false)
+  const [bcReady, setBcReady] = useState(false)
+  const [bcGlobal, setBcGlobal] = useState<Record<string, string> | null>(null)
+  const [monitor] = useState(() => createMonitor())
+  const [inspectorView, setInspectorView] = useState<'form' | 'text'>('form')
+  const [monitorOpen, setMonitorOpen] = useState(() => { try { return storage.getItem('bcr32-studio.monitor-open') !== 'false' } catch { return true } })
+  useEffect(() => { try { storage.setItem('bcr32-studio.monitor-open', String(monitorOpen)) } catch { /* Optional preference. */ } }, [monitorOpen])
+  // Undo / redo per preset (src/history.ts): assignments and labels; values and the observed firmware are not history.
+  const [history] = useState(() => createHistory())
+  const [historyCounts, setHistoryCounts] = useState({ undo: 0, redo: 0 })
+  const historyKey = presetId || 'draft', historyKeyRef = useRef(historyKey), restoring = useRef<string | null>(null)
+  const historyState = useMemo(() => JSON.stringify({ profile: { ...profile, device: undefined }, labels: customLabels }), [profile, customLabels])
+  useEffect(() => {
+    if (historyKeyRef.current !== historyKey) { historyKeyRef.current = historyKey; history.arrive(historyKey, historyState) }
+    else if (restoring.current === historyState) restoring.current = null
+    else history.record(historyKey, historyState, performance.now())
+    setHistoryCounts(history.counts(historyKey))
+  }, [historyKey, historyState])
+  const stepHistory = (direction: 'undo' | 'redo') => {
+    if (locked) { setNotice('Editor configuration locked'); return }
+    const state = direction === 'undo' ? history.undo(historyKey) : history.redo(historyKey)
+    if (state === null) { setNotice(direction === 'undo' ? 'Nothing to undo in this preset.' : 'Nothing to redo in this preset.'); return }
+    const { profile: restored, labels } = JSON.parse(state) as { profile: Bcr32Profile; labels: typeof customLabels }
+    restoring.current = state
+    setProfile(current => ({ ...restored, device: current.device })); setCustomLabels(labels)
+    setNotice(direction === 'undo' ? 'Undone.' : 'Redone.')
+  }
+  const stepRef = useRef(stepHistory); stepRef.current = stepHistory
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!active || locked) return
+      const target = event.target as HTMLElement | null
+      if (!(event.metaKey || event.ctrlKey) || target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
+      const key = event.key.toLowerCase()
+      if (key === 'z') { event.preventDefault(); stepRef.current(event.shiftKey ? 'redo' : 'undo') }
+      else if (key === 'y') { event.preventDefault(); stepRef.current('redo') }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [active, locked])
   const [activity, setActivity] = useState<Activity>(idleActivity)
   const pulseActivity = (source: Activity['source']) => setActivity(current => ({ serial: current.serial + 1, source }))
   const [selection, setSelection] = useState<Selection>({ kind: 'encoders', id: 1 })
@@ -124,10 +230,10 @@ function App() {
   // selection follows `settled`, the activity strip shows `active`. Created once with real timers; onChange fires at a tick, or
   // once with the empty state on reset()/stop() so the strip empties with the arbiter.
   const [activeControls, setActiveControls] = useState<ActiveControl[]>([])
-  // Floating display window (src/FloatingDisplay.tsx): while open, the arbiter's timers run in it (visible, not throttled).
-  const [pipWindow, setPipWindow] = useState<Window | null>(null)
-  const pipRef = useRef<Window | null>(null); pipRef.current = pipWindow
-  const [arbiter] = useState(() => createDisplayArbiter({ timers: delegatingTimers(() => pipRef.current), onChange: state => {
+  // Floating display (src/FloatingDisplay.tsx): the screens drawn on a canvas shown as a picture-in-picture video.
+  const floatRef = useRef<FloatingScreen | null>(null), [floatOn, setFloatOn] = useState(false)
+  const floatContent = useRef<{ text: ScreenText; style: string } | null>(null)
+  const [arbiter] = useState(() => createDisplayArbiter({ onChange: state => {
     setActiveControls(current => current.length === 0 && state.active.length === 0 ? current : state.active)
     const shown = state.shown
     if (shown) setScreenControl(current => selectionKey(current) === selectionKey(shown) ? current : shown)
@@ -137,17 +243,18 @@ function App() {
     if (settled) { selectionRef.current = settled; setSelection(settled); setSelections([settled]); selectionsRef.current = [settled] }
   } }))
   useEffect(() => () => arbiter.stop(), [arbiter])
-  useEffect(() => () => { pipRef.current?.close() }, [])
+  useEffect(() => () => { floatRef.current?.close() }, [])
+  useEffect(() => { floatRef.current?.redraw() })
   async function toggleFloatingDisplay() {
-    if (pipRef.current) { pipRef.current.close(); return }
+    if (floatRef.current) { floatRef.current.close(); return }
     try {
-      const pip = await openFloatingWindow()
-      pip.addEventListener('pagehide', () => setPipWindow(current => current === pip ? null : current))
-      setPipWindow(pip)
+      floatRef.current = await openFloatingDisplay(ctx => { const c = floatContent.current; if (c) drawScreens(ctx, c.text, c.style) }, () => { floatRef.current = null; setFloatOn(false) })
+      setFloatOn(true)
     } catch (error) { setNotice(error instanceof Error ? error.message : String(error)) }
   }
   const [values, setValues] = useState<LiveValues>(() => Object.fromEntries(initial.values.encoders.flatMap((v, i) => v === null ? [] : [[i + 1, { value: v, source: 'local' as const }]])))
   const liveRef = useRef(values); liveRef.current = values
+  const parameterLast=useRef(new Map<string,number>())
   const auxRef = useRef(auxValues); auxRef.current = auxValues
   const [auxSources, setAuxSources] = useState<Record<string, LiveValue['source']>>({})
   const heldButton = useRef<{ control: Selection; config: Encoder } | null>(null)
@@ -180,14 +287,15 @@ function App() {
   // Values read from the controller, as Config fields, with the time of the read (src/device-globals.ts settingsFromDevice).
   const [deviceSnapshot, setDeviceSnapshot] = useState<{ at: string; settings: Partial<ControllerSettings> } | null>(null)
   // Load the controller's settings automatically at each connection (default on, remembered per browser).
-  const [autoLoadDevice, setAutoLoadDevice] = useState(() => { try { return window.localStorage.getItem('bcr32-studio.device-autoload') !== 'false' } catch { return true } })
-  useEffect(() => { try { window.localStorage.setItem('bcr32-studio.device-autoload', String(autoLoadDevice)) } catch { /* Optional preference. */ } }, [autoLoadDevice])
+  const [autoLoadDevice, setAutoLoadDevice] = useState(() => { try { return storage.getItem('bcr32-studio.device-autoload') !== 'false' } catch { return true } })
+  useEffect(() => { try { storage.setItem('bcr32-studio.device-autoload', String(autoLoadDevice)) } catch { /* Optional preference. */ } }, [autoLoadDevice])
   const autoLoadRef = useRef(autoLoadDevice); autoLoadRef.current = autoLoadDevice
 
   const inputs = useMemo(() => access ? Array.from(access.inputs.values()) : [], [access, portVersion])
   const outputs = useMemo(() => access ? Array.from(access.outputs.values()) : [], [access, portVersion])
   const output = outputs.find(port => port.id === outputId)
-  const brightnessEnabled = !!access?.sysexEnabled && isBcrOutput(output) && inputs.some(p=>p.id===inputId && p.state==='connected' && /BCR[- ]?32/i.test(p.name??''))
+  const connectedPair = inputs.some(port => port.id === inputId && port.state === 'connected') && output?.state === 'connected'
+  const brightnessEnabled = currentDevice.features.brightness && !!access?.sysexEnabled && isBcrOutput(output) && inputs.some(p=>p.id===inputId && isDevicePort(currentDevice, p))
   const selected = profile[selection.kind].find((encoder) => encoder.id === selection.id)!
   const selectedItems = selectedControls(profile,selections)
   const multiple = selections.length>1
@@ -206,6 +314,29 @@ function App() {
     if(!preserveTab)setTab('control')
   }
   const snapshot: ControllerState = useMemo(() => ({ profile, labels: customLabels, ringMode, values: { ...auxValues, encoders: profile.encoders.map(e => values[e.id]?.value ?? null) } }), [profile, customLabels, ringMode, auxValues, values])
+  useEffect(() => { onSnapshot?.(snapshot) }, [snapshot])
+  // Optional common tool adapter: routed targets only update local values, never the CC sender.
+  useEffect(()=>{
+    if(!parameters||!bound.instanceId)return
+    const offs=(['encoders','pushes','buttons'] as const).flatMap(kind=>profile[kind].map(e=>{
+      const id=`${bound.instanceId}:${kind}:${e.id}`
+      return parameters.register({id,name:`${currentDevice.name} · ${bound.instanceId!.slice(0,8)} · ${kind} ${e.id}`,minimum:Math.min(e.minimum,e.maximum),maximum:Math.max(e.minimum,e.maximum),setLocal:(value,trace)=>{
+        parameterLast.current.set(id,value)
+        if(kind==='encoders'){liveRef.current={...liveRef.current,[e.id]:{value,source:'local'}};setValues(liveRef.current)}
+        else {auxRef.current={...auxRef.current,[kind]:auxRef.current[kind].map((v,i)=>i===controlIndex(kind,e.id)?value:v)};setAuxValues(auxRef.current);setAuxSources(old=>({...old,[`${kind}:${e.id}`]:'local'}))}
+        parameters.publish(id,value,trace)
+      }})
+    }))
+    return()=>{offs.forEach(off=>off())}
+  },[parameters,bound,profile])
+  useEffect(()=>{
+    if(!parameters||!bound.instanceId)return
+    for(const kind of ['encoders','pushes','buttons'] as const)for(const e of profile[kind]){
+      const id=`${bound.instanceId}:${kind}:${e.id}`,value=kind==='encoders'?values[e.id]?.value:auxValues[kind][controlIndex(kind,e.id)]
+      if(value===null||value===undefined||value<Math.min(e.minimum,e.maximum)||value>Math.max(e.minimum,e.maximum)||parameterLast.current.get(id)===value)continue
+      parameterLast.current.set(id,value);parameters.publish(id,value)
+    }
+  },[parameters,bound,profile,values,auxValues])
   const selectMany=(list:Selection[])=>{
     if(!list.length)return
     const active=list[list.length-1]
@@ -222,7 +353,7 @@ function App() {
     const draft = pendingDraft.current
     if (!draft) return
     pendingDraft.current = null
-    try { window.localStorage.setItem(draftStorageKey, JSON.stringify(draft)) }
+    try { storage.setItem(draftStorageKey, JSON.stringify(draft)) }
     catch { setNotice('Local storage unavailable: export the preset JSON to keep your work.') }
   }
   useEffect(() => {
@@ -235,18 +366,17 @@ function App() {
     return () => { window.removeEventListener('beforeunload', flushDraft); window.removeEventListener('pagehide', flushDraft); flushDraft() }
   }, [])
   useEffect(() => {
-    try { window.localStorage.setItem(workspaceKey, JSON.stringify({ id: presetId, name: presetName })) } catch { /* Preset export remains available. */ }
+    try { storage.setItem(workspaceKey, JSON.stringify({ id: presetId, name: presetName })) } catch { /* Preset export remains available. */ }
   }, [presetId, presetName])
   useEffect(() => {
-    try { window.localStorage.setItem(themeStorageKey, theme) } catch { /* Theme remains usable without local storage. */ }
+    try { storage.setItem(themeStorageKey, theme) } catch { /* Theme remains usable without local storage. */ }
   }, [theme])
 
 
   const stopEmission = () => { sender.current?.close(); sender.current = null; heldButton.current = null; setSendCC(false) }
-  const storeLibrary = (next: ControllerPreset[]) => {
-    // Persist before updating state: a quota error must not pretend the save succeeded.
-    window.localStorage.setItem(presetStorageKey, JSON.stringify(libraryFile(next)))
-    setPresets(next)
+  const storeLibrary = (next: ControllerPreset[]|((items:ControllerPreset[])=>ControllerPreset[])) => {
+    if(lockedRef.current)throw Error('Editor configuration locked')
+    presetBank.save(next)
   }
   const recallState = (state: ControllerState) => {
     stopEmission(); disarmLearn()
@@ -256,17 +386,21 @@ function App() {
     setValues(Object.fromEntries(state.values.encoders.flatMap((v, i) => v === null ? [] : [[i + 1, { value: v, source: 'local' as const }]])))
   }
   const recallPreset = (id: string) => {
+    if (locked) { setNotice('Editor configuration locked'); return }
     const p = presets.find(p => p.id === id)
     if (!p) return
     if (dirty && !window.confirm(translate('Load this preset and replace the current draft? Unsaved changes will be replaced.', language))) return
     recallState(parseControllerState(p)); setPresetId(p.id); setPresetName(p.name)
     setNotice(`Preset “${p.name}” loaded locally. CC sending disabled; no hardware writes.`)
   }
+  usePresetExchange(presetExchange,{id:bound.instanceId??`legacy-${currentDevice.id}`,moduleId:`${currentDevice.id}-editor`,stateVersion:1,name:currentDevice.name,
+    capture:()=>({name:presetName,state:parseControllerState(snapshot)}),validate:parseControllerState,isLocked:()=>lockedRef.current,
+    load:(value,name)=>{recallState(parseControllerState(value));setPresetId('');setPresetName(name);setNotice('Library preset loaded locally; hardware sending disabled.')}},presetSignal)
   const savePreset = (asNew = false) => {
     try {
       if ((asNew || !activePreset) && presets.length >= 500) throw new Error('Library full (500 presets)')
       const p = makePreset(snapshot, presetName, !asNew && activePreset ? activePreset.id : undefined)
-      storeLibrary([...presets.filter(e => e.id !== p.id), p])
+      storeLibrary(items=>[...items.filter(e => e.id !== p.id), p])
       setPresetId(p.id); setPresetName(p.name)
       setNotice(`Preset “${p.name}” saved in this browser. Visual labels only.`)
     } catch (error) { setNotice(`Save failed: ${error instanceof Error ? error.message : String(error)}`) }
@@ -274,14 +408,99 @@ function App() {
   const importPresets = async (file: File | undefined) => {
     if (!file) return
     try {
+      if(file.size>64*1024*1024)throw Error('Preset file size limit')
       const raw = JSON.parse(await file.text())
       const incoming = raw.format === 'bcr32-preset-library' ? parseLibrary(raw) : [parsePreset(raw)]
       // Imported files never silently overwrite an existing preset or load hardware state.
       const imported = incoming.map(p => ({ ...p, id: crypto.randomUUID() }))
       if (presets.length + imported.length > 500) throw new Error('Limit of 500 presets')
-      storeLibrary([...presets, ...imported])
+      storeLibrary(items=>[...items, ...imported])
       setNotice(`${imported.length} preset(s) imported into the library, without loading or MIDI sending.`)
     } catch (error) { setNotice(`Import rejected: ${error instanceof Error ? error.message : String(error)}`) }
+  }
+  // BCL files (B-Control models): text (.bcr/.bcf/.txt) or the same lines as SysEx (.syx). A single preset replaces the
+  // draft, several go to the library; what cannot be converted is listed in Files, never guessed.
+  const importBcl = async (file: File | undefined) => {
+    if (!file || !currentDevice.bclModel) return
+    try {
+      if(file.size>bclFileLimits.bytes)throw Error('BCL file size limit exceeded')
+      const bytes = new Uint8Array(await file.arrayBuffer())
+      if(bytes.length>bclFileLimits.bytes)throw Error('BCL file size limit exceeded')
+      const source = bytes[0] === 0xf0 ? bclLinesFromSyx(bytes) : { lines: new TextDecoder().decode(bytes).split(/\r?\n/), model: null, issues: [] }
+      applyBcl(source.lines, source.issues, source.model, file.name)
+    } catch (error) { setNotice(`Import rejected: ${error instanceof Error ? error.message : String(error)}`) }
+  }
+  // BCL lines from a file or read from the controller: one preset replaces the draft (after confirmation), several go
+  // to the library. Throws on a file for another model or without preset.
+  const applyBcl = (lines: string[], sourceIssues: BclIssue[], modelByte: number | null, label: string) => {
+    {
+      const doc = parseBcl(lines)
+      const letter = doc.model ?? (modelByte === 0x14 ? 'F' : modelByte === 0x15 ? 'R' : null)
+      if (letter && letter !== currentDevice.bclModel) throw new Error('File made for another controller model')
+      if (!doc.presets.length) {
+        if (!doc.global) throw new Error('No preset in the file')
+        setBcGlobal(doc.global)
+        setProfile(p => ({ ...p, parameters: { ...p.parameters, global: { protocol: 'bcl', statements: Object.entries(doc.global!).map(([k,v]) => `.${k} ${v}`) } } }))
+        setNotice(`BCL global setup imported: ${label}`); return
+      }
+      const converted = doc.presets.map(p => ({ preset: p, ...presetToProfile(p, { ...createProfile(), ...(doc.global ? { parameters: { global: { protocol: 'bcl', statements: Object.entries(doc.global).map(([k,v]) => `.${k} ${v}`) } } } : {}) }, currentDevice.faders) }))
+      const tag = (p: typeof doc.presets[number]) => doc.presets.length > 1 ? `${p.slot ? `P-${String(p.slot).padStart(2, '0')}` : 'temp'} · ` : ''
+      setBclReport([...sourceIssues, ...doc.issues].map(i => ({ control: `Line ${i.line}`, reason: i.message })).concat(converted.flatMap(c => c.unconverted.map(u => ({ ...u, control: tag(c.preset) + u.control })))))
+      if (converted.length === 1) {
+        if (dirty && !window.confirm(translate('Importing this profile replaces the draft, its values and labels. Continue?', language))) return
+        recallState({ profile: converted[0].profile, labels: emptyLabels(), values: emptyValues(), ringMode: 'bar' })
+        setPresetId(''); setPresetName(converted[0].preset.name || label)
+        setNotice(`BCL preset imported: ${label}`)
+        return
+      }
+      if (presets.length + converted.length > 500) throw new Error('Limit of 500 presets')
+      const imported = converted.map(c => makePreset({ profile: c.profile, labels: emptyLabels(), values: emptyValues(), ringMode: 'bar' }, `${tag(c.preset)}${c.preset.name || label}`.slice(0, 80)))
+      storeLibrary(items=>[...items, ...imported])
+      setNotice(`${imported.length} preset(s) imported into the library, without loading or MIDI sending.`)
+    }
+  }
+  // Read a preset from the controller (read request only) and load it like a BCL file.
+  const readFromDevice = async (slot: number | 'temporary') => {
+    const reader = bcReader.current
+    if (!reader) return
+    setBcBusy(true)
+    try {
+      const chain = await reader.readPreset(slot)
+      if (bcReader.current !== reader) return
+      if (!chain.complete) throw new Error(chain.issues.at(-1) ?? 'No reply')
+      applyBcl(chain.lines, chain.issues.map(message => ({ line: 0, message })), currentDevice.sysex.model, slot === 'temporary' ? `${currentDevice.name} · current preset` : `${currentDevice.name} · P-${String(slot).padStart(2, '0')}`)
+    } catch (error) { setNotice(`Read failed: ${error instanceof Error ? error.message : String(error)}`) }
+    finally { setBcBusy(false) }
+  }
+  // B-Control global setup (request 41, read only): shown in Config as the controller reports it.
+  const readGlobalFromDevice = async () => {
+    const reader = bcReader.current
+    if (!reader) return
+    setBcBusy(true)
+    try {
+      const chain = await reader.readGlobal()
+      if (bcReader.current !== reader) return
+      if (!chain.complete) throw new Error(chain.issues.at(-1) ?? 'No reply')
+      const global = parseBcl(chain.lines).global ?? {}
+      setBcGlobal(global)
+      setProfile(p => ({ ...p, parameters: { ...p.parameters, global: { protocol: 'bcl', statements: Object.entries(global).map(([k,v]) => `.${k} ${v}`) } } }))
+    } catch (error) { setNotice(`Read failed: ${error instanceof Error ? error.message : String(error)}`) }
+    finally { setBcBusy(false) }
+  }
+  const readNamesFromDevice = async () => {
+    const reader = bcReader.current
+    if (!reader) return
+    setBcBusy(true)
+    try { const names = await reader.readNames(); if (bcReader.current === reader) setBcNames(names) } finally { setBcBusy(false) }
+  }
+  const exportBcl = (asSyx: boolean) => {
+    if (!currentDevice.bclModel) return
+    const { lines, unconverted } = profileToBcl(profile, presetName.trim() || 'MIDI Studio', currentDevice.bclModel, null, currentDevice.faders)
+    setBclReport(unconverted)
+    const stem = `${currentDevice.id}-${fileStem(presetName)}`
+    if (asSyx) download(new Uint8Array(bclToSyx(lines, currentDevice.sysex.model)), `${stem}.syx`, 'application/octet-stream')
+    else download(lines.join('\n') + '\n', `${stem}.${currentDevice.bclModel === 'F' ? 'bcf' : 'bcr'}`, 'text/plain')
+    setNotice(unconverted.length ? `BCL file saved; ${unconverted.length} control(s) not converted: see the list in Files.` : 'BCL file saved.')
   }
   const exportPreset = () => {
     try { const p = makePreset(snapshot, presetName); download(JSON.stringify(p, null, 2), `bcr32-${fileStem(p.name)}.json`) }
@@ -301,7 +520,7 @@ function App() {
   }
 
   useEffect(() => {
-    try { window.localStorage.setItem(storageKey, JSON.stringify(profile)) } catch { /* Draft persistence reports errors above. */ }
+    try { storage.setItem(storageKey, JSON.stringify(profile)) } catch { /* Draft persistence reports errors above. */ }
   }, [profile])
 
   useEffect(() => {
@@ -314,18 +533,24 @@ function App() {
       setPortVersion(n => n + 1)
       if (!isBcrOutput(access.outputs.get(outputId)) || pair.output?.id !== outputId) {
         sender.current?.close(); sender.current = null; setSendCC(false)
-        if (!isBcrOutput(pair.output)) setNotice('BCR32 output unavailable: CC sending stopped, no pending values.')
+        if (!isBcrOutput(pair.output)) setNotice(`${currentDevice.name} output unavailable: CC sending stopped, no pending values.`)
       }
       if (pair.input && pair.output && !associatedOnce.current) {
         associatedOnce.current = true
         setProfile(current => associateDefaultEncoder(current, hasPresetRef.current))
       }
-      if (pair.ambiguous) setNotice('Multiple BCR32 ports: choose a pair; no device is selected at random.')
+      if (pair.ambiguous) setNotice(`Multiple ${currentDevice.name} ports: choose a pair; no device is selected at random.`)
     }
     return () => { access.onstatechange = null }
   }, [access, inputId, outputId])
 
   // Arm only a newly connected BCR output. This never enqueues preset values,
+  useEffect(() => {
+    if (!bindPair || !access) return
+    try { bindPair(inputId, outputId) }
+    catch (error) { sender.current?.close(); sender.current = null; setSendCC(false); setNotice(error instanceof Error ? error.message : String(error)) }
+  }, [access, inputId, outputId, bindPair])
+
   // and does not undo a manual stop, preset recall or transport failure.
   useEffect(() => {
     if (!isBcrOutput(output)) { automaticEmissionPort.current = null; return }
@@ -339,7 +564,7 @@ function App() {
     const transport = createCcSender(bytes => {
       if (!isBcrOutput(output)) throw new Error('BCR32 output disconnected')
       output.send!(bytes)
-    }, bytes => { pulseActivity('send'); setEvents(current => [{ hex: `→ ${asHex(bytes)}`, text: describeMessage(bytes), note: 'value sent' }, ...current].slice(0, 12)) }, error => {
+    }, bytes => { pulseActivity('send'); monitor.push('out', bytes, 'value sent'); setEvents(current => [{ hex: `→ ${asHex(bytes)}`, text: describeMessage(bytes), note: 'value sent' }, ...current].slice(0, 12)) }, error => {
       setSendCC(false)
       setNotice(`Sending stopped: ${error instanceof Error ? error.message : String(error)}`)
     })
@@ -357,6 +582,7 @@ function App() {
     setValues(current => Object.fromEntries(Object.entries(current).map(([id, v]) => [id, { value: v.value, source: v.source }])))
     input.onmidimessage = (event) => {
       const data = Array.from(event.data)
+      monitor.push('in', data)
       // Clock (F8) and active sensing (FE) touch no React state: no activity pulse, no log line, no App render.
       if (data.length && !isSystemRealtime(data)) {
         pulseActivity('receive')
@@ -364,6 +590,7 @@ function App() {
       }
       brightnessTransport.current?.receive(data)
       globalsReader.current?.receive(data)
+      bcReader.current?.receive(data)
       const dump = decodeControllerDump(data)
       // Up to 64 presets × 8 blocks are kept; the notice counts messages instead of announcing each block.
       if (dump) setDumps(list => { const next = [dump, ...list].slice(0, 600); setNotice(dump.checksumOk ? `Front-panel export received: ${next.length} messages.` : 'Front-panel export received with a checksum error.'); return next })
@@ -462,7 +689,7 @@ function App() {
     sender.current?.close(); sender.current = null
     const enabled = !sendCC && isBcrOutput(output)
     setSendCC(enabled)
-    setNotice(enabled ? 'CC sending enabled: UI gestures send values to BCR32, not assignments.' : 'CC sending disabled: reception and local preview only.')
+    setNotice(enabled ? `CC sending enabled: UI gestures send values to ${currentDevice.name}, not assignments.` : 'CC sending disabled: reception and local preview only.')
   }
 
   const connect = async () => {
@@ -471,7 +698,7 @@ function App() {
     automaticEmissionPort.current = null
     sender.current?.close(); sender.current = null; setSendCC(false)
     try {
-      const { access: midi, sysexError } = await automaticMidiAccess()
+      const { access: midi, sysexError } = await (requestAccess ?? automaticMidiAccess)()
       setAccess(midi)
       const pair = automaticPorts(midi)
       setInputId(pair.input?.id ?? '')
@@ -480,7 +707,7 @@ function App() {
         associatedOnce.current = true
         setProfile(current => associateDefaultEncoder(current, hasPresetRef.current))
       }
-      setNotice(sysexError ? 'MIDI connected; browser denied SysEx. Retry after granting permission.' : pair.ambiguous ? 'Multiple BCR32 devices: choose ports; no arbitrary pairing.' : pair.input && pair.output ? 'CC sending enabled: UI gestures send values to BCR32, not assignments.' : 'MIDI allowed; waiting for BCR32, automatic connection when plugged in.')
+      setNotice(sysexError ? 'MIDI connected; browser denied SysEx. Retry after granting permission.' : pair.ambiguous ? `Multiple ${currentDevice.name} devices: choose ports; no arbitrary pairing.` : pair.input && pair.output ? `CC sending enabled: UI gestures send values to ${currentDevice.name}, not assignments.` : `MIDI allowed; waiting for ${currentDevice.name}, automatic connection when plugged in.`)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'MIDI access denied.')
     }
@@ -495,12 +722,12 @@ function App() {
 
   // Declared after the receive effect: attach the listener before probing.
   useEffect(() => {
-    const input = inputs.find(p => p.id === inputId && p.state === 'connected' && /BCR[- ]?32/i.test(p.name ?? ''))
-    if (!access?.sysexEnabled || !input || !isBcrOutput(output)) { probedPair.current = null; return }
+    const input = inputs.find(p => p.id === inputId && isDevicePort(currentDevice, p))
+    if (!currentDevice.features.productProbe || !access?.sysexEnabled || !input || !isBcrOutput(output)) { probedPair.current = null; return }
     if (probedPair.current?.access === access && probedPair.current.input === input && probedPair.current.output === output) return
     probedPair.current = { access, input, output }
     try {
-      output.send!(productQuery)
+      output.send!(productQuery); monitor.push('out', productQuery, 'product query (read-only)')
       pulseActivity('send')
       setEvents(current => [{ hex: `→ ${asHex(productQuery)}`, text: 'automatic product/firmware probe (read-only)' }, ...current].slice(0, 12))
     } catch (error) { setNotice(`Automatic probe failed: ${error instanceof Error ? error.message : String(error)}`) }
@@ -508,8 +735,10 @@ function App() {
 
   // Single validation path for the inspector and MIDI Learn: applySelectionChange, then clamp live values of the targets.
   const commitChange = (targets: Selection[], change: ControlChange) => {
+    if (locked) { setNotice('Editor configuration locked'); return }
     const keys=new Set(targets.map(selectionKey))
     const next=applySelectionChange(profileRef.current,targets,change)
+    profileRef.current=next // several commits in one gesture build on each other
     setProfile(next)
     setValues(current=>Object.fromEntries(Object.entries(current).map(([id,old])=>{
       if(!keys.has(selectionKey({kind:'encoders',id:Number(id)})))return [id,old]
@@ -520,6 +749,46 @@ function App() {
   }
   const updateSelected = (change: ControlChange) => {
     try { commitChange(selections,change) } catch(error){setNotice(error instanceof Error?error.message:String(error))}
+  }
+  // Drag and drop on the panel (src/control-move.ts): swap, insert or copy, with the labels; one undo step.
+  const moveControls = (kind: MoveKind, from: number, to: number, mode: MoveMode) => {
+    if (locked) { setNotice('Editor configuration locked'); return }
+    const r = moveControl(profileRef.current, customLabels, currentDevice, kind, from, to, mode)
+    if (r.profile === profileRef.current) return
+    profileRef.current = r.profile; setProfile(r.profile); setCustomLabels(r.labels)
+    selectUi({ kind, id: to }, {}, true)
+    const pair = `${controlName({ kind, id: from })} → ${controlName({ kind, id: to })}`
+    setNotice(`${mode === 'swap' ? `Swapped: ${pair}.` : mode === 'copy' ? `Copied: ${pair}.` : `Moved: ${pair}; the controls in between shifted.`}${r.notes.length ? ' ' + r.notes.join(' ') : ''}`)
+  }
+  // B-Control: what the selected control does to the preset's hardware settings (.fkeys, .egroups, .lock), shown
+  // before it surprises on the device. Derived the same way as the BCL export (src/bcl.ts).
+  const hardwareNotes = (): string[] => {
+    if (!currentDevice.bclModel) return []
+    const set = presetSettings(profile), notes: string[] = [], { kind, id } = selection
+    const assigned = kind === 'buttons' && profile.buttons.find(b => b.id === id)?.type !== 'off'
+    if (assigned && id >= 53 && id <= 56) notes.push('Programming a function key turns STORE, LEARN, EDIT and EXIT into keys in this preset (.fkeys off).')
+    if (assigned && id >= 57 && id <= 60) notes.push(`Programming a group key leaves ${set.egroups} encoder group(s) in this preset (.egroups ${set.egroups}).`)
+    if (assigned && (id === 63 || id === 64)) notes.push('Programming a preset key stops the preset keys from changing presets (.lock on).')
+    if (kind !== 'buttons' && id <= 32 && Math.ceil(id / 8) > set.egroups) notes.push(`Encoder group ${Math.ceil(id / 8)} is not available in this preset (.egroups ${set.egroups}).`)
+    return notes
+  }
+  // Monitor: the controls of the profile a message belongs to, and "Apply to selection" (each selected control gets
+  // the message's type, channel and parameter; keys and encoders keep only the types they accept).
+  const messageType = (row: MonitorRow): EncoderType | null => ({ CC: 'cc', NRPN: 'nrpn', Note: 'note', PB: 'pb', AT: 'at', PC: 'pc' } as Record<string, EncoderType>)[row.kind] ?? null
+  const monitorControl = (row: MonitorRow) => {
+    const type = messageType(row)
+    if (!type || row.channel === null) return null
+    const hits = (['encoders', 'pushes', 'buttons'] as const).flatMap(kind => profile[kind].filter(e => e.type === type && e.channel === row.channel && (type === 'pb' || type === 'pc' || (type === 'at' && row.parameter === null ? !!e.aftertouchAll : e.parameter === row.parameter))).map(e => controlLabel(kind, e.id, customLabels) === controlName({ kind, id: e.id }) ? controlName({ kind, id: e.id }) : `${controlName({ kind, id: e.id })} · ${controlLabel(kind, e.id, customLabels)}`))
+    return hits.length ? hits.slice(0, 2).join(', ') + (hits.length > 2 ? ` +${hits.length - 2}` : '') : null
+  }
+  const applyMessage = (row: MonitorRow) => {
+    const type = messageType(row)
+    if (!type || row.channel === null) return
+    const change: ControlChange = { type, channel: row.channel, ...(row.parameter !== null ? { parameter: row.parameter } : {}), ...(type === 'at' ? { aftertouchAll: row.parameter === null } : {}), ...(type === 'nrpn' ? { maximum: 16383 } : {}) }
+    try {
+      for (const s of selections) commitChange([s], change)
+      setNotice(`Message applied to ${selections.length} control(s).`)
+    } catch (error) { setNotice(error instanceof Error ? error.message : String(error)) }
   }
 
   // MIDI Learn is one-shot and single-target. It only edits the local profile: no SysEx, no hardware write.
@@ -566,7 +835,7 @@ function App() {
     if(!brightnessEnabled||!output){brightnessTransport.current=null;return}
     const transport=createBrightnessTransport(bytes=>{
       if(!isBcrOutput(output))throw Error('BCR32 output disconnected')
-      output.send!(bytes);pulseActivity('send')
+      output.send!(bytes);pulseActivity('send');monitor.push('out',bytes,'LED brightness')
       setEvents(current=>[{hex:`→ ${asHex(bytes)}`,text:'LED brightness'},...current].slice(0,12))
     },state=>{setBrightness(state.value);setBrightnessDraft(state.draft);setBrightnessStatus(state.status)})
     brightnessTransport.current=transport;transport.read()
@@ -574,13 +843,22 @@ function App() {
   },[access,inputId,output,brightnessEnabled,portVersion])
   useEffect(()=>{if(tab==='config'&&brightness===null)brightnessTransport.current?.read()},[tab])
   useEffect(() => {
-    if (!brightnessEnabled || !output?.send) { globalsReader.current = null; return }
-    const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes))
+    if (!currentDevice.features.globals || !brightnessEnabled || !output?.send) { globalsReader.current = null; return }
+    const port = output, reader = createGlobalsReader(bytes => { port.send?.(bytes); monitor.push('out', bytes, 'settings read') })
     globalsReader.current = reader
     if (autoLoadRef.current) void loadDeviceSettings(reader)
     return () => { reader.close(); if (globalsReader.current === reader) globalsReader.current = null }
   }, [access, inputId, output, brightnessEnabled, portVersion])
   // Read the controller's settings and put them into the Config fields (the values stay editable; nothing is written).
+  // B-Control models: a reader for read requests once SysEx is allowed and the model's ports are paired; identity first.
+  useEffect(() => {
+    const input = inputs.find(p => p.id === inputId && isDevicePort(currentDevice, p))
+    if (!currentDevice.bclModel || !access?.sysexEnabled || !input || !isBcrOutput(output)) { bcReader.current = null; setBcReady(false); setBcIdentity(null); return }
+    const port = output, reader = createBcReader(currentDevice, bytes => { port.send?.(bytes); pulseActivity('send'); monitor.push('out', bytes, 'read request') })
+    bcReader.current = reader; setBcReady(true)
+    void reader.identify().then(id => { if (bcReader.current === reader) setBcIdentity(id) })
+    return () => { reader.close(); if (bcReader.current === reader) { bcReader.current = null; setBcReady(false) } }
+  }, [access, inputId, output, portVersion])
   async function loadDeviceSettings(reader = globalsReader.current) {
     if (!reader) return
     setDeviceSettingsBusy(true)
@@ -646,58 +924,92 @@ function App() {
   }
 
   const screenValue = screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }
-  return translatedTree(<main className="studio compact" data-theme={theme} onKeyDown={event=>{if(event.key!=='Escape')return;if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
-    <section className="workspace">
-      <section className="surface" aria-label="BCR-32 encoders">
-        <FrontPanel selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
+  floatContent.current = { text: screenText(screenControl, profile[screenControl.kind].find(e => e.id === screenControl.id)!, screenValue.value, screenValue.source, controlLabel(screenControl.kind, screenControl.id, customLabels)), style: displayStyle }
+  return translatedTree(<main className={`studio compact${environment ? ' embedded-editor' : ''}`} data-theme={theme} data-tools-collapsed={toolsCollapsed || undefined}
+    onChangeCapture={event => { if (locked && !(event.target as HTMLElement).closest('.value-preview,.ports-fields,.config-appearance > .zoom-option,.language-icon-picker')) { event.preventDefault(); event.stopPropagation(); setNotice('Editor configuration locked') } }}
+    onKeyDown={event=>{if(event.key!=='Escape')return;if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
+    {environment && <button className="editor-tools-toggle" aria-label={toolsCollapsed ? 'Show editing tools' : 'Collapse editing tools'} aria-expanded={!toolsCollapsed} title={toolsCollapsed ? 'Show editing tools' : 'Collapse editing tools'} onClick={() => setToolsCollapsed(value => !value)}><Icon name={toolsCollapsed ? 'expand' : 'collapse'} /></button>}
+    <section className={`workspace${tab !== 'control' ? ' left-open' : ''}`}>
+      <section className="surface" aria-label={`${currentDevice.name} encoders`}>
+        {currentDevice.panel.sections ? <DevicePanel device={currentDevice} profile={profile} selection={selection} selections={selections} select={selectUi} values={values} auxValues={auxValues} customLabels={customLabels} screenControl={screenControl} screenValue={screenValue} showNumbers={showNumbers} move={locked ? undefined : moveControls} setValue={setPreviewValue} mouseMulti={mouseMulti} selectMany={selectMany} /> : <FrontPanel device={currentDevice} move={locked ? undefined : moveControls} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => { if (!locked) setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) })) }} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
-        <div className="connection"><div className="connection-state"><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span><span className="firmware-status studio-version" data-i18n-skip>Studio v{studioVersion}</span>{profile.device.firmwareObserved && <span className="firmware-status"><span>Firmware:</span> {profile.device.firmwareObserved}</span>}</div><button className="floating-toggle" aria-pressed={!!pipWindow} disabled={!floatingSupported()} title={floatingSupported() ? 'Small always-on-top window with the screen, movable and resizable' : 'Needs Chrome or Edge 116 or later'} onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close floating display' : 'Floating display'}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button><LanguagePicker /></div>
-        {pipWindow && createPortal(<FloatingDisplay theme={theme} displayStyle={displayStyle} control={screenControl} config={profile[screenControl.kind].find(e => e.id === screenControl.id)!} label={controlLabel(screenControl.kind, screenControl.id, customLabels)} value={screenValue.value} source={screenValue.source} inspect={() => selectUi(screenControl, {}, true)} setValue={setScreenValue} />, pipWindow.document.body)}
-        <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
-        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'files', 'config', 'log'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Files', 'Config', 'Log'][i]} onClick={() => setTab(item)}><Icon name={(['sliders', 'folder', 'import', 'sliders', 'log'] as const)[i]} />{['Control', 'Presets', 'Files', 'Config', 'Log'][i]}</button>)}</nav>
+        {tools}
+        <PresetStorageNotice {...presetBank}/>
+        <div className="connection"><OfflineStatus /><div className="connection-state"><MidiConnectionIndicator midi={midiLease} connected={connectedPair} activity={activity} /><span className="firmware-status studio-version" data-i18n-skip>Studio v{studioVersion}</span>{profile.device.firmwareObserved && <span className="firmware-status"><span>Firmware:</span> {profile.device.firmwareObserved}</span>}{bcIdentity && <span className="firmware-status" data-i18n-skip>{bcIdentity.text}</span>}</div><MidiStatus activity={activity} input={inputs.find(p => p.id === inputId)?.name ?? null} output={output?.name ?? null} open={() => setTab('config')} /><button className="help-toggle" aria-pressed={tab === 'help'} title="Help" aria-label="Help" onClick={() => setTab(current => current === 'help' ? 'control' : 'help')} data-i18n-skip>?</button><button className="floating-toggle" aria-pressed={floatOn} disabled={!floatingSupported()} title={floatingSupported() ? 'A bare always-on-top window with the screens, movable and resizable' : 'Needs a browser with picture-in-picture (Chrome, Edge, Brave, Safari)'} onClick={() => { void toggleFloatingDisplay() }}>{floatOn ? 'Close floating display' : 'Floating display'}</button><button className="primary" hidden={!!access?.sysexEnabled} title="Retry MIDI + SysEx" onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button><LanguagePicker /></div>
+        <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : `Send CC to ${currentDevice.name}`}</button>
+        <div className="history-tools" role="group" aria-label="Undo and redo"><button onClick={() => stepHistory('undo')} disabled={!historyCounts.undo} title="Undo (Cmd/Ctrl+Z), in this preset only"><span aria-hidden="true">↶</span> Undo <span className="history-count" data-i18n-skip>{historyCounts.undo}</span></button><button onClick={() => stepHistory('redo')} disabled={!historyCounts.redo} title="Redo (Cmd/Ctrl+Shift+Z)"><span aria-hidden="true">↷</span> Redo <span className="history-count" data-i18n-skip>{historyCounts.redo}</span></button></div>
+        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'files', 'config', 'log', 'help'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Files', 'Config', 'Log', 'Help'][i]} onClick={() => setTab(current => current === item && item !== 'control' ? 'control' : item)}><Icon name={(['sliders', 'folder', 'import', 'gear', 'log', 'help'] as const)[i]} />{['Control', 'Presets', 'Files', 'Config', 'Log', 'Help'][i]}</button>)}</nav>
         <div className="sidebar-content">
+        <div className="tool-panel">
         <section className="profile-actions preset-panel" hidden={tab !== 'presets'} aria-label="Preset management">
           <h2>Presets{dirty ? ' *' : ''}</h2>
-          <select aria-label="Load preset" value={presetId} onChange={event => recallPreset(event.target.value)}><option value="">Draft · choose a preset</option>{presets.map(p => <option data-i18n-skip key={p.id} value={p.id}>{p.name}</option>)}</select>
-          <label>Preset name<input maxLength={80} value={presetName} onChange={event => setPresetName(event.target.value.replace(/[\u0000-\u001f\u007f]/g, ' '))} /></label>
-          <div className="preset-actions"><button className="primary" onClick={() => savePreset()} disabled={!presetName.trim()}><Icon name="save" />{activePreset ? 'Save / rename' : 'Create preset'}</button><button onClick={() => savePreset(true)} disabled={!presetName.trim()}><Icon name="copy" />Save as new</button></div>
+          <EditorPresetTools items={presets.map(p=>({key:p.id,name:p.name}))} selectedKey={presetId} name={presetName} locked={locked} onName={setPresetName} onSelect={recallPreset} onSave={savePreset} onError={e=>setNotice(String(e))} onDelete={()=>{if(lockedRef.current)throw Error('Editor configuration locked');if(window.confirm(translate('Delete this local preset?',language))){storeLibrary(items=>items.filter(p=>p.id!==presetId));setPresetId('')}}}>
+          {currentDevice.bclModel && <details className="protocol-options"><summary data-i18n-skip>BCL preset parameters</summary><ParameterFields schema={bclSchema} scope="preset" state={presetParameterState(profile)} change={preset => setProfile(p => ({ ...p, parameters: { ...p.parameters, preset } }))} /></details>}
+          </EditorPresetTools>
         </section>
         <section className="profile-actions config-appearance" hidden={tab !== 'config'}>
           <h2>Config</h2>
+          <label className="device-model">Controller model<select value={currentDevice.id} disabled={!!environment} onChange={event => chooseDevice(event.target.value)}>{Object.values(devices).map(d => <option data-i18n-skip key={d.id} value={d.id}>{d.name}</option>)}</select></label>
+          {!environment && <p className="surface-help">Changing the model reloads the editor; each model keeps its own presets.</p>}
+          {currentDevice.bclModel && <div className="bc-global"><h3>{`${currentDevice.name} global setup`}</h3><p className="surface-help" data-i18n-skip>Local configuration / BCL export · no device write.</p>
+            <button disabled={!bcReady || bcBusy} onClick={() => void readGlobalFromDevice()}>{`Read from the ${currentDevice.name}`}</button>
+            <ParameterFields schema={bclSchema} scope="global" state={profile.parameters?.global} change={global => setProfile(p => ({ ...p, parameters: { ...p.parameters, global } }))} />
+            {bcGlobal && <table className="bc-global-table"><tbody>{([['midimode', 'MIDI mode'], ['startup', 'Startup preset'], ['footsw', 'Footswitch'], ['rxch', 'Receive channel'], ['deviceid', 'Device ID'], ['txinterval', 'Transmission interval (ms)'], ['deadtime', 'Dead time (ms)']] as const).map(([key, label]) => <tr key={key}><th>{label}</th><td data-i18n-skip>{bcGlobal[key] ?? '—'}</td></tr>)}</tbody></table>}</div>}
           <div className="theme-swatches" role="group" aria-label="Controller and interface theme"><Icon name="palette" />{themes.map(t => <button key={t.id} className={`theme-swatch swatch-${t.id}`} aria-label={`Theme ${t.name}`} aria-pressed={theme === t.id} title={t.name} onClick={() => setTheme(parseTheme(t.id))}><span className="sr-only">{t.name}</span><span className="swatch-tooltip" aria-hidden="true">{t.name}</span></button>)}</div>
           <label className="zoom-option"><input type="checkbox" checked={autoZoom} onChange={event => setAutoZoom(event.target.checked)} />Zoom while adjusting</label>
           <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
           <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
           <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
-          <DeviceSettings results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings()) }))} autoLoad={autoLoadDevice} setAutoLoad={setAutoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} />
+          {currentDevice.features.globals && <DeviceSettings results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings()) }))} autoLoad={autoLoadDevice} setAutoLoad={setAutoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} />}
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
-          <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} saveAll={list => download(new Uint8Array([...list].reverse().flatMap(d => d.raw)), `bcr32-exports-${list.length}.syx`, 'application/octet-stream')} />
+          {currentDevice.features.frontPanelExport && <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} saveAll={list => download(new Uint8Array([...list].reverse().flatMap(d => d.raw)), `bcr32-exports-${list.length}.syx`, 'application/octet-stream')} />}
+          {currentDevice.bclModel && <div className="bcl-files bc-read"><h3>{`Read from the ${currentDevice.name}`}</h3><p className="surface-help">Read requests only: the controller sends its preset as BCL text; nothing is written to it.</p>
+            <div className="preset-actions"><button disabled={!bcReady || bcBusy} onClick={() => void readFromDevice('temporary')}><Icon name="import" />Read current preset</button><button disabled={!bcReady || bcBusy} onClick={() => void readNamesFromDevice()}>Read preset names</button></div>
+            <div className="preset-actions"><select aria-label="Preset slot" value={bcSlot} onChange={event => setBcSlot(Number(event.target.value))}>{Array.from({ length: currentDevice.presetSlots }, (_, i) => i + 1).map(n => <option data-i18n-skip key={n} value={n}>{`P-${String(n).padStart(2, '0')}${bcNames.find(x => x.slot === n)?.name ? ` · ${bcNames.find(x => x.slot === n)!.name}` : ''}`}</option>)}</select><button disabled={!bcReady || bcBusy} onClick={() => void readFromDevice(bcSlot)}>Read this preset</button></div></div>}
+          {currentDevice.bclModel && <div className="bcl-files"><h3>BCL files</h3><p className="surface-help">Text the controller reads (.bcr, .bcf, .txt) or the same lines as SysEx (.syx). Program Change, GS/XG, MMC and custom output are not converted yet. Nothing is sent to the controller.</p>
+            <div className="preset-actions"><button onClick={() => exportBcl(false)}><Icon name="export" />Export BCL text</button><button onClick={() => exportBcl(true)}><Icon name="export" />Export SysEx (.syx)</button><label className="file">Import BCL or SysEx<input type="file" accept=".bcr,.bcf,.bc2,.txt,.bcl,.syx" onChange={event => { void importBcl(event.target.files?.[0]); event.target.value = '' }} /></label></div>
+            {bclReport.length > 0 && <details open className="bcl-report"><summary><span>Not converted</span> · {bclReport.length}</summary><ul data-i18n-skip>{bclReport.slice(0, 200).map((u, n) => <li key={n}>{u.control}: {u.reason}</li>)}</ul></details>}</div>}
           <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} />
           <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
-          <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
-          <div className="cubase-export"><h3>Cubase · MIDI Remote</h3><p className="surface-help">Surface script for Cubase 12 and later: encoders, pushes and buttons with their exact MIDI messages. No function is assigned: map them in Cubase with the Mapping Assistant.</p><p className="surface-help" data-i18n-skip><code>MIDI Remote/{cubaseFolder}/</code></p><button onClick={exportCubase}><Icon name="export" />Export Cubase script</button></div>
+          {currentDevice.features.pdfSheet && <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>}
+          {currentDevice.features.cubase && <div className="cubase-export"><h3>Cubase · MIDI Remote</h3><p className="surface-help">Surface script for Cubase 12 and later: encoders, pushes and buttons with their exact MIDI messages. No function is assigned: map them in Cubase with the Mapping Assistant.</p><p className="surface-help" data-i18n-skip><code>MIDI Remote/{cubaseFolder}/</code></p><button onClick={exportCubase}><Icon name="export" />Export Cubase script</button></div>}
           <details><summary>Legacy profile format</summary><div className="preset-actions"><button onClick={exportProfile}><Icon name="export" />Export profile v2</button><label className="file">Import profile v1/v2<input type="file" accept="application/json" onChange={event => { void importProfile(event.target.files?.[0]); event.target.value = '' }} /></label></div></details>
         </section>
+    <section className="lower">
+      <section className="ports" hidden={tab !== 'config'}>
+        {currentDevice.features.studioConfig && <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled} brightnessStatus={brightnessStatus} />}
+        <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
+        <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => { setInputId(event.target.value); if (environment) changeOutput('') }}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{environment ? `${port.name ?? 'MIDI'} · ${port.id}` : port.name ?? port.id}</option>)}</select></label>
+          <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{environment ? `${port.name ?? 'MIDI'} · ${port.id}` : port.name ?? port.id}</option>)}</select></label>
+          </div>
+      </section>
+      {tab === 'help' && <HelpPanel />}
+      <section className="log" hidden={tab !== 'log'}><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
+    </section>
+        </div>
         <section className="sidebar-meta">
           <p className="sidebar-notice" role="status">{notice}</p>
         </section>
-      <section className="inspector" hidden={tab !== 'control'} aria-label={`Edit ${selection.kind} ${selected.id}`}>
-        <ControlSearch profile={profile} labels={customLabels} selection={selection} select={s=>selectUi(s,{},true)} />
+      <section className={`inspector${currentDevice.bclModel && selections.length === 1 && inspectorView === 'text' ? ' text-mode' : ''}`} aria-label={`Edit ${selection.kind} ${selected.id}`}>
+        <ControlSearch device={currentDevice} profile={profile} labels={customLabels} selection={selection} select={s=>selectUi(s,{},true)} />
         <p className="eyebrow">{selection.kind === 'buttons' ? 'PROGRAMMABLE BUTTON' : 'SELECTED ENCODER'}</p>
-        <h2>{selection.kind === 'buttons' ? 'Button' : 'Encoder'} {selected.id}</h2>
+        <h2>{selection.kind === 'buttons' ? `Button ${selected.id}` : currentDevice.faders && selected.id >= currentDevice.faders.first ? `Fader ${selected.id - currentDevice.faders.first + 1}` : `Encoder ${selected.id}`}</h2>
+        {currentDevice.bclModel && selections.length === 1 && <div className="action-tabs inspector-view" role="group" aria-label="Inspector view"><button aria-pressed={inspectorView === 'form'} onClick={() => setInspectorView('form')}>Form</button><button aria-pressed={inspectorView === 'text'} onClick={() => setInspectorView('text')}>BCL text</button></div>}
+        {currentDevice.bclModel && selections.length === 1 && inspectorView === 'text' && <BclText model={currentDevice.bclModel} faders={currentDevice.faders} selection={selection} config={selected} profile={profile} presetName={presetName} apply={encoder => { const { id: _id, ...fields } = encoder; try { commitChange([selection], { ...fields, parameterOff: undefined, minimumOff: undefined }) } catch (error) { setNotice(error instanceof Error ? error.message : String(error)) } }} />}
         {activeControls.length>0&&<ol className="activity-strip" aria-label="Active controls">{activeControls.slice(0,4).map(a=>{const value=a.control.kind==='encoders'?values[a.control.id]?.value:auxValues[a.control.kind][controlIndex(a.control.kind,a.control.id)];const source=a.control.kind==='encoders'?values[a.control.id]?.source:auxSources[`${a.control.kind}:${a.control.id}`];const percent=Math.round(a.share*100);return <li key={selectionKey(a.control)}><button aria-pressed={selectionKey(a.control)===selectionKey(selection)} onClick={()=>selectUi(a.control,{},true)}><span>{controlName(a.control)}</span><output>{value??'—'}</output><small>{source==='relative'?'relative estimate':source==='midi'?'MIDI received':'local preview'}</small><span className="activity-share" title={`${percent}% of pulses`}><span style={{width:`${percent}%`}} /></span></button></li>})}</ol>}
         <div className="selection-tools"><span>Selection · {selections.length}</span><button aria-pressed={mouseMulti} onClick={()=>setMouseMulti(current=>!current)}>Multi-select</button><button onClick={()=>{const list=profile[selection.kind].map(e=>({kind:selection.kind,id:e.id}));setSelections(list);selectionsRef.current=list}}>All</button>{(multiple||mouseMulti)&&<button onClick={()=>{setMouseMulti(false);selectUi(selection,{},true)}}>Single</button>}<button aria-pressed={learn.active} className="learn-toggle" onClick={toggleLearn}>Learn</button>{mouseMulti?<small>Click: add / remove</small>:<small data-i18n-skip>Cmd/Ctrl + click · Shift + click</small>}</div>
+        {hardwareNotes().map(note => <p key={note} className="surface-help hardware-note" role="note">{note}</p>)}
         {learn.active&&<p className="surface-help learn-status" role="status">Learn · {learn.status}</p>}
         {mouseMulti&&<p className="surface-help">Drag on the background: rectangle selection.</p>}
         {is14Bit(selected) && <p className="surface-help">{modeText[selected.mode]} · 14 bits · {selected.type === 'nrpn' ? 'Data Entry CC 6 + 38' : `CC ${selected.parameter} + ${selected.parameter + 32}`}.</p>}
         {selected.type !== 'off' && transportIssue(selection.kind === 'encoders' ? selected : { ...selected, mode: 'absolute' }) && <p className="surface-help" role="status">{transportIssue(selection.kind === 'encoders' ? selected : { ...selected, mode: 'absolute' })}</p>}
         <label>Visual label<input maxLength={48} placeholder={multiple?'Mixed / batch label':'Default printed name'} value={sharedField(selections.map(s=>customLabels[s.kind][controlIndex(s.kind,s.id)]))} onChange={event => setCustomLabels(current => ({ ...current,...Object.fromEntries((['encoders','pushes','buttons'] as const).map(kind=>[kind,current[kind].map((label,i)=>selectedKeys.has(selectionKey({kind,id:profile[kind][i].id}))?cleanLabel(event.target.value):label)])) }))} /></label>
         <label className="zoom-option" data-i18n-skip><input type="checkbox" checked={selected.display !== false} onChange={e=>updateSelected({display:e.target.checked})} />Display On/Off</label>
-        {selection.kind !== 'buttons' && <div className="action-tabs"><button aria-pressed={selection.kind === 'encoders'} onClick={() => selectUi({ ...selection, kind: 'encoders' },{},true)}><Icon name="rotate" />Rotation</button><button aria-pressed={selection.kind === 'pushes'} onClick={() => selectUi({ ...selection, kind: 'pushes' },{},true)}><Icon name="push" />Push</button></div>}
+        {selection.kind !== 'buttons' && profile.pushes.some(p => p.id === selection.id) && <div className="action-tabs"><button aria-pressed={selection.kind === 'encoders'} onClick={() => selectUi({ ...selection, kind: 'encoders' },{},true)}><Icon name="rotate" />Rotation</button><button aria-pressed={selection.kind === 'pushes'} onClick={() => selectUi({ ...selection, kind: 'pushes' },{},true)}><Icon name="push" />Push</button></div>}
         <p className="muted">{sendCC ? 'CC values sent · assignments unchanged.' : 'Receive / local preview · CC sending disabled.'}</p>
         {selection.kind === 'encoders' && <section className="value-preview">
           <label>Value · {values[selected.id]?.source === 'relative' ? 'relative estimate' : values[selected.id]?.source === 'midi' ? 'MIDI received' : sendCC ? 'UI adjustment' : 'local preview'}<output>{values[selected.id]?.value ?? '—'}</output>
@@ -711,7 +1023,7 @@ function App() {
             onBlur={() => { if (selected.mode === 'momentary') pressSelected(false) }}><Icon name="push" />Test press / release</button>
           <p className="surface-help">{selected.mode === 'momentary' ? 'Tog Off: maximum on press, minimum on release.' : selected.mode === 'toggle' ? 'Tog On: alternate maximum and minimum on each press.' : 'Inc: add the step on each press, clamped to the range.'} Clicking the panel only selects a control.</p>
         </section>}
-        {!!selectedRotations.length && <label>LED ring<select value={batchLed} onChange={event=>updateSelected({ledMode:event.target.value as LedMode})}>{batchLed===''&&<option value="" disabled>Mixed</option>}{ledModes.map(mode=><option data-i18n-skip key={mode} value={mode}>{ledModeLabel[mode]}</option>)}</select></label>}
+        {!!selectedRotations.length && (!currentDevice.ringModes || selectedRotations.some(e=>currentDevice.ringModes!(e.selection.id).length>1)) && <label>LED ring<select value={batchLed} onChange={event=>updateSelected({ledMode:event.target.value as LedMode})}>{batchLed===''&&<option value="" disabled>Mixed</option>}{ledModes.filter(mode=>!currentDevice.ringModes||selectedRotations.every(e=>currentDevice.ringModes!(e.selection.id).includes(mode))).map(mode=><option data-i18n-skip key={mode} value={mode}>{ledModeLabel[mode]}</option>)}</select></label>}
         <div className="fields two"><label>Type<select value={batchType} onChange={(event) => updateSelected({ type: event.target.value as EncoderType })}>
           {batchType===''&&<option value="" disabled>Mixed</option>}{Array.from(new Set([...(multiple?[]:[selected.type]),...commonTypes])).map((type) => <option key={type} value={type}>{type.toUpperCase()}</option>)}
         </select></label>
@@ -734,21 +1046,16 @@ function App() {
         {selected.type !== 'mmc' && <div className="fields two"><label>Minimum<input type="number" min="0" max={valueLimit(selected)} value={selected.minimum} onChange={(event) => updateSelected({ minimum: Number(event.target.value) })} /></label>
           <label>{selected.type === 'note' ? 'Velocity' : selected.type === 'pc' ? 'Program maximum' : 'Maximum'}<input type="number" min="0" max={valueLimit(selected)} value={selected.maximum} onChange={(event) => updateSelected({ maximum: Number(event.target.value) })} /></label></div>}
         {selection.kind !== 'encoders' && selected.mode === 'inc_dec' && <label>Step per press<input type="number" min="-127" max="127" value={selected.increment ?? 1} onChange={event => updateSelected({ increment: Number(event.target.value) })} /></label>}
+        {currentDevice.bclModel && !multiple && <details className="protocol-options" open><summary data-i18n-skip>BCL parameters</summary><BclParameters key={`${selection.kind}:${selection.id}`} config={selected} capabilities={currentDevice.faders && selection.id >= currentDevice.faders.first + (currentDevice.faders.physicalCount ?? currentDevice.faders.count) ? [] : ['motor']} scope={selection.kind !== 'encoders' ? 'button' : currentDevice.faders && selection.id >= currentDevice.faders.first ? 'fader' : 'encoder'} change={encoder => { const { id: _id, ...fields } = encoder; commitChange([selection], fields) }} /></details>}
       </section>
 
-    <section className="lower">
-      <section className="ports" hidden={tab !== 'config'}>
-        <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled} brightnessStatus={brightnessStatus} />
-        <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
-        <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
-          <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
-          </div>
-      </section>
-      <section className="log" hidden={tab !== 'log'}><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
-    </section>
         </div>
       </aside>
     </section>
+    <details className="console" open={monitorOpen} onToggle={event => setMonitorOpen(event.currentTarget.open)}>
+      <summary>MIDI monitor</summary>
+      <MidiMonitor monitor={monitor} control={monitorControl} canApply={selections.length > 0} apply={applyMessage} />
+    </details>
   </main>, language)
 }
 

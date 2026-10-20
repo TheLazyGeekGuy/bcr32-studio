@@ -23,7 +23,7 @@ const csp = Object.fromEntries(h['Content-Security-Policy'].split(';').map(d => 
 assert.deepEqual(csp['frame-ancestors'], ["'none'"]); assert.deepEqual(csp['object-src'], ["'none'"]); assert.deepEqual(csp['default-src'], ["'self'"])
 assert.deepEqual(csp['script-src'], ["'self'"], 'No inline script, no eval')
 assert.ok(csp['img-src'].includes("'self'") && csp['img-src'].includes('blob:'), 'Images: own assets and client-generated blobs')
-assert.deepEqual(csp['connect-src'], ["'self'"], 'The PDF font is fetched from the origin')
+assert.deepEqual(csp['connect-src'], ["'self'",'http://127.0.0.1:5181'], 'Own assets plus the fixed optional loopback inventory; no wildcard, LAN range or remote companion')
 // Every asset path the app references must exist under public/ and must not be excluded from the upload.
 // .assetsignore only drops build by-products (*.map, .DS_Store): every shipped public file is uploaded.
 const ignored = readFileSync(join(pub, '.assetsignore'), 'utf8').split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
@@ -35,7 +35,7 @@ walk('')
 for (const path of shipped) assert.ok(!excluded(path), 'Shipped public file excluded from upload: ' + path)
 const src = join(root, 'src'), referenced = new Set()
 for (const file of readdirSync(src).filter(f => /\.(tsx?|css)$/.test(f))) for (const m of readFileSync(join(src, file), 'utf8').matchAll(/['"`(]\/?((?:[\w-]+\/)+[\w.-]+\.(?:webp|png|jpe?g|svg|ttf|woff2?))['"`)]/g)) referenced.add(m[1])
-assert.deepEqual([...referenced].sort(), ['branding/bcr32-studio-logo.webp', 'fonts/NotoSans-Regular.ttf'], 'App asset files: the logo and the PDF font, nothing else')
+assert.deepEqual([...referenced].sort(), ['branding/midi-studio-logo.svg', 'fonts/NotoSans-Regular.ttf'], 'App asset files: the logo and the PDF font, nothing else')
 // Paths are relative (vite base './'), so the same build works at a domain root and under any sub-path.
 for (const file of readdirSync(src).filter(f => /\.(tsx?|css)$/.test(f))) assert.ok(!/['"`(]\/(branding|fonts)\//.test(readFileSync(join(src, file), 'utf8')), 'Root-absolute asset path in ' + file)
 for (const path of referenced) { assert.ok(existsSync(join(pub, path)), 'Missing public asset: ' + path); assert.ok(!excluded(path), 'App asset excluded from upload: ' + path) }

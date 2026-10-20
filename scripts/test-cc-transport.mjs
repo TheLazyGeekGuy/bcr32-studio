@@ -8,7 +8,7 @@ const transpile = name => ts.transpileModule(readFileSync(new URL(`../src/${name
 const require = createRequire(import.meta.url)
 const transport = {}
 const panel = {}
-const localRequire = name => {
+const localRequire = name => { if (name.endsWith('.json')) return JSON.parse(readFileSync(new URL(`../src/${name.replace(/^\.\//, '')}`, import.meta.url), 'utf8'));
   if (!name.startsWith('./')) return require(name)
   const exports = {}
   new Function('require', 'exports', transpile(name.slice(2) + (['./ActivityLeds', './OledDisplay', './i18n', './Icon'].includes(name) ? '.tsx' : '.ts')))(localRequire, exports)
@@ -55,7 +55,7 @@ assert.equal(echoed[1].value, 64)
 assert.equal(echoCount, 1)
 echoedSender.close()
 const web = {}
-new Function('require', 'exports', transpile('web-midi.ts'))(require, web)
+new Function('require', 'exports', transpile('web-midi.ts'))(localRequire, web)
 const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
 const requested = []
 Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { requestMIDIAccess: async options => { requested.push(options); return { sysexEnabled: options.sysex } } } })

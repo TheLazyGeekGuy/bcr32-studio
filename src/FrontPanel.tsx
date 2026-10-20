@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import type { Bcr32Profile } from './profile'
-import { cleanLabel, controlIndex, emptyLabels, type VisualLabels } from './presets'
-import { buttonPosition, encoderNames, encoderPosition } from './panel-layout'
+import { cleanLabel, controlIndex as modelControlIndex, emptyLabels, type VisualLabels } from './presets'
+import {controlLabelFor} from './control-labels'
+import { buttonPosition, encoderNames, encoderPosition, extraButtonPosition } from './panel-layout'
 import { ActivityLeds, idleActivity, type Activity } from './ActivityLeds'
 import { NameDisplay, OledDisplay } from './OledDisplay'
 import { receiveControlCC, type LiveValue } from './controller-midi'
 import { ledSegments, type LedMode } from './led-modes'
 import { controlsInRectangle, type SelectionGesture, type SelectionRectangle } from './multi-selection'
 import { translate, useLanguage } from './i18n'
+import { bcr32KeyLabels, bcr32RightKeys } from './device-bcr32'
+import { dragMoveProps, type MoveKind, type MoveMode } from './control-move'
+import { currentDevice } from './devices'
+import type { DeviceDefinition } from './device-definition'
 
 export type Selection = { kind: 'encoders' | 'pushes' | 'buttons'; id: number }
 export type LiveValues = Record<number, LiveValue>
@@ -18,18 +23,11 @@ export function receiveCC(profile: Bcr32Profile, current: LiveValues, data: numb
   for (const e of profile.encoders) { const value = receiveControlCC(e, current[e.id], data); if (value) next[e.id] = value }
   return next
 }
-const labels = ['PITCH', 'VELOCITY', 'MUTE', 'DELAY', 'LENGTH', 'MIDI CTRL α', 'MIDI CTRL β', 'WAVE GEN', 'CHORD', 'STEP SKIP', 'SEQ START', 'SEQ LENGTH', 'SEQ OFFSET', 'CLK DIVIDER', 'SHUFFLE', 'DIRECTION']
-const globals = ['EDIT / GLOBAL', 'EXIT', 'STORE', 'LD / LRN', 'TAP DELETE', 'TAP WRITE', 'INST SEL', 'MIXER', 'LOOP', 'PLAY / STOP']
-// Name printed on the panel for a control (a push takes its encoder's name).
-export function printedName(kind: Selection['kind'], id: number): string {
-  if (kind !== 'buttons') return encoderNames[id - 1] ?? `${id}`
-  if (id >= 5 && id <= 20) return labels[id - 5]
-  if (id >= 21 && id <= 24) return `T${id - 20}`
-  if (id >= 65 && id <= 68) return globals[id - 65 + 6]
-  return id === 74 || id === 75 ? `FOOTSW ${id - 73}` : `${id}`
-}
+const labels = bcr32KeyLabels, globals = bcr32RightKeys
+// Name printed on the panel for a control (a push takes its encoder's name), from the current model's definition.
+export const printedName = (kind: Selection['kind'], id: number, device: DeviceDefinition = currentDevice): string => device.printedName(kind, id)
 // Label of a control as shown on the panel: the user's label, else the printed name.
-export const controlLabel = (kind: Selection['kind'], id: number, custom: VisualLabels) => custom[kind][controlIndex(kind, id)]?.trim() || printedName(kind, id)
+export const controlLabel = (kind: Selection['kind'], id: number, custom: VisualLabels, device: DeviceDefinition = currentDevice) => controlLabelFor(device, kind, id, custom)
 // Percentages of the panel coordinate space (1717 × 1440).
 const region = (x: number, y: number, width: number, height: number): CSSProperties => ({
   left: `${x / 1717 * 100}%`, top: `${y / 1440 * 100}%`,
@@ -50,7 +48,8 @@ function InlineName({ initial, style, name, commit, cancel }: { initial: string;
     onKeyDown={event => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); finish() } else if (event.key === 'Escape') { event.preventDefault(); finished.current = true; cancel() } }} />
 }
 
-export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = false, displayStyle = 'ice' }: {
+export function FrontPanel({ device = currentDevice, profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(device), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = false, displayStyle = 'ice', move }: {
+  device?: DeviceDefinition
   profile: Bcr32Profile; selection: Selection; selections?: Selection[]; select: (value: Selection, gesture?: SelectionGesture) => void; action: (name: string) => void
   values?: LiveValues; setValue?: (id: number, value: number) => void; ringMode?: LedMode
   compact?: boolean
@@ -66,7 +65,10 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
   screenControl?: Selection
   screenValue?: { value: number | null; source: 'local' | 'midi' | 'relative' }
   setScreenValue?: (value: number) => void
+  move?: (kind: MoveKind, from: number, to: number, mode: MoveMode) => void // drag and drop of encoders (by their label) and keys
 }) {
+  const controlIndex = (kind: Selection['kind'], id: number) => modelControlIndex(kind, id, device)
+  const { encoderPosition, buttonPosition, extraButtonPosition, encoderNames } = device.panel
   const language = useLanguage(), t = (text: string) => translate(text, language)
   const [editing, setEditing] = useState<Selection | null>(null)
   const [selectedGlobal,setSelectedGlobal]=useState<number|null>(null)
@@ -95,7 +97,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
   const gesture = (event: {metaKey:boolean;ctrlKey:boolean;shiftKey:boolean}) => ({toggle:mouseMulti||event.metaKey||event.ctrlKey,range:event.shiftKey})
   const startRename = (control: Selection) => { drag.current = null; select(control); setEditing(control) }
   const renameKey = (event: KeyboardEvent, control: Selection) => { if (event.key === 'F2') { event.preventDefault(); startRename(control) } }
-  const button = (id: number, label: string, x: number, y: number, width = 140) => <button key={id}
+  const button = (id: number, label: string, x: number, y: number, width = 140) => <button key={id} {...(move ? dragMoveProps('buttons', id, move) : {})}
     style={region(x, y, width, 55)} className={`panel-hit key-hit ${id>=65?'right-key':''} ${(profile.buttons.find(b => b.id === id)?.type ?? 'off') === 'off' ? 'control-off' : 'control-on'} ${isSelected('buttons', id) ? 'active' : ''}`}
     aria-label={t(`Button ${id} ${customLabels.buttons[controlIndex('buttons', id)] || label}`)} title={`${customLabels.buttons[controlIndex('buttons', id)] || label} · ${profile.buttons.find(b => b.id === id)?.type === 'off' ? 'OFF' : t('assigned')} · ${t('local profile')}`}
     aria-pressed={isSelected('buttons', id)} onClick={event => select({ kind: 'buttons', id },gesture(event))}
@@ -123,7 +125,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
     }}
     onPointerUp={event=>{
       const state=marquee.current;if(!state||state.pointerId!==event.pointerId)return
-      if(state.moved){const controls=controlsInRectangle(profile,selection.kind,state.rect);if(controls.length)selectMany(controls)}
+      if(state.moved){const controls=controlsInRectangle(profile,selection.kind,state.rect,device);if(controls.length)selectMany(controls)}
       marquee.current=null;setRectangle(null);event.currentTarget.releasePointerCapture(event.pointerId)
     }}
     onPointerCancel={()=>{marquee.current=null;setRectangle(null)}} onLostPointerCapture={()=>{marquee.current=null;setRectangle(null)}}>
@@ -131,7 +133,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
     <div className="panel-plate" aria-hidden="true" />
     {rectangle&&<div className="selection-rectangle" aria-hidden="true" style={region(Math.min(rectangle.x1,rectangle.x2),Math.min(rectangle.y1,rectangle.y2),Math.abs(rectangle.x2-rectangle.x1),Math.abs(rectangle.y2-rectangle.y1))} />}
     <ActivityLeds activity={activity} />
-    {compact && <div className="editor-brand" style={region(700, 38, 305, 72)}><img src="branding/bcr32-studio-logo.webp" alt="BCR32 Studio" draggable={false} /></div>}
+    {compact && <div className="editor-brand" style={region(700, 38, 305, 72)}><img src="branding/midi-studio-logo.svg" alt="MIDI Studio" draggable={false} /></div>}
     {labels.map((label, i) => button(i + 5, label, 37 + (i % 8) * 161.4, i < 8 ? 247 : 369))}
     {['T1', 'T2', 'T3', 'T4'].map((label, i) => button(i + 21, label, i % 2 ? 1583 : 1422, i < 2 ? 247 : 369, 96))}
     {profile.encoders.map(e => {
@@ -143,7 +145,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
       const segments = ledSegments(e.ledMode ?? ringMode, value, e.minimum, e.maximum, enabled, known)
       return <div key={e.id} className={zoomed && screenControl.kind !== 'buttons' && screenControl.id === e.id ? 'zoomed-encoder' : undefined} style={{ transformOrigin: `${x / 1717 * 100}% ${y / 1440 * 100}%` }}>
         {showNumbers && <span className="encoder-number" style={region(x - 22, y - 107, 44, 28)} aria-hidden="true">{e.id}</span>}
-        <button className="panel-hit name-hit" style={region(x - 78, y + 74, 156, 27)} aria-label={`${t('Encoder label')} ${e.id} ${customLabels.encoders[e.id - 1] || encoderNames[e.id - 1]}`}
+        <button className="panel-hit name-hit" {...(move ? dragMoveProps('encoders', e.id, move) : {})} style={region(x - 78, y + 74, 156, 27)} aria-label={`${t('Encoder label')} ${e.id} ${customLabels.encoders[e.id - 1] || encoderNames[e.id - 1]}`}
           title={t('Click: select. Double-click or F2: rename.')}
           onClick={event => select({ kind: 'encoders', id: e.id },gesture(event))} onDoubleClick={() => startRename({ kind: 'encoders', id: e.id })}
           onKeyDown={event => renameKey(event, { kind: 'encoders', id: e.id })}><span className="silver-dial-label">{customLabels.encoders[e.id - 1] || encoderNames[e.id - 1]}</span></button>
@@ -181,7 +183,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
     })}
     <button style={region(1168, 124, 140, 55)} className="panel-hit key-hit zaq-toggle" aria-label="ZQR / CTRL"
       onClick={() => action('Editor Controller mode only. No hardware change.')}><span className="silver-key-label">ZQR / CTRL</span></button>
-    {nameScreen && <NameDisplay text={controlLabel(screenControl.kind, screenControl.id, customLabels)} blank={displayed.display === false} style={region(1374, 463, 192, 49)} />}
+    {nameScreen && <NameDisplay text={controlLabel(screenControl.kind, screenControl.id, customLabels, device)} blank={displayed.display === false} style={region(1374, 463, 192, 49)} />}
     <OledDisplay control={screenControl} config={displayed} value={displayValue.value} source={displayValue.source} style={region(1374, 518, 192, 98)}
       inspect={() => select(screenControl)} setValue={v => { if (setScreenValue) setScreenValue(v); else if (screenControl.kind === 'encoders') setValue(screenControl.id, v) }} />
     <button style={region(1583, 518, 96, 96)} className="panel-hit rotation-hit select-knob" aria-label={t('SELECT rotation and push')}
@@ -197,7 +199,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
       {[938,1085].map(y=><path key={y} d={`M1410 ${y}V${y+55}M1529 ${y}V${y+55}`} />)}
       <path d="M1571 938V993M1690 938V993" />
     </svg>
-    {globals.map((label, i) => i >= 6 ? button(65 + i - 6, label, i % 2 ? 1583 : 1422, [1085, 1207][Math.floor((i - 6) / 2)], 96) : <button key={label} style={region(i % 2 ? 1583 : 1422, [670, 792, 938, 1085, 1207][Math.floor(i / 2)], 96, 55)}
+    {globals.map((label, i) => i >= 6 ? (pos => button(pos.id, label, pos.x, pos.y, pos.width))({ id: 65 + i - 6, ...extraButtonPosition(65 + i - 6) }) : <button key={label} style={region(i % 2 ? 1583 : 1422, [670, 792, 938, 1085, 1207][Math.floor(i / 2)], 96, 55)}
       className={`panel-hit key-hit right-key control-off ${selectedGlobal===i?'active':''}`} aria-label={label} aria-pressed={selectedGlobal===i} title={`${label} · ${t('hardware command not enabled')}`}
       onClick={() => {setSelectedGlobal(i);action(`${label} shown: no hardware command sent.`)}}><span className="silver-key-label">{label}</span></button>)}
     {editing && (() => {
@@ -205,7 +207,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
       const { x, y } = encoderPosition(editing.id)
       const key = buttonPosition(index)
       const extra = editing.kind === 'buttons' && editing.id >= 65
-      const style = editing.kind === 'buttons' ? extra ? region(editing.id % 2 ? 1422 : 1583, editing.id < 67 ? 1091 : 1213, 96, 43) : region(key.x, key.y + 6, key.width, 43) : region(x - 78, y + (editing.kind === 'pushes' ? 103 : 74), 156, 32)
+      const style = editing.kind === 'buttons' ? extra ? (pos => region(pos.x, pos.y + 6, pos.width, 43))(extraButtonPosition(editing.id)) : region(key.x, key.y + 6, key.width, 43) : region(x - 78, y + (editing.kind === 'pushes' ? 103 : 74), 156, 32)
       const fallback = editing.kind === 'encoders' ? encoderNames[index] : editing.kind === 'buttons' ? extra ? globals[editing.id - 65 + 6] : (index < 16 ? labels[index] : `T${index - 15}`) : ''
       return <InlineName key={`${editing.kind}-${editing.id}`} initial={customLabels[editing.kind][index] || fallback} style={style}
         name={`${t(editing.kind === 'buttons' ? 'Button' : editing.kind === 'pushes' ? 'Push' : 'Encoder')} ${editing.id}`}

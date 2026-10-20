@@ -1,17 +1,20 @@
 import { is14Bit, modesFor, parameterLimit, typesFor, valueLimit, type Bcr32Profile, type Encoder } from './profile'
-import { encoderPosition, buttonPosition } from './panel-layout'
+import { encoderPosition, buttonPosition, extraButtonPosition } from './panel-layout'
+import { currentDevice } from './devices'
+import type { DeviceDefinition } from './device-definition'
 export type ControlSelection = { kind: 'encoders' | 'pushes' | 'buttons'; id: number }
 export type SelectionGesture = { toggle?: boolean; range?: boolean }
 export type ControlChange = Omit<Partial<Encoder>, 'mmc'> & { mmc?: Partial<NonNullable<Encoder['mmc']>> }
 export const selectionKey = (s: ControlSelection) => `${s.kind}:${s.id}`
 export type SelectionRectangle={x1:number;y1:number;x2:number;y2:number}
-export function controlsInRectangle(profile:Bcr32Profile,kind:ControlSelection['kind'],rect:SelectionRectangle):ControlSelection[] {
+export function controlsInRectangle(profile:Bcr32Profile,kind:ControlSelection['kind'],rect:SelectionRectangle,device:DeviceDefinition=currentDevice):ControlSelection[] {
+  const {encoderPosition,buttonPosition,extraButtonPosition}=device.panel
   const inside=(x:number,y:number)=>x>=Math.min(rect.x1,rect.x2)&&x<=Math.max(rect.x1,rect.x2)&&y>=Math.min(rect.y1,rect.y2)&&y<=Math.max(rect.y1,rect.y2)
   const rotaryKind=kind==='pushes'?'pushes':'encoders'
   const rotations=profile[rotaryKind].filter(e=>{const p=encoderPosition(e.id);return inside(p.x,p.y)}).map<ControlSelection>(e=>({kind:rotaryKind,id:e.id}))
   const buttons=profile.buttons.filter((b,index)=>{
     if(b.id>=74)return false
-    const p=b.id>=65?{x:b.id%2?1422:1583,y:b.id<67?1085:1207,width:96}:buttonPosition(index)
+    const p=b.id>=65?extraButtonPosition(b.id):buttonPosition(index)
     return inside(p.x+p.width/2,p.y+27.5)
   }).map(b=>({kind:'buttons' as const,id:b.id}))
   return [...rotations,...buttons]
@@ -30,7 +33,8 @@ export function selectControls(current: ControlSelection[], next: ControlSelecti
 export function selectedControls(profile: Bcr32Profile, selections: ControlSelection[]) {
   return selections.map(s=>({selection:s,control:profile[s.kind].find(e=>e.id===s.id)!})).filter(x=>!!x.control)
 }
-export function applySelectionChange(profile: Bcr32Profile, selections: ControlSelection[], change: ControlChange): Bcr32Profile {
+export function applySelectionChange(profile: Bcr32Profile, selections: ControlSelection[], change: ControlChange, device: DeviceDefinition = currentDevice): Bcr32Profile {
+  const modelModes = (type: Encoder['type'], rotation: boolean) => modesFor(type, rotation, device)
   if (selections.length>1 && ('parameter' in change || 'parameterOff' in change || 'aftertouchAll' in change || change.mmc && 'command' in change.mmc)) throw Error('The parameter cannot be edited in a multiple selection.')
   const targets=new Map(selectedControls(profile,selections).map(x=>[selectionKey(x.selection),x]))
   const next={...profile}
@@ -41,8 +45,8 @@ export function applySelectionChange(profile: Bcr32Profile, selections: ControlS
     if(mmc)n.mmc={...(e.mmc??{deviceId:'all',command:'Play',locate:[0,0,0,0],frameRate:'off'}),...mmc}
     n.id=e.id
     if(change.type && !typesFor(kind==='encoders').includes(change.type)) throw Error('Type is incompatible with part of the selection.')
-    if(change.type && !modesFor(n.type,kind==='encoders').includes(n.mode)) n.mode=modesFor(n.type,kind==='encoders')[0]
-    if(change.mode && !modesFor(n.type,kind==='encoders').includes(change.mode)) throw Error('Mode is incompatible with part of the selection.')
+    if(change.type && !modelModes(n.type,kind==='encoders').includes(n.mode)) n.mode=modelModes(n.type,kind==='encoders')[0]
+    if(change.mode && !modelModes(n.type,kind==='encoders').includes(change.mode)) throw Error('Mode is incompatible with part of the selection.')
     if(selections.length>1 && change.type && e.parameter>parameterLimit(n)) throw Error('Existing parameters are incompatible with this type. Edit individually.')
     if(selections.length>1 && (change.mode || change.type) && is14Bit(n) && n.type==='cc' && n.parameter>31) throw Error('14-bit CC requires parameters 0–31. Edit individually.')
     if(is14Bit(n)&&!is14Bit(e)&&e.minimum===0&&e.maximum===127) n.maximum=16383

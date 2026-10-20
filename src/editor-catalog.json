@@ -1,0 +1,26 @@
+{
+  "bcr32-editor": {
+    "manifest": {
+      "id": "bcr32-editor",
+      "modelId": "bcr32",
+      "name": "BCR32",
+      "version": "0.1.0",
+      "sdkVersion": 1,
+      "stateSchemaVersion": 2,
+      "capabilities": [
+        "controller-profile",
+        "live-midi-values"
+      ]
+    },
+    "presentation": {
+      "manufacturer": "Behringer",
+      "model": "BCR32",
+      "preview": {
+        "src": "/editor-previews/bcr32.svg",
+        "width": 1717,
+        "height": 1440,
+        "kind": "schematic"
+      }
+    }
+  }
+}
