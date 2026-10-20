@@ -6,7 +6,7 @@ install, no account, nothing leaves your machine.
 
 Current version: **0.12.1** · [Changelog](CHANGELOG.md)
 
-**Try it now: https://bcr32-studio.github.io/** (Chrome, Edge, Brave or Opera; plug in the BCR32 over USB
+**Try it now: https://thelazygeekguy.github.io/bcr32-studio/** (Chrome, Edge, Brave or Opera; plug in the BCR32 over USB
 and allow MIDI access). Without a controller the editor still opens: presets, PDF sheets and the Cubase export work offline.
 
 ![BCR32 Studio: two encoders turning, OLED and activity strip following the incoming MIDI](docs/images/screenshot.webp)
@@ -45,7 +45,7 @@ most valuable contribution.
 
 ## Use it
 
-- **Hosted**: https://bcr32-studio.github.io/, rebuilt from `main` on every merge.
+- **Hosted**: https://thelazygeekguy.github.io/bcr32-studio/, rebuilt from `main` on every merge.
 - **Local**: `npm ci && npm run dev`, then http://127.0.0.1:5173/.
 
 A Chromium-based browser is required: Web MIDI with SysEx is not available in Firefox or Safari. Everything stays in

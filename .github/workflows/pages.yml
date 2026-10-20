@@ -1,7 +1,7 @@
 name: Pages
 
 # Primary public deployment: every push to main is built and published on GitHub Pages
-# (https://bcr32-studio.github.io/). No external service, no secret.
+# (https://thelazygeekguy.github.io/bcr32-studio/). No external service, no secret.
 on:
   push:
     branches: [main]
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.server_url == 'https://github.com' && github.repository == 'bcr32-studio/bcr32-studio.github.io'
+    if: github.server_url == 'https://github.com' && github.repository == 'TheLazyGeekGuy/bcr32-studio'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
