@@ -53,7 +53,7 @@ assert.match(preview, /class="oled-glass"/); assert.match(preview, /class="oled-
 // 5. Config: one button per style with its preview, pressed state, persisted, translated.
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
 assert.equal(load('./display-styles').displayStyleKey, 'bcr32-studio.display-style', 'storage key')
-assert.ok(app.includes('localStorage.getItem(displayStyleKey)') && app.includes('localStorage.setItem(displayStyleKey') && app.includes('displayStyle={displayStyle}'), 'persisted and passed to the panel')
+assert.ok(app.includes('storage.getItem(displayStyleKey)') && app.includes('storage.setItem(displayStyleKey') && app.includes('displayStyle={displayStyle}'), 'instance-scoped persistence and passed to the panel')
 const html = renderToStaticMarkup(React.createElement(load('./App').default))
 assert.equal((html.match(/class="display-style-option"/g) ?? []).length, 5, 'five options in Config')
 assert.equal((html.match(/class="display-preview"/g) ?? []).length, 5, 'each option shows its preview')

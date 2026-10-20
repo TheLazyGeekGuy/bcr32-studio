@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.45.0-alpha.2] — 2026-10-20
+
+- Move the BCR32 editor into the shared MIDI Studio host, preserving the common appearance, screen, monitor, library and history tools.
+- Add firmware 1.0.2 controller auto-read, correct encoder-push PC Bank Off/Toggle Off, T1–T4 shortcuts and warm preset cache.
+- Replace the long preset form with Read/Save/Export actions and explicit hardware destination/name.
+- Carry the backup, explicit preset STORE, readback and working-preset restoration workflow.
+- Send Type OFF immediately for controller buttons, pushes and rotations with independent readback. Keep preset saving manual.
+- Distribute only BCR32 and its shared dependencies; leave parallel editor work outside this release.
+
 Versions of the **application**, independent of the controller firmware (0.56.0 observed). `MAJOR.MINOR.PATCH`:
 incompatible change, new feature, fix. `0.x` versions are experimental.
 

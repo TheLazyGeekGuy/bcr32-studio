@@ -1,10 +1,11 @@
 import { PDFDocument, rgb, type PDFFont } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
-import { buttonNames, buttonPosition, encoderNames, encoderPosition } from './panel-layout'
+import { bcr32 } from './device-bcr32'
 import { groups, controlIndex, type ControllerPreset } from './presets'
 
 // Shared by the browser download and the Node visual-regression fixture.
 export async function presetPdf(preset: ControllerPreset, fontBytes: Uint8Array) {
+  const { buttonNames, buttonPosition, encoderNames, encoderPosition } = bcr32.panel
   const doc = await PDFDocument.create()
   doc.registerFontkit(fontkit)
   const font = await doc.embedFont(fontBytes, { subset: true })
@@ -20,7 +21,7 @@ export async function presetPdf(preset: ControllerPreset, fontBytes: Uint8Array)
   const text = (s: string, x: number, top: number, fontSize = 9, color = black) => page.drawText(safe(s), { x, y: size[1] - top - fontSize, size: fontSize, font, color })
   const fit = (s: string, width: number, preferred: number, f: PDFFont = font) => Math.min(preferred, width / Math.max(1, f.widthOfTextAtSize(safe(s), 1)))
   const heading = (subtitle: string) => {
-    text('BCR-32 Studio · ' + preset.name, 30, 25, fit('BCR-32 Studio · ' + preset.name, 535, 17))
+    text('MIDI Studio · ' + preset.name, 30, 25, fit('MIDI Studio · ' + preset.name, 535, 17))
     text(subtitle, 30, 55, 9, gray)
   }
   const footer = () => {
@@ -66,7 +67,7 @@ export async function presetPdf(preset: ControllerPreset, fontBytes: Uint8Array)
     text('Control', 30, 90, 8); text('Label', 100, 90, 8); text('Assignment / mode', 280, 90, 8); text('Range', 460, 90, 8); text('Value', 530, 90, 8)
     let y = 111
     for (const kind of kinds) for (const e of preset.profile[kind]) {
-      const i = controlIndex(kind, e.id)
+      const i = controlIndex(kind, e.id, bcr32)
       const prefix = kind === 'encoders' ? 'Enc' : kind === 'pushes' ? 'Push' : 'BTN'
       const name = preset.labels[kind][i] || (kind === 'encoders' ? encoderNames[i] : kind === 'buttons' ? buttonNames[i] : '—')
       text(prefix + ' ' + e.id, 30, y, 8)

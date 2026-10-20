@@ -1,5 +1,7 @@
-export type IconName = 'folder' | 'save' | 'copy' | 'import' | 'export' | 'print' | 'palette' | 'sliders' | 'midi' | 'log' | 'expand' | 'collapse' | 'send' | 'power' | 'rotate' | 'push' | 'close' | 'language'
+export type IconName = 'folder' | 'save' | 'copy' | 'import' | 'export' | 'print' | 'palette' | 'sliders' | 'midi' | 'log' | 'expand' | 'collapse' | 'send' | 'power' | 'rotate' | 'push' | 'close' | 'language' | 'gear' | 'help'
 const paths: Record<IconName, string[]> = {
+  gear: ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z','M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z'],
+  help: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z','M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3','M12 17h.01'],
   folder: ['M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z'],
   save: ['M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12l4 4v12a2 2 0 0 1-2 2Z','M7 3v6h10V3','M7 21v-8h10v8'],
   copy: ['M9 9h11v11H9Z','M15 9V4H4v11h5'],

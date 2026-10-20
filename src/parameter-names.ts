@@ -20,15 +20,16 @@ export function parseNames(value: unknown): ParameterName[] {
   })
 }
 export const namesFile = (entries: ParameterName[]) => ({ format: 'bcr32-parameter-names', version: 1, entries })
-export function loadNames(): ParameterName[] {
+export function loadNames(storage: Pick<Storage, 'getItem' | 'setItem'> | undefined = undefined): ParameterName[] {
   try {
-    const current = window.localStorage.getItem(parameterNamesKey)
+    const store = storage ?? window.localStorage
+    const current = store.getItem(parameterNamesKey)
     if (current) return parseNames(JSON.parse(current))
-    const old = window.localStorage.getItem(legacyNamesKey)
+    const old = store.getItem(legacyNamesKey)
     if (old) {
       // One-time migration of exact old factory labels; other user names remain verbatim.
       const migrated = parseNames(JSON.parse(old)).map(e => e.type === 'cc' && e.name === legacyCcNames[e.parameter] ? { ...e, name: ccNames[e.parameter] } : e)
-      try { window.localStorage.setItem(parameterNamesKey, JSON.stringify(namesFile(migrated))) } catch { /* In-memory migration still works. */ }
+      try { store.setItem(parameterNamesKey, JSON.stringify(namesFile(migrated))) } catch { /* In-memory migration still works. */ }
       return migrated
     }
   } catch { /* Invalid or unavailable storage uses the factory table. */ }

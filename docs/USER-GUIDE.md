@@ -1,3 +1,5 @@
+> Historical guide for the pre-1.0.2 editor. For the current release use the in-editor Documentation button and [firmware 1.0.2 notes](FIRMWARE-1.0.2.md). Legacy command assumptions do not establish firmware 1.0.2 support.
+
 # BCR32 Studio — user guide
 
 BCR32 Studio is a browser editor for the Behringer BCR32 MIDI controller. It shows the controller as a live front

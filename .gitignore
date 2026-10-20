@@ -5,3 +5,5 @@ output/
 .playwright-cli/
 .wrangler/
 *.log
+docs-site/.vitepress/cache/
+docs-site/.vitepress/dist/

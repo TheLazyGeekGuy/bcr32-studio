@@ -49,7 +49,7 @@ assert.equal(result.folder, 'Driver Scripts/Local/Behringer/BCR32'); assert.equa
 assert.ok(!/\b(let|const|class)\s|=>|`/.test(src), 'ES5 only: no let/const/class, arrow functions or template literals')
 assert.ok(!src.includes('*/') && !src.includes('evil\nline'), 'labels sanitized: no comment terminator, no raw newline')
 assert.ok(src.includes('Encoder 1 (Cutoff * / evil line): CC 16 · channel 1'), 'custom label in the comment')
-assert.ok(src.includes('BCR32 Studio 9.9.9') && src.includes('2026-10-11'), 'header: version and date')
+assert.ok(src.includes('MIDI Studio 9.9.9') && src.includes('2026-10-11'), 'header: version and date')
 
 // --- Execute the script against a mock of midiremote_api_v1 that only knows the methods of the official reference. ---
 const calls = [], allowed = new Set(['makeDeviceDriver', 'makeMidiInput', 'makeMidiOutput', 'makeDetectionUnit', 'detectPortPair', 'expectInputNameContains', 'expectOutputNameContains',
@@ -70,7 +70,7 @@ let required = null
 new Function('require', src)(name => { required = name; return node('api') })
 assert.equal(required, 'midiremote_api_v1')
 const find = method => calls.filter(c => c.method === method)
-assert.deepEqual(find('makeDeviceDriver')[0].args, ['Behringer', 'BCR32', 'BCR32 Studio'])
+assert.deepEqual(find('makeDeviceDriver')[0].args, ['Behringer', 'BCR32', 'MIDI Studio'])
 assert.deepEqual(find('expectInputNameContains').map(c => c.args[0]), ['BCR32', 'BCR-32', 'BCR 32'], 'one detection unit per port spelling')
 assert.equal(find('makePushEncoder').length, 32, '32 push encoders'); assert.equal(find('makeButton').length, profile.buttons.length, 'every programmable key')
 assert.equal(find('makePage').length, 1, 'one (empty) mapping page'); assert.ok(!src.includes('makeValueBinding'), 'no Cubase function mapped: the Mapping Assistant does it')

@@ -1,4 +1,6 @@
 import { is14Bit, modesFor, parameterLimit, typesFor, type Encoder, type EncoderMode, type EncoderType } from './profile'
+import { currentDevice } from './devices'
+import type { DeviceDefinition } from './device-definition'
 import type { ControlChange } from './multi-selection'
 
 // MIDI Learn: pure decoding of one incoming message into the parameters a control can take.
@@ -74,13 +76,13 @@ export const describeLearn = (result: Pick<LearnResult, 'type' | 'parameter' | '
 export const describeApplied = (result: Pick<LearnResult, 'type' | 'parameter' | 'fourteenBit' | 'aftertouchAll'>, kind: 'encoders' | 'pushes' | 'buttons') =>
   describeLearn(kind === 'encoders' ? result : { ...result, fourteenBit: false })
 
-export function applyLearn(control: Encoder, kind: 'encoders' | 'pushes' | 'buttons', result: LearnResult): ControlChange | { error: string } {
+export function applyLearn(control: Encoder, kind: 'encoders' | 'pushes' | 'buttons', result: LearnResult, device: DeviceDefinition = currentDevice): ControlChange | { error: string } {
   const rotation = kind === 'encoders', type: EncoderType = result.type
   if (!typesFor(rotation).includes(type)) return { error: `Message ${describeLearn(result)} cannot be applied to this control.` }
   // Same limit as the inspector (parameterLimit on a rotation, 127 on buttons and pushes): refused, never silently clamped.
   const limit = rotation ? parameterLimit({ type }) : 127
   if (result.parameter !== undefined && result.parameter > limit) return { error: `Message ${describeLearn(result)} out of range (max ${limit}) for this control.` }
-  const modes = modesFor(type, rotation)
+  const modes = modesFor(type, rotation, device)
   let mode: EncoderMode
   if (!rotation) mode = modes.includes(control.mode) ? control.mode : modes[0]
   else if (result.incDec && modes.includes('inc_dec')) mode = 'inc_dec'

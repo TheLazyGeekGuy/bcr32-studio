@@ -5,7 +5,7 @@ import { modeText } from './oled-model'
 import { translate, useLanguage } from './i18n'
 
 // Small native SVG dot matrix: sharp at any panel scale, no external font.
-const glyphs: Record<string, string> = {
+export const glyphs: Record<string, string> = {
   '/':'00001/00010/00010/00100/01000/01000/10000',
   '_':'00000/00000/00000/00000/00000/00000/11111',
   A:'01110/10001/10001/11111/10001/10001/10001', B:'11110/10001/10001/11110/10001/10001/11110', C:'01111/10000/10000/10000/10000/10000/01111',

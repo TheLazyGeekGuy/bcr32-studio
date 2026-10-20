@@ -1,0 +1,1596 @@
+{
+  "firmware": "1.0.2",
+  "sha256": "118219386423549ed497877accc1e18a7f285e9838abe1a3c15f9a344bdfb158",
+  "hardware_validated": false,
+  "scope": "App firmware only; bootloader absent. 128 positions inventoried, unknown meanings explicitly retained.",
+  "commands": [
+    {
+      "command": 0,
+      "hex": "00",
+      "name": "Identification/version numérique",
+      "shape": "request 8; reply 14",
+      "scope": "commun",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 1,
+      "hex": "01",
+      "name": "Identification texte / changement de page spécial",
+      "shape": "request 8 => reply command 02; autre branche appelle mode 0",
+      "scope": "commun",
+      "evidence_level": "confirmed_static",
+      "notes": "Distinguer les deux branches; ne pas assimiler au transport.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 2,
+      "hex": "02",
+      "name": "Réponse identification texte",
+      "shape": "response only",
+      "scope": "commun",
+      "evidence_level": "response_only",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 3,
+      "hex": "03",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 4,
+      "hex": "04",
+      "name": "Import bloc binaire / accusé import",
+      "shape": "request dump 273; reply 10",
+      "scope": "transfert",
+      "evidence_level": "confirmed_static",
+      "notes": "Reply: mode en byte7, résultat en byte8; huit blocs pour un pattern. Écriture stockage selon mode/type.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 5,
+      "hex": "05",
+      "name": "Chargement valeur interne 32 bits",
+      "shape": "packed7 4 raw bytes; reply 9, value 1",
+      "scope": "interne",
+      "evidence_level": "partial",
+      "notes": "Destination state+0x10; sens et séquence non établis.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 6,
+      "hex": "06",
+      "name": "Export global",
+      "shape": "request 8; transfert asynchrone",
+      "scope": "transfert",
+      "evidence_level": "confirmed_static",
+      "notes": "Le routage varie entre contrôleur et séquenceur. Assemblage complet du flux à valider matériellement.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 7,
+      "hex": "07",
+      "name": "Export preset courant",
+      "shape": "request 8; transfert asynchrone",
+      "scope": "transfert",
+      "evidence_level": "confirmed_static",
+      "notes": "Le routage varie entre contrôleur et séquenceur. Assemblage complet du flux à valider matériellement.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 8,
+      "hex": "08",
+      "name": "Export page courante",
+      "shape": "request 8; transfert asynchrone",
+      "scope": "transfert",
+      "evidence_level": "confirmed_static",
+      "notes": "Le routage varie entre contrôleur et séquenceur. Assemblage complet du flux à valider matériellement.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 9,
+      "hex": "09",
+      "name": "Export ensemble des presets",
+      "shape": "request 8; transfert asynchrone",
+      "scope": "transfert",
+      "evidence_level": "confirmed_static",
+      "notes": "Le routage varie entre contrôleur et séquenceur. Assemblage complet du flux à valider matériellement.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 10,
+      "hex": "0A",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 11,
+      "hex": "0B",
+      "name": "Passage page Zaquencer",
+      "shape": "request 8, no immediate reply",
+      "scope": "mode",
+      "evidence_level": "confirmed_static",
+      "notes": "Appelle mode interne 2; conditions de disponibilité.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 12,
+      "hex": "0C",
+      "name": "Passage page contrôleur",
+      "shape": "request 8, no immediate reply",
+      "scope": "mode",
+      "evidence_level": "confirmed_static",
+      "notes": "Appelle mode interne 1; effet précis sur lecture simultanée à tester.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 13,
+      "hex": "0D",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 14,
+      "hex": "0E",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 15,
+      "hex": "0F",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 16,
+      "hex": "10",
+      "name": "Transition interne transfert/stockage",
+      "shape": "branche sans réponse immédiate",
+      "scope": "interne",
+      "evidence_level": "partial",
+      "notes": "Écriture état 0x41; ne pas exposer comme action nommée sans caractérisation.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 17,
+      "hex": "11",
+      "name": "Transition interne transfert/stockage",
+      "shape": "branche sans réponse immédiate",
+      "scope": "interne",
+      "evidence_level": "partial",
+      "notes": "Écriture état 0x41; ne pas exposer comme action nommée sans caractérisation.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 18,
+      "hex": "12",
+      "name": "Transition interne transfert/stockage",
+      "shape": "branche sans réponse immédiate",
+      "scope": "interne",
+      "evidence_level": "partial",
+      "notes": "Écriture état 0x41; ne pas exposer comme action nommée sans caractérisation.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 19,
+      "hex": "13",
+      "name": "Transition interne transfert/stockage",
+      "shape": "branche sans réponse immédiate",
+      "scope": "interne",
+      "evidence_level": "partial",
+      "notes": "Écriture état 0x41; ne pas exposer comme action nommée sans caractérisation.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 20,
+      "hex": "14",
+      "name": "Effacement preset contrôleur",
+      "shape": "request 8 current or 9 indexed <64",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "FUN_080243A8; menu libre, contrôleur actif, séquenceur arrêté. Destructif.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 21,
+      "hex": "15",
+      "name": "Déclenchement opération contrôleur état 7",
+      "shape": "request 8",
+      "scope": "contrôleur",
+      "evidence_level": "partial",
+      "notes": "FUN_08023004; sémantique utilisateur non fixée.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 22,
+      "hex": "16",
+      "name": "Forçage état transport à zéro",
+      "shape": "request 8; no immediate reply",
+      "scope": "séquenceur",
+      "evidence_level": "partial",
+      "notes": "Écrit 0 dans état de lecture; symbole éditeur Zaquencer_PlayState trompeur: aucune réponse de lecture ici.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 23,
+      "hex": "17",
+      "name": "StartOn",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 24,
+      "hex": "18",
+      "name": "ClockRateOut",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 25,
+      "hex": "19",
+      "name": "Réglage global supplémentaire",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "partial",
+      "notes": "Accède configuration+0x0C via 0801713C/0801735C; nom et énumération non établis.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 26,
+      "hex": "1A",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 27,
+      "hex": "1B",
+      "name": "FootSwitch1",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 28,
+      "hex": "1C",
+      "name": "FootSwitch2",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 29,
+      "hex": "1D",
+      "name": "MidiThruDest",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 30,
+      "hex": "1E",
+      "name": "MidiThruSource",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 31,
+      "hex": "1F",
+      "name": "OperatingMode",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 32,
+      "hex": "20",
+      "name": "Ligne BCL",
+      "shape": "request 10+ASCII length; reply 21 hh ll status, 11 bytes",
+      "scope": "BCL",
+      "evidence_level": "confirmed_static",
+      "notes": "40/42: slots 0..63 et 7E/7F acceptés sous conditions; sens des slots spéciaux non établi. Ne pas confondre numéro BCL humain et index wire.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 33,
+      "hex": "21",
+      "name": "Réponse BCL / noms",
+      "shape": "11-byte status or name response",
+      "scope": "BCL",
+      "evidence_level": "confirmed_static",
+      "notes": "40/42: slots 0..63 et 7E/7F acceptés sous conditions; sens des slots spéciaux non établi. Ne pas confondre numéro BCL humain et index wire.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 34,
+      "hex": "22",
+      "name": "Rappel preset contrôleur",
+      "shape": "request 9",
+      "scope": "BCL",
+      "evidence_level": "confirmed_static",
+      "notes": "40/42: slots 0..63 et 7E/7F acceptés sous conditions; sens des slots spéciaux non établi. Ne pas confondre numéro BCL humain et index wire.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 35,
+      "hex": "23",
+      "name": "Scale",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 36,
+      "hex": "24",
+      "name": "ScaleBase",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 37,
+      "hex": "25",
+      "name": "TransposeMode",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 38,
+      "hex": "26",
+      "name": "TriggerMode",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 39,
+      "hex": "27",
+      "name": "QuantizationMode",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 40,
+      "hex": "28",
+      "name": "QuantizationMixer",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 41,
+      "hex": "29",
+      "name": "Track Mode",
+      "shape": "read 9; set/reply 10",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 42,
+      "hex": "2A",
+      "name": "Track Port",
+      "shape": "read 9; set/reply 10",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 43,
+      "hex": "2B",
+      "name": "Track Channel",
+      "shape": "read 9; set/reply 10",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 44,
+      "hex": "2C",
+      "name": "Track CtrlAlpha",
+      "shape": "read 9; packed byte set/reply 11",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 45,
+      "hex": "2D",
+      "name": "Track CtrlBeta",
+      "shape": "read 9; packed byte set/reply 11",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 46,
+      "hex": "2E",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 47,
+      "hex": "2F",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 48,
+      "hex": "30",
+      "name": "ControllerOutPort",
+      "shape": "read 8; set/reply 9",
+      "scope": "commun",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 49,
+      "hex": "31",
+      "name": "Type",
+      "shape": "read 9; set/reply 10",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 50,
+      "hex": "32",
+      "name": "Canal",
+      "shape": "read 9; set/reply 10",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 51,
+      "hex": "33",
+      "name": "Paramètre",
+      "shape": "read 9; set/reply 12 (packed16)",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 52,
+      "hex": "34",
+      "name": "Valeur 1",
+      "shape": "read 9; set/reply 12 (packed16)",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 53,
+      "hex": "35",
+      "name": "Valeur 2",
+      "shape": "read 9; set/reply 12 (packed16)",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 54,
+      "hex": "36",
+      "name": "Mode",
+      "shape": "read 9; set/reply 10",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 55,
+      "hex": "37",
+      "name": "Option / LED",
+      "shape": "read 9; set/reply 10 rotations ou 12 boutons",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 56,
+      "hex": "38",
+      "name": "Affichage",
+      "shape": "read 9; set/reply 10",
+      "scope": "contrôleur",
+      "evidence_level": "confirmed_static",
+      "notes": "Index de cible 0..81; sens conditionnel au type. Le firmware peut accepter des formes plus lâches: construire uniquement une forme canonique.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 57,
+      "hex": "39",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 58,
+      "hex": "3A",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 59,
+      "hex": "3B",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 60,
+      "hex": "3C",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 61,
+      "hex": "3D",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 62,
+      "hex": "3E",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 63,
+      "hex": "3F",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 64,
+      "hex": "40",
+      "name": "Export preset BCL",
+      "shape": "request 9",
+      "scope": "BCL",
+      "evidence_level": "confirmed_static",
+      "notes": "40/42: slots 0..63 et 7E/7F acceptés sous conditions; sens des slots spéciaux non établi. Ne pas confondre numéro BCL humain et index wire.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 65,
+      "hex": "41",
+      "name": "Export global BCL",
+      "shape": "request 8",
+      "scope": "BCL",
+      "evidence_level": "confirmed_static",
+      "notes": "40/42: slots 0..63 et 7E/7F acceptés sous conditions; sens des slots spéciaux non établi. Ne pas confondre numéro BCL humain et index wire.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 66,
+      "hex": "42",
+      "name": "Demande noms presets",
+      "shape": "request 9",
+      "scope": "BCL",
+      "evidence_level": "confirmed_static",
+      "notes": "40/42: slots 0..63 et 7E/7F acceptés sous conditions; sens des slots spéciaux non établi. Ne pas confondre numéro BCL humain et index wire.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 67,
+      "hex": "43",
+      "name": "Snapshot",
+      "shape": "request 8, controller active",
+      "scope": "BCL",
+      "evidence_level": "confirmed_static",
+      "notes": "40/42: slots 0..63 et 7E/7F acceptés sous conditions; sens des slots spéciaux non établi. Ne pas confondre numéro BCL humain et index wire.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 68,
+      "hex": "44",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 69,
+      "hex": "45",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 70,
+      "hex": "46",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 71,
+      "hex": "47",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 72,
+      "hex": "48",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 73,
+      "hex": "49",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 74,
+      "hex": "4A",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 75,
+      "hex": "4B",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 76,
+      "hex": "4C",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 77,
+      "hex": "4D",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 78,
+      "hex": "4E",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 79,
+      "hex": "4F",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 80,
+      "hex": "50",
+      "name": "SyncMode",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 81,
+      "hex": "51",
+      "name": "ClockOutPort",
+      "shape": "read 8; set/reply 9",
+      "scope": "séquenceur",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 82,
+      "hex": "52",
+      "name": "LedLuminosity",
+      "shape": "read 8; set/reply 9",
+      "scope": "commun",
+      "evidence_level": "confirmed_static",
+      "notes": "",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 83,
+      "hex": "53",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 84,
+      "hex": "54",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 85,
+      "hex": "55",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 86,
+      "hex": "56",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 87,
+      "hex": "57",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 88,
+      "hex": "58",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 89,
+      "hex": "59",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 90,
+      "hex": "5A",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 91,
+      "hex": "5B",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 92,
+      "hex": "5C",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 93,
+      "hex": "5D",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 94,
+      "hex": "5E",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 95,
+      "hex": "5F",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 96,
+      "hex": "60",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 97,
+      "hex": "61",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 98,
+      "hex": "62",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 99,
+      "hex": "63",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 100,
+      "hex": "64",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 101,
+      "hex": "65",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 102,
+      "hex": "66",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 103,
+      "hex": "67",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 104,
+      "hex": "68",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 105,
+      "hex": "69",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 106,
+      "hex": "6A",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 107,
+      "hex": "6B",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 108,
+      "hex": "6C",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 109,
+      "hex": "6D",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 110,
+      "hex": "6E",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 111,
+      "hex": "6F",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 112,
+      "hex": "70",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 113,
+      "hex": "71",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 114,
+      "hex": "72",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 115,
+      "hex": "73",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 116,
+      "hex": "74",
+      "name": "Réponse constante de service",
+      "shape": "read 8; reply 9 value0",
+      "scope": "service",
+      "evidence_level": "partial",
+      "notes": "Un zéro constant ne constitue pas une mesure de capacité.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 117,
+      "hex": "75",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 118,
+      "hex": "76",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 119,
+      "hex": "77",
+      "name": "Transition bootloader/redémarrage",
+      "shape": "request 8",
+      "scope": "maintenance",
+      "evidence_level": "partial",
+      "notes": "Appels 08017618,0802530A,0801AEA4,08026DD8. Bootloader absent de l’image; exclu synchronisation normale.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 120,
+      "hex": "78",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 121,
+      "hex": "79",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 122,
+      "hex": "7A",
+      "name": "Séquence magique service 0B 0C 32",
+      "shape": "payload begins 0B 0C 32",
+      "scope": "service",
+      "evidence_level": "partial",
+      "notes": "Transition mode et état 0x43. Sens complet non caractérisé.",
+      "evidence": "inferred_sysex_dispatch @ 0x080255AC"
+    },
+    {
+      "command": 123,
+      "hex": "7B",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 124,
+      "hex": "7C",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 125,
+      "hex": "7D",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 126,
+      "hex": "7E",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    },
+    {
+      "command": 127,
+      "hex": "7F",
+      "name": "Pas de branche identifiée",
+      "scope": "non attribué",
+      "evidence_level": "not_found_in_this_dispatcher",
+      "notes": "Pas une preuve d’absence dans le bootloader, les réponses asynchrones ou un autre protocole."
+    }
+  ],
+  "zaquencer_cc_defaults": [
+    {
+      "offset": 0,
+      "status": 176,
+      "cc_min": 0,
+      "cc_max": 0,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Rappel pattern 0..127",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "pattern=value"
+    },
+    {
+      "offset": 5,
+      "status": 176,
+      "cc_min": 1,
+      "cc_max": 1,
+      "value_min": 0,
+      "value_max": 63,
+      "name": "Rappel pattern 128..191",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "pattern=value+128"
+    },
+    {
+      "offset": 10,
+      "status": 176,
+      "cc_min": 2,
+      "cc_max": 2,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Rappel pattern variante quantifiée 0..127",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "pattern=value; flag=1"
+    },
+    {
+      "offset": 15,
+      "status": 176,
+      "cc_min": 3,
+      "cc_max": 3,
+      "value_min": 0,
+      "value_max": 63,
+      "name": "Rappel pattern variante quantifiée 128..191",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "pattern=value+128; flag=1"
+    },
+    {
+      "offset": 20,
+      "status": 176,
+      "cc_min": 4,
+      "cc_max": 4,
+      "value_min": 0,
+      "value_max": 1,
+      "name": "Transport état 0/1",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "Voir fonction et conditions; action non entièrement qualifiée"
+    },
+    {
+      "offset": 25,
+      "status": 176,
+      "cc_min": 4,
+      "cc_max": 4,
+      "value_min": 2,
+      "value_max": 2,
+      "name": "Transport seconde action (reset/reprise à qualifier)",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "Voir fonction et conditions; action non entièrement qualifiée"
+    },
+    {
+      "offset": 30,
+      "status": 176,
+      "cc_min": 5,
+      "cc_max": 5,
+      "value_min": 0,
+      "value_max": 7,
+      "name": "Mute piste (état persistant)",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>1; on=value&1"
+    },
+    {
+      "offset": 35,
+      "status": 176,
+      "cc_min": 6,
+      "cc_max": 6,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Mute voix (état persistant)",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>5; voice=(value&31)>>1; on=value&1"
+    },
+    {
+      "offset": 40,
+      "status": 176,
+      "cc_min": 7,
+      "cc_max": 7,
+      "value_min": 0,
+      "value_max": 7,
+      "name": "Roll piste",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>1; on=value&1"
+    },
+    {
+      "offset": 45,
+      "status": 176,
+      "cc_min": 7,
+      "cc_max": 7,
+      "value_min": 53,
+      "value_max": 53,
+      "name": "Arrêt rolls",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "all track+voice rolls off"
+    },
+    {
+      "offset": 50,
+      "status": 176,
+      "cc_min": 8,
+      "cc_max": 8,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Roll voix",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>5; voice=(value&31)>>1; on=value&1"
+    },
+    {
+      "offset": 55,
+      "status": 176,
+      "cc_min": 9,
+      "cc_max": 9,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Paramètre de piste +0x6A (1..32)",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>5; setting=(value&31)+1"
+    },
+    {
+      "offset": 60,
+      "status": 176,
+      "cc_min": 10,
+      "cc_max": 10,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Paramètre de piste +0x6B (1..32)",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>5; setting=(value&31)+1"
+    },
+    {
+      "offset": 65,
+      "status": 176,
+      "cc_min": 11,
+      "cc_max": 11,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Décalage piste +0x6C",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>5; offset=value&31"
+    },
+    {
+      "offset": 70,
+      "status": 176,
+      "cc_min": 12,
+      "cc_max": 12,
+      "value_min": 0,
+      "value_max": 19,
+      "name": "Direction code 0..4",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value//5; code=value%5"
+    },
+    {
+      "offset": 75,
+      "status": 176,
+      "cc_min": 13,
+      "cc_max": 13,
+      "value_min": 0,
+      "value_max": 39,
+      "name": "Division code 0..9",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value//10; code=value%10"
+    },
+    {
+      "offset": 80,
+      "status": 176,
+      "cc_min": 13,
+      "cc_max": 13,
+      "value_min": 40,
+      "value_max": 79,
+      "name": "Division code réordonné",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=(value-40)//10; remap[code]=[0,1,9,2,8,3,7,4,6,5]"
+    },
+    {
+      "offset": 85,
+      "status": 176,
+      "cc_min": 14,
+      "cc_max": 15,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Rest par pas",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=(cc-14)*2+(value>>6); step=(value&63)>>1; rest=value&1"
+    },
+    {
+      "offset": 90,
+      "status": 176,
+      "cc_min": 16,
+      "cc_max": 17,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Masque par pas",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=(cc-16)*2+(value>>6); step=(value&63)>>1; bit=value&1"
+    },
+    {
+      "offset": 95,
+      "status": 176,
+      "cc_min": 4,
+      "cc_max": 4,
+      "value_min": 3,
+      "value_max": 3,
+      "name": "Action 08035B18",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "Voir fonction et conditions; action non entièrement qualifiée"
+    },
+    {
+      "offset": 100,
+      "status": 176,
+      "cc_min": 4,
+      "cc_max": 4,
+      "value_min": 4,
+      "value_max": 4,
+      "name": "Action 08035AB4",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "Voir fonction et conditions; action non entièrement qualifiée"
+    },
+    {
+      "offset": 105,
+      "status": 176,
+      "cc_min": 7,
+      "cc_max": 7,
+      "value_min": 8,
+      "value_max": 16,
+      "name": "Quantification roll globale 0..8",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "code=value-8 for all tracks"
+    },
+    {
+      "offset": 110,
+      "status": 176,
+      "cc_min": 7,
+      "cc_max": 7,
+      "value_min": 17,
+      "value_max": 52,
+      "name": "Quantification roll par piste 0..8",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=(value-17)//9; code=(value-17)%9"
+    },
+    {
+      "offset": 115,
+      "status": 176,
+      "cc_min": 18,
+      "cc_max": 20,
+      "value_min": 0,
+      "value_max": 127,
+      "name": "Tempo 30..300 BPM",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "bpm=clamp(value+(cc-18)*128-76,30,300)"
+    },
+    {
+      "offset": 120,
+      "status": 176,
+      "cc_min": 21,
+      "cc_max": 21,
+      "value_min": 0,
+      "value_max": 16,
+      "name": "Échelle 0..15,16=FF",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "scale=value,16 -> FF"
+    },
+    {
+      "offset": 125,
+      "status": 176,
+      "cc_min": 22,
+      "cc_max": 22,
+      "value_min": 0,
+      "value_max": 11,
+      "name": "Base échelle 0..11",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "base=value"
+    },
+    {
+      "offset": 130,
+      "status": 176,
+      "cc_min": 23,
+      "cc_max": 23,
+      "value_min": 0,
+      "value_max": 31,
+      "name": "Opération de piste 0..7",
+      "channel": "Canal de télécommande configuré (0 désactive; 1..16)",
+      "evidence": "0803277C (valeurs par défaut), 0803186C (actions), 08030EB0 (garde canal)",
+      "hardware_validated": false,
+      "formula": "track=value>>3; operation=value&7"
+    }
+  ],
+  "bcl_tx_tokens": [
+    {
+      "token": "val",
+      "opcode": 64,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val0.6",
+      "opcode": 64,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val0",
+      "opcode": 65,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val0.3",
+      "opcode": 66,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val4.7",
+      "opcode": 67,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val8.11",
+      "opcode": 68,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val12.13",
+      "opcode": 69,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val7.13",
+      "opcode": 70,
+      "argument_bytes": 0
+    },
+    {
+      "token": "val1.7",
+      "opcode": 71,
+      "argument_bytes": 0
+    },
+    {
+      "token": "reloffs",
+      "opcode": 72,
+      "argument_bytes": 2
+    },
+    {
+      "token": "relsign",
+      "opcode": 73,
+      "argument_bytes": 2
+    },
+    {
+      "token": "rel2s",
+      "opcode": 74,
+      "argument_bytes": 0
+    },
+    {
+      "token": "cks-1",
+      "opcode": 75,
+      "argument_bytes": 1
+    },
+    {
+      "token": "cks-2",
+      "opcode": 76,
+      "argument_bytes": 1
+    },
+    {
+      "token": "cks-3",
+      "opcode": 77,
+      "argument_bytes": 1
+    },
+    {
+      "token": "ifp",
+      "opcode": 78,
+      "argument_bytes": 0
+    },
+    {
+      "token": "ifn",
+      "opcode": 79,
+      "argument_bytes": 0
+    },
+    {
+      "token": "ntimes",
+      "opcode": 80,
+      "argument_bytes": 0
+    }
+  ],
+  "parameter_metadata_file": "firmware-1.0.2-parameters.json"
+}

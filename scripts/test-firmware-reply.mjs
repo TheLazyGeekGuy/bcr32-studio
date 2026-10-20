@@ -4,8 +4,10 @@ import ts from 'typescript'
 import { createRequire } from 'node:module'
 const transpile = name => ts.transpileModule(readFileSync(new URL(`../src/${name}`, import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText
 const require = createRequire(import.meta.url)
+// web-midi.ts imports the device definition (src/devices.ts): local modules are transpiled too.
+const localRequire = name => { if (name.endsWith('.json')) return JSON.parse(readFileSync(new URL(`../src/${name.replace(/^\.\//, '')}`, import.meta.url), 'utf8')); if (!name.startsWith('./')) return require(name); const exports = {}; new Function('require', 'exports', transpile(name.slice(2) + '.ts'))(localRequire, exports); return exports }
 const web = {}
-new Function('require', 'exports', transpile('web-midi.ts'))(require, web)
+new Function('require', 'exports', transpile('web-midi.ts'))(localRequire, web)
 const { parseFirmwareReply, productQuery, isSystemRealtime } = web
 // Only observed sample: ControlTribe displays it as v0.56.0.
 const observed = [0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64, 0x00, 0x01, 0x00, 0x00, 0x00, 0x38, 0x00, 0xf7]

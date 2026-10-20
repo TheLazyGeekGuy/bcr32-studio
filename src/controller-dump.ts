@@ -1,11 +1,13 @@
 import type { Encoder, EncoderType } from './profile'
+import { currentDevice } from './devices'
+import { sysexHeader, type DeviceDefinition } from './device-definition'
 
 // Front-panel export of a Controller preset (docs/PROTOCOL.md, "Dump container"): 273 bytes,
 // F0 00 20 32 7F 64 | 04 0C <type?> <page?> <preset?> <block 0–7> | 256 nibbles (128 bytes) | 4-nibble checksum | F7.
 // Checksum: 16-bit sum of bytes 0–267, high nibble first. The 128 data bytes split into 11-byte records
 // [type][channel][parameter LE16][minimum LE16][maximum LE16][mode][option][display] (hypothesis, consistent with captures).
 // Read-only: nothing here sends anything to the device.
-const header = [0xf0, 0x00, 0x20, 0x32, 0x7f, 0x64, 0x04, 0x0c]
+const header = [...sysexHeader(currentDevice), 0x04, 0x0c]
 // Type byte, hypothesis except 2 = CC (observed). MMC does not fit in this enumeration.
 const types: (EncoderType | null)[] = ['off', 'pc', 'cc', 'nrpn', 'pb', 'note', 'at', 'gs']
 
@@ -15,7 +17,7 @@ export type ControllerDump = { block: number; identity: string; header: number[]
 // Records whose control is established on hardware (differential tests): record 0 = encoder 1 (CC 10 -> 11 -> 16).
 export const knownRecords: Record<number, { kind: 'encoders'; id: number }> = { 0: { kind: 'encoders', id: 1 } }
 
-export const isControllerDump = (bytes: ArrayLike<number>) => bytes.length === 273 && header.every((v, i) => bytes[i] === v) && bytes[272] === 0xf7
+export const isControllerDump = (bytes: ArrayLike<number>, device: DeviceDefinition = currentDevice) => device.features.frontPanelExport && bytes.length === 273 && [...sysexHeader(device), 0x04, 0x0c].every((v, i) => bytes[i] === v) && bytes[272] === 0xf7
 
 function parseRecords(data: number[]): DumpRecord[] {
   const records: DumpRecord[] = []
@@ -30,8 +32,8 @@ function parseRecords(data: number[]): DumpRecord[] {
   return records
 }
 
-export function decodeControllerDump(bytes: ArrayLike<number>): ControllerDump | null {
-  if (!isControllerDump(bytes)) return null
+export function decodeControllerDump(bytes: ArrayLike<number>, device: DeviceDefinition = currentDevice): ControllerDump | null {
+  if (!isControllerDump(bytes, device)) return null
   const raw = Array.from(bytes)
   for (let i = 12; i < 272; i++) if (raw[i] > 0x0f) return null // the payload and checksum are nibbles
   const data: number[] = []

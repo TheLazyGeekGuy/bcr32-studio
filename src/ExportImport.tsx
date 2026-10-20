@@ -16,7 +16,7 @@ export function ExportImport({ dumps, apply, save, saveAll }: {
   const hex = (bytes: number[]) => bytes.map(b => b.toString(16).padStart(2, '0')).join(' ')
   return <div className="export-import" role="group" aria-label={t('Front-panel export')}>
     <h3>{t('Front-panel export')}</h3>
-    <p className="surface-help">{t('BCR32 Studio listens while you export from the controller. Nothing is sent to the BCR32.')}</p>
+    <p className="surface-help">{t('MIDI Studio listens while you export from the controller. Nothing is sent to the BCR32.')}</p>
     <ul className="export-procedures">
       <li>{t('Current preset: STORE, hold SELECT, press encoder 1, then encoder 8.')}</li>
       <li>{t('All 64 presets: STORE, hold SELECT, press encoder 1, then encoder 7.')}</li>

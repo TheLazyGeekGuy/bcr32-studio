@@ -5,6 +5,7 @@ export const themes = [
   { id: 'amethyst', name: 'Amethyst' },
   { id: 'brass', name: 'Brass' },
   { id: 'silver', name: 'Silver' },
+  { id: 'midnight', name: 'Midnight' },
 ] as const
 export type Theme = typeof themes[number]['id']
 export const themeStorageKey = 'bcr32-studio.theme.v1'

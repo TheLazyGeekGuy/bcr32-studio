@@ -1,19 +1,15 @@
-import { requestMidiAccess, type MidiAccess, type MidiPort } from './web-midi'
+import type { MidiAccess, MidiPort } from './web-midi'
+export {automaticMidiAccess} from './midi-permission'
 import type { Bcr32Profile } from './profile'
+import { currentDevice } from './devices'
+import { isDevicePort, type DeviceDefinition } from './device-definition'
 
-const bcrPorts = (ports: Map<string, MidiPort>) => Array.from(ports.values()).filter(p => p.state === 'connected' && /BCR[- ]?32/i.test(p.name ?? ''))
-export function automaticPorts(access: MidiAccess, inputId = '', outputId = '') {
-  const inputs = bcrPorts(access.inputs), outputs = bcrPorts(access.outputs)
+const bcrPorts = (ports: Map<string, MidiPort>, device: DeviceDefinition) => Array.from(ports.values()).filter(p => isDevicePort(device, p))
+export function automaticPorts(access: MidiAccess, inputId = '', outputId = '', device: DeviceDefinition = currentDevice) {
+  const inputs = bcrPorts(access.inputs, device), outputs = bcrPorts(access.outputs, device)
   const input = inputs.find(p => p.id === inputId) ?? (inputs.length === 1 ? inputs[0] : undefined)
   const output = outputs.find(p => p.id === outputId) ?? (outputs.length === 1 ? outputs[0] : undefined)
   return { input, output, ambiguous: !input && inputs.length > 1 || !output && outputs.length > 1 }
-}
-export async function automaticMidiAccess(request = requestMidiAccess) {
-  try { return { access: await request(true), sysexError: null } }
-  catch (error) {
-    // A SysEx refusal must not disable standard CC reception.
-    return { access: await request(false), sysexError: error instanceof Error ? error.message : String(error) }
-  }
 }
 export function associateDefaultEncoder(profile: Bcr32Profile, hasPreset: boolean): Bcr32Profile {
   // Starting point when nothing is configured yet: encoder 1 on CC 16, channel 1. A default, NOT a mapping read from the device.

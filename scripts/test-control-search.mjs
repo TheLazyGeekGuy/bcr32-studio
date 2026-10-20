@@ -6,7 +6,7 @@ import ts from 'typescript'
 import React from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 const native=createRequire(import.meta.url),cache=new Map()
-function load(name){if(!name.startsWith('./'))return native(name);if(cache.has(name))return cache.get(name);const base=fileURLToPath(new URL(`../src/${name.slice(2)}`,import.meta.url));const exports={};cache.set(name,exports);new Function('require','exports',ts.transpileModule(readFileSync(existsSync(`${base}.tsx`)?`${base}.tsx`:`${base}.ts`,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(load,exports);return exports}
+function load(name){ if (name.endsWith('.json')) return JSON.parse(readFileSync(new URL(`../src/${name.replace(/^\.\//, '')}`, import.meta.url), 'utf8'));if(!name.startsWith('./'))return native(name);if(cache.has(name))return cache.get(name);const base=fileURLToPath(new URL(`../src/${name.slice(2)}`,import.meta.url));const exports={};cache.set(name,exports);new Function('require','exports',ts.transpileModule(readFileSync(existsSync(`${base}.tsx`)?`${base}.tsx`:`${base}.ts`,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(load,exports);return exports}
 const {createProfile}=load('./profile'),{emptyLabels}=load('./presets'),{controlSearchOptions:search}=load('./control-search')
 const p=createProfile(),labels=emptyLabels()
 assert.equal(search(p,labels).length,90)
@@ -30,7 +30,8 @@ assert.match(html,/<input type="text" role="combobox" aria-label="Control search
 assert.ok(html.includes('value="Encoder 1 · Cutoff Überblendung"'),'Current selection shown with its custom label')
 assert.ok(!html.includes('role="listbox"')&&!html.includes('aria-activedescendant'),'Results list closed until focus')
 // Keyboard navigation needs a DOM renderer to exercise; until one exists these stay source-level guards.
-const component=readFileSync(new URL('../src/ControlSearch.tsx',import.meta.url),'utf8')
+const component=readFileSync(new URL('../src/EditorControlSearch.tsx',import.meta.url),'utf8')
+assert.ok(readFileSync(new URL('../src/ControlSearch.tsx',import.meta.url),'utf8').includes('<EditorControlSearch'),'Legacy props adapt to the actual common component')
 for(const feature of ['role="listbox"','aria-activedescendant','ArrowDown','ArrowUp',"e.key==='Enter'","e.key==='Escape'",'onBlur'])assert.ok(component.includes(feature),feature)
 assert.ok(component.includes("e.key==='Escape'&&open"),'Closed search must allow Escape to cancel panel selection')
 console.log('PASS: 90 controls, names, aliases, custom labels, accents, CC and keyboard combobox semantics')
