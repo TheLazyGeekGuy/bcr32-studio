@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, type MutableRefObject } from 'react
 import { createPresetReader, type PresetRead, type PresetReadResult } from './controller-presets'
 import { translate, useLanguage } from './i18n'
 import { bclFile } from './bcl'
-import { createBclSender, presetStorageValidated, storeHardwarePreset } from './preset-store'
+import { createBclSender, presetStorageValidated, storeHardwarePreset, type HardwarePresetStorePlan } from './preset-store'
 
 type Props = { storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
 export function ControllerPresets({ storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
@@ -88,14 +88,23 @@ export function ControllerPresets({ storage, authorizeTransfer, onStored, trackS
     if(quiet.current){transport?.cancel();quiet.current=false}
     if (!presetStorageValidated || destination === null || !available || busy || storeBusy || !transport || !sender) return
     setStoreBusy(true); setStoreError(''); setNotice('Saving complete controller preset…'); setCount(0)
+    let acknowledged: HardwarePresetStorePlan | undefined
     try {
-      const plan = await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name,
+      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name,
+        onAcknowledged: saved => {
+          if(reader.current!==transport)return
+          acknowledged=saved
+          setNames(current=>({...current,[saved.slot]:saved.name}))
+          onStored?.(saved.slot+1)
+        },
         backup: contents => { const key = 'bcr32-studio.before-hardware-store.v1'; storage.setItem(key, contents); if (storage.getItem(key) !== contents) throw Error('Backup could not be verified; nothing sent') },
       })
       if (reader.current !== transport) return
-      onStored?.(plan.slot + 1)
-      setNames(current => ({ ...current, [plan.slot]: plan.name }));setSaveOpen(false); setNotice('Preset stored and read back. Working contents restored.')
-    } catch (error) { if (reader.current === transport) { setNotice('Preset save stopped. Backup retained; hardware may be partially changed.'); setStoreError(String(error)) } }
+      setSaveOpen(false); setNotice('Preset stored and read back. Working contents restored.')
+    } catch (error) { if (reader.current === transport) {
+      // A failed verification makes the acknowledged destination uncertain; do not retain a false label.
+      if(acknowledged){const slot=acknowledged.slot;setNames(current=>{const next={...current};delete next[slot];return next})}
+      setNotice('Preset save stopped. Backup retained; hardware may be partially changed.'); setStoreError(String(error)) } }
     finally { if (reader.current === transport) setStoreBusy(false) }
   }
   const label = (slot: number) => `${slot + 1} · ${names[slot] || t(Object.hasOwn(names, slot) ? 'Unnamed preset' : 'Name not read')}`

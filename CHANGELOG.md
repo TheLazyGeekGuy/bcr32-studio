@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.45.0-alpha.3] — 2026-10-20
+
+- Update the cached destination preset name as soon as the controller acknowledges the complete save transfer, without rereading the 64 preset names. Keep read/save/shortcut lists in sync, and invalidate an uncertain label if the save later fails.
+
 ## [0.45.0-alpha.2] — 2026-10-20
 
 - Move the BCR32 editor into the shared MIDI Studio host, preserving the common appearance, screen, monitor, library and history tools.
