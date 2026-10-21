@@ -40,6 +40,8 @@ self.addEventListener('activate', event => {
   })())
 })
 self.addEventListener('message', event => {
+  // Sent only from an explicit "Update and reload" action; never automatic during a MIDI session.
+  if (event.data?.type === 'SKIP_WAITING') { event.waitUntil(self.skipWaiting()); return }
   if (!['STATUS', 'PREPARE'].includes(event.data?.type)) return
   event.waitUntil((async () => {
     try {

@@ -1,1 +1,4 @@
 .offline-status{display:inline-flex;align-items:center;gap:4px;color:var(--theme-muted,#aaa);flex-shrink:0}.offline-status[data-ready=true]{color:var(--theme-accent,#d99b41)}.offline-status small{font-size:10px;line-height:1}.offline-status svg{display:block;pointer-events:none}
+.offline-update{margin-left:6px;padding:2px 8px;font-size:12px;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit;cursor:pointer}
+.route-error{max-width:42rem;margin:48px auto;padding:0 16px;font-family:system-ui,sans-serif}
+.route-error small{color:#8a8f98;overflow-wrap:anywhere}
