@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.45.0-alpha.4] — 2026-10-21
+
+- Fix "Editor unavailable" after a new deployment: the offline service worker now precaches every JS/CSS file of the build it pins, so lazy modules (instrument library, PDF export, editor chunks) keep working after GitHub Pages removes the previous build's files.
+- Show the offline status in standalone editors, with an explicit "Update and reload" action when a new version is waiting; a new build still never takes over on its own during a MIDI session.
+- The last-resort error screen logs the error, shows its message and offers the update when one is waiting.
+
 ## [0.45.0-alpha.3] — 2026-10-20
 
 - Update the cached destination preset name as soon as the controller acknowledges the complete save transfer, without rereading the 64 preset names. Keep read/save/shortcut lists in sync, and invalidate an uncertain label if the save later fails.
