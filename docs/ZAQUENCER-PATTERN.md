@@ -99,6 +99,41 @@ Commands 29–2D (mode, port, channel, alpha, beta) answered on firmware 1.0.2, 
 (`scripts/hw/bcr32-track-read.mjs`, 20:30 CEST): mode 0, port 4, channel 0/1/2/3 for T1–T4 (MIDI channels 1–4), alpha −4,
 beta −4 for every track. The meaning of mode 0, port 4 and −4 is not established yet.
 
+## Transfers: what the BCR2000 Zaquencer manual 1.04 tells us
+
+The public *Zaquencer Instruction Manual* 1.04 (zaqaudio.com, §14 "Preset/Global Import Export" and §15 "SysEx
+Implementation") describes the BCR2000 firmware this sequencer comes from. Its SysEx block is the same shape as `04 0B`;
+only the 7-byte prefix differs. Nothing in this section is observed on a BCR32 yet: it is a correspondence to test.
+
+| Byte | BCR2000 Zaquencer 1.04 | BCR32 `04 0B` | Reading by analogy |
+| --- | --- | --- | --- |
+| 0–7 | `F0 00 21 1F 00 15 <major> <minor>` | `F0 00 20 32 <dev> 64 04 0B` | prefix only |
+| 8 | All (0) / Single (1) / Page (2) / Global (3) | kind 0–3 | same four kinds; Global = 2 blocks on both |
+| 9 | page number, read only in All | bank | sequence page (12 pages) |
+| 10 | preset number, read in All and Page | page 0–15 | sequence within the page (16 per page, 12 × 16 = 192) |
+| 11 | block 0–7 | block 0–7 | same |
+| 12–267 | 256 nibbles, high first; 1024-byte preset = 8 blocks | same | same |
+| 268–271 | 16-bit sum of header + data, 4 nibbles | same | same |
+
+Receive rules in 1.04: a **Single** file overwrites the currently selected preset and a **Page** file the page shown
+on the display, whatever numbers the file carries; incomplete presets are discarded; errors come back on MIDI Out A as
+`F0 00 21 1F 00 15 01 0X F7` (01 header, 02 length, 03 checksum, 04 block, 05 plausibility, 06 version) and success
+sends nothing. The BCR32 1.0.2 answers an import block with a 10-byte acknowledgement instead (command `04`, §10 of
+[BCR32-PROTOCOL-1.0.2.md](BCR32-PROTOCOL-1.0.2.md)).
+
+| Action | BCR2000 Zaquencer 1.04 | BCR32 manual Rev1 |
+| --- | --- | --- |
+| Export | LOAD menu, hold push encoder 1, then push 6 (all 192), 7 (current page), 8 (current preset) | ZAQ mode, STORE, hold SELECT (58), press encoder 25, then 29 (all memory), 30 (12 pages), 31 (current page), 32 (current sequence) |
+| Export globals | GLOBAL menu, hold push encoder 1, push 8 | not listed separately (probably part of "all memory") |
+| Import | STORE menu, hold push encoder 1 while the file starts; EXIT cancels | STORE, hold SELECT (58), press encoder 33 ("import mode") |
+| Output port | **MIDI Out A only**; sequencer stopped; panel locked while sending | not stated |
+| Remote request | none | commands `06`–`09` (export globals / current / page / all), not yet tried |
+
+Consequence for the capture plan: on 2026-10-24 two front-panel exports (encoder 32) sent nothing over USB. If the
+BCR32 kept the BCR2000 rule, the export leaves on DIN MIDI Out A, which the *USB* operation mode disables (manual Rev1,
+global setting 7: USB / STDL / MIXED). The next capture is therefore either MIDI Out A to a computer MIDI input with the
+operation mode on MIXED, or the remote export request `07` over USB (read-only, needs a go first).
+
 ## What stays unknown
 
 - **Gate**: the codes are raw 0–15 values. Their musical meaning (lengths, ties, special codes) is not established.
@@ -109,7 +144,7 @@ beta −4 for every track. The meaning of mode 0, port 4 and −4 is not establi
 - **Scale list (`23`)**: range 0–127 in the editor; no option list in the official editor matches it, so values stay raw.
 - **Track header 00–0F**: apart from the step mask in 00–03 (from the code), the positions of mute, timing and range
   codes are not located. The header is kept byte for byte.
-- Also open: the meaning of kinds 0–2 and of the bank/page bytes, the content of kind 3, and whether the firmware ever
+- Also open: kinds 0–3 and the bank/page bytes are only read by analogy with the BCR2000 (see Transfers above), and whether the firmware ever
   writes delay `-128` (the codec reads it but only accepts −127…127 when editing).
 
 ## Validation plan
