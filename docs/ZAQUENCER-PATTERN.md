@@ -48,6 +48,36 @@ For step `s >= 24`, gate bits 0–3 occupy bit 7 of velocity bytes `4*(s-24)+0..
 the other: the test patches every field of every step and checks that no other bit of the 1024 bytes changes, then runs
 2048 gate edits that must keep all velocities.
 
+## Public reference: the Zaquencer author's preset map
+
+The author of the Zaquencer firmware published a preset map on the ZAQ Audio forum on 2026-05-22
+(<https://zaqaudio.com/files/Zaquencer_Preset_Map.txt>, read 2026-10-24). It describes the **original Zaquencer** (BCR2000);
+it does not name the BCR32. Its per-track layout matches the table above offset for offset and names the fields:
+
+| Offset | Name in the preset map | Codec field | Reading used by the sequencer view |
+| --- | --- | --- | --- |
+| 00–03 | skipStep (32 flags) | `mask` | step skipped |
+| 04 | trackMute (1 bit) | header | track muted |
+| 05 | dir (2 bits) | header | direction code (values not documented) |
+| 06 / 07 / 08 | sequenceStart / sequenceLength / sequenceOffset (5 bits) | header | shown read-only |
+| 09 | selectedClockDivider (4 bits) | header | clock divider code |
+| 0A / 0B | shuffleEvenTicks / shuffleOddTicks | header | shown read-only |
+| 0C–0D | drumMutes (16 flags) | header | muted drum voices |
+| 10–2F | noteVal | `note` | note |
+| 30–4F | noteVelocity (bit 7 reused for note length of steps 24–31) | `velocity` | velocity |
+| 50–6F | noteStartTimeOffset (signed, unit not stated) | `delay` | start offset |
+| 70–7B + velocity bit 7 | noteLength (4 bits per step) | `gate` | note length 0–15 (unit not stated) |
+| 7C–9B / 9C–BB | CCVal for the track's CC 1 / CC 2 (signed, −1 = off) | `alpha` / `beta` | CC values, −1 stored as `FF` |
+| BC–FB | notePolyphony (16 bits per step) | `voices` | polyphony word (drums or chord) |
+| FC–FF | noteMute (32 flags) | `rest` | step muted |
+
+The map also lists per-track output (MIDI A/B), channel, CC numbers, drum/chord mode and drum note mapping, and the
+global clock, scale, transpose, trigger and quantization fields of the preset's global area.
+
+**Consequence for the editor:** bytes 00–03 are read as *skip* flags and FC–FF as *mute* flags. A step plays when it is
+neither skipped nor muted and its velocity is above 0. Earlier versions of this page called 00–03 a "step mask"; which
+reading is right on a BCR32 will be settled by the first real export (validation plan, step 1).
+
 ## What stays unknown
 
 - **Gate**: the codes are raw 0–15 values. Their musical meaning (lengths, ties, special codes) is not established.

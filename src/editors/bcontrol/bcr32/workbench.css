@@ -918,3 +918,8 @@
 .bcr32-workbench .studio.compact .seq-entry .mock-check{display:flex;flex-direction:row;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--mk-text);text-transform:none;letter-spacing:0}
 @media(max-width:760px){.bcr32-workbench .sequencer-view{grid-template-columns:1fr}.bcr32-workbench .seq-grid,.bcr32-workbench .seq-bars,.bcr32-workbench .seq-roll-row{min-width:640px}}
 .bcr32-workbench .studio.compact .seq-entry .mock-check{white-space:nowrap;width:auto}
+.bcr32-workbench .studio.compact .seq-cell.skip{opacity:.35;background:repeating-linear-gradient(-45deg,#2b2c30,#2b2c30 2px,#1d1e21 2px,#1d1e21 5px)}
+.bcr32-workbench .seq-header{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}
+.bcr32-workbench .seq-header th{font-weight:400;text-align:left;color:var(--mk-muted);padding:3px 0}
+.bcr32-workbench .seq-header td{text-align:right;padding:3px 0}
+.bcr32-workbench .seq-preview-note{margin:0 0 10px}
