@@ -40,4 +40,11 @@ assert.throws(()=>presetStorePlan("$rev BCR32\n$preset\n  .name 'a'\n  .name 'b'
   const p=presetStorePlan(d.exports.defaultPresetBcl,12,'test Fred')
   assert.ok(p.expected.includes("  .name 'test Fred'")&&p.lines.at(-2)==='$store 13','the stored default template is a valid single preset')
 }
+// The first read after $store may time out: the verification read is retried, then the store completes.
+{
+  let stored=false,timeouts=0;const working="$rev BCR32\n$preset\n  .name 'W'\n  .init\n$end",p=presetStorePlan(working,20,'Retry')
+  await storeHardwarePreset({source:'working',slot:20,name:'Retry',pause:1,backup(){},transfer:async lines=>{if(lines.some(l=>l.startsWith('$store ')))stored=true},
+    read:async r=>{if(stored&&r.kind==='slot'&&timeouts<2){timeouts++;return {status:'timeout',request:r,names:{},frames:[],text:''}}return {status:'complete',request:r,names:{},frames:[],text:r.kind==='working'?working:stored?p.expected:working.replace("'W'","'old'")}}})
+  assert.equal(timeouts,2,'two timeouts after the store were retried')
+}
 console.log('PASS BCR32 preset store: slot62 Test cache event immediately after ACK, before independent verification/restoration; no names query, trimmed name, no event on failed transfer, failed readback still rejects after acknowledgement')
