@@ -38,6 +38,7 @@ import { applyChange, buttonValue, createMidiDecoder, decoderKey, transportIssue
 import { buttonNames } from './panel-layout'
 import { ControlSearch } from './ControlSearch'
 import { LibraryList } from './LibraryList'
+import { SequencerView } from './SequencerView'
 import { createBrightnessTransport } from './led-brightness'
 import { applySelectionChange, selectControls, selectedControls, selectionKey, sharedField, type SelectionGesture, type ControlChange } from './multi-selection'
 import { applyLearn, createLearnSession, describeApplied, type LearnResult } from './midi-learn'
@@ -260,7 +261,10 @@ function loadWorkspace() {
   const [dumps, setDumps] = useState<ControllerDump[]>([])
   const [liveFirmware, setLiveFirmware] = useState<string | null>(null)
   const [liveDeviceId, setLiveDeviceId] = useState<number | null>(null)
-  const firmwareReceive = useRef<(bytes: number[]) => void>(() => {})
+  const firmwareReceive = useRef<(bytes: number[]) => void>(() => {}), sequencerReceive = useRef<(bytes: number[]) => void>(() => {})
+  // Controller view (front panel and panel) or the full-width sequencer view; remembered per browser.
+  const [editorMode, setEditorMode] = useState<'controller' | 'sequencer'>(() => { try { return storage.getItem('bcr32-studio.editor-mode') === 'sequencer' ? 'sequencer' : 'controller' } catch { return 'controller' } })
+  useEffect(() => { try { storage.setItem('bcr32-studio.editor-mode', editorMode) } catch { /* Optional preference. */ } }, [editorMode])
   const [presetBusy, setPresetBusy] = useState(false)
   const presetReceive = useRef<(bytes: number[]) => void>(() => {})
   const controllerReader = useRef<ReturnType<typeof createControllerReader> | null>(null)
@@ -527,6 +531,7 @@ function loadWorkspace() {
       controllerReader.current?.receive(data)
       assignmentWriter.current?.receive(data)
       firmwareReceive.current(data)
+      sequencerReceive.current(data)
       presetReceive.current(data)
       const dump = decodeControllerDump(data)
       // Up to 64 presets × 8 blocks are kept; the notice counts messages instead of announcing each block.
@@ -989,10 +994,13 @@ function loadWorkspace() {
   }}])
   function latestScreenList(list:EditorScreen[]){latestScreen.current=list[0];return list}
   const assignmentAvailable = brightnessEnabled && liveFirmware === '1.0.2' && liveDeviceId !== null && liveDeviceId !== 127 && controllerRead.status === 'complete'
-  return translatedTree(<main className="studio compact" data-theme={theme} data-tools-collapsed={toolsCollapsed||undefined} onKeyDown={event=>{if(event.key!=='Escape')return;if(displayOpen){setDisplayOpen(false);event.preventDefault()}else if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
+  return translatedTree(<main className="studio compact" data-theme={theme} data-tools-collapsed={toolsCollapsed||undefined} data-mode={editorMode} onKeyDown={event=>{if(event.key!=='Escape')return;if(displayOpen){setDisplayOpen(false);event.preventDefault()}else if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
         <div className="editor-toolbar" role="toolbar" aria-label="Editor toolbar">
+          <div className="mock-seg editor-mode" role="group" aria-label="Editor view"><button aria-pressed={editorMode === 'controller'} onClick={() => setEditorMode('controller')}>Controller</button><button aria-pressed={editorMode === 'sequencer'} onClick={() => setEditorMode('sequencer')}>Sequencer</button></div>
+          {editorMode === 'controller' && <>
+          <span className="tb-sep" aria-hidden="true" />
           <div className="editor-history-tools" role="group" aria-label="History"><button aria-label="Undo" title="Undo" disabled={locked||!historyCounts.undo} onClick={()=>moveHistory('undo')}><span aria-hidden="true" data-i18n-skip>↶</span></button><button aria-label="Redo" title="Redo" disabled={locked||!historyCounts.redo} onClick={()=>moveHistory('redo')}><span aria-hidden="true" data-i18n-skip>↷</span></button></div>
           <span className="tb-sep" aria-hidden="true" />
           <button className={`cc-toggle tb-switch ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} title="Send CC to BCR32" onClick={toggleSend} disabled={!isBcrOutput(output)}><span className="switch" aria-hidden="true" />CC → BCR32</button>
@@ -1015,9 +1023,10 @@ function loadWorkspace() {
             </fieldset></div>
           </div>
           <span className="tb-spacer" />
-          <button className="bcr32-tools-toggle" aria-label={toolsCollapsed?'Show editing tools':'Collapse editing tools'} aria-expanded={!toolsCollapsed} title={toolsCollapsed?'Show editing tools':'Collapse editing tools'} onClick={()=>setToolsCollapsed(on=>!on)}><span aria-hidden="true" data-i18n-skip>{toolsCollapsed?'◂':'▸'}</span></button>
+          </>}
+          {editorMode === 'controller' && <button className="bcr32-tools-toggle" aria-label={toolsCollapsed?'Show editing tools':'Collapse editing tools'} aria-expanded={!toolsCollapsed} title={toolsCollapsed?'Show editing tools':'Collapse editing tools'} onClick={()=>setToolsCollapsed(on=>!on)}><span aria-hidden="true" data-i18n-skip>{toolsCollapsed?'◂':'▸'}</span></button>}
         </div>
-        <FrontPanel move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
+        {editorMode === 'sequencer' ? <SequencerView access={access} controllerInputId={inputId} receive={sequencerReceive} download={download} locked={locked} /> : <FrontPanel move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">

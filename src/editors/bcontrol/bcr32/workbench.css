@@ -856,3 +856,65 @@
 .bcr32-workbench .library-name small{color:var(--mk-muted,#9a978f);font-size:10px;flex:none}
 .bcr32-workbench .library-move{display:flex;gap:2px}
 .bcr32-workbench .studio.compact .library-move button{margin:0;padding:1px 6px;font-size:11px;border:1px solid var(--mk-line,#34363b);border-radius:3px;background:transparent;color:var(--mk-text,#e6e3dc)}
+/* Sequencer view: the whole workspace, as in the sequencer mockup. */
+.bcr32-workbench .studio.compact[data-mode=sequencer]>.workspace{grid-template-columns:minmax(0,1fr)}
+.bcr32-workbench .studio.compact[data-mode=sequencer]>.workspace>.sidebar{display:none}
+.bcr32-workbench .studio.compact[data-mode=sequencer]>.workspace>.surface{border-right:0}
+.bcr32-workbench .editor-toolbar .editor-mode{margin:0}
+.bcr32-workbench .sequencer-view{display:grid;grid-template-columns:minmax(0,1fr) 350px;min-height:0;height:100%;outline:none}
+.bcr32-workbench .seq-main{min-width:0;overflow:auto;padding:12px 14px}
+.bcr32-workbench .seq-bar,.bcr32-workbench .seq-entry{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bcr32-workbench .studio.compact .seq-bar>button{padding:4px 9px;font-size:12px;border:1px solid var(--mk-line);border-radius:4px;background:transparent;color:var(--mk-text)}
+.bcr32-workbench .seq-bar .mock-seg{margin:0}
+.bcr32-workbench .seq-spacer{flex:1}
+.bcr32-workbench .seq-offline{font-size:11px;color:#4caf72;border:1px solid #2f5a3d;border-radius:10px;padding:1px 8px}
+.bcr32-workbench .studio.compact :is(.seq-pattern,.seq-inline){display:inline-flex;flex-direction:row;align-items:center;gap:6px;margin:0;font-size:11px;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact :is(.seq-pattern,.seq-inline) select{width:auto;padding:4px 6px;font-size:12px;border:1px solid var(--mk-line);border-radius:4px;background:var(--mk-surface2);color:var(--mk-text)}
+.bcr32-workbench .sequencer-view h3{display:flex;justify-content:space-between;gap:8px;margin:14px 0 6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mk-muted)}
+.bcr32-workbench .sequencer-view h3 .mock-caption{text-transform:none;letter-spacing:0;font-weight:400}
+.bcr32-workbench .seq-grid{display:grid;grid-template-columns:54px repeat(32,minmax(14px,1fr));gap:3px;align-items:center}
+.bcr32-workbench .seq-num{font-size:9px;color:var(--mk-muted);text-align:center}.bcr32-workbench .seq-num.beat{color:var(--mk-text)}
+.bcr32-workbench .studio.compact .seq-track{display:flex;align-items:center;gap:6px;margin:0;padding:2px 4px;font-size:12px;border:0;border-radius:4px;background:transparent;color:var(--mk-text)}
+.bcr32-workbench .studio.compact .seq-track[aria-pressed=true]{background:var(--mk-tint);color:var(--mk-accent)}
+.bcr32-workbench .seq-track i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.bcr32-workbench .studio.compact .seq-cell{position:relative;height:26px;margin:0;padding:0;border:1px solid var(--mk-line);border-radius:3px;background:#26272b;overflow:hidden}
+.bcr32-workbench .studio.compact .seq-cell.on{background:var(--c);border-color:transparent;opacity:.9}
+.bcr32-workbench .studio.compact .seq-cell.rest{background:repeating-linear-gradient(45deg,#2b2c30,#2b2c30 3px,#33343a 3px,#33343a 6px)}
+.bcr32-workbench .studio.compact .seq-cell.sel{outline:2px solid #fff;outline-offset:1px}
+.bcr32-workbench .seq-vel{position:absolute;left:0;right:0;top:0;background:rgba(0,0,0,.28)}
+.bcr32-workbench .seq-lanes,.bcr32-workbench .seq-roll{border:1px solid var(--mk-line);border-radius:6px;background:var(--mk-surface)}
+.bcr32-workbench .seq-lane{display:grid;grid-template-columns:54px 1fr;border-bottom:1px solid var(--mk-line)}
+.bcr32-workbench .seq-lane:last-child{border-bottom:0}
+.bcr32-workbench .seq-lane-label{padding:6px;font-size:11px;color:var(--mk-muted);border-right:1px solid var(--mk-line)}
+.bcr32-workbench .seq-bars{display:grid;grid-template-columns:repeat(32,minmax(14px,1fr));gap:3px;height:70px;padding:6px;align-items:end}
+.bcr32-workbench .seq-bars.delay{align-items:center}
+.bcr32-workbench .studio.compact .seq-bar{margin:0;padding:0;border:0;border-radius:2px 2px 0 0;background:var(--c);opacity:.85;cursor:ns-resize;min-height:2px}
+.bcr32-workbench .studio.compact .seq-bar.off{opacity:.18}.bcr32-workbench .studio.compact .seq-bar.sel{outline:1px solid #fff}
+.bcr32-workbench .seq-roll{max-height:60vh;overflow:auto}
+.bcr32-workbench .seq-roll-row{display:grid;grid-template-columns:54px repeat(32,minmax(14px,1fr));gap:3px;padding:1px 6px 1px 0}
+.bcr32-workbench .seq-roll-row.black{background:rgba(255,255,255,.025)}
+.bcr32-workbench .seq-roll-key{font-size:9px;color:var(--mk-muted);padding-left:6px;line-height:14px}
+.bcr32-workbench .studio.compact .seq-roll-cell{height:14px;margin:0;padding:0;border:0;border-radius:2px;background:transparent}
+.bcr32-workbench .studio.compact .seq-roll-cell.beat{box-shadow:inset 1px 0 0 rgba(255,255,255,.06)}
+.bcr32-workbench .studio.compact .seq-roll-cell.on{background:var(--c)}
+.bcr32-workbench .studio.compact .seq-roll-cell.sel{outline:1px solid #fff}
+.bcr32-workbench .seq-table-wrap{overflow:auto}
+.bcr32-workbench .seq-table{width:100%;border-collapse:collapse;font-size:12px}
+.bcr32-workbench .seq-table :is(th,td){padding:3px 4px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)}
+.bcr32-workbench .seq-table th{font-weight:400;font-size:11px;color:var(--mk-muted)}
+.bcr32-workbench .seq-table tr[aria-selected=true]{background:var(--mk-tint)}
+.bcr32-workbench .studio.compact .seq-table input[type=number]{width:52px;padding:2px;text-align:center;border:1px solid var(--mk-line);border-radius:3px;background:var(--mk-surface2);color:var(--mk-text)}
+.bcr32-workbench .seq-panel{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--mk-line);background:var(--mk-surface)}
+.bcr32-workbench .seq-tabs{display:flex;border-bottom:1px solid var(--mk-line)}
+.bcr32-workbench .studio.compact .seq-tabs button{flex:1;margin:0;padding:9px 2px 8px;font-size:12px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .seq-tabs button[aria-selected=true]{color:var(--mk-text);border-bottom-color:var(--mk-accent)}
+.bcr32-workbench .seq-panel-content{flex:1;overflow:auto;padding:12px}
+.bcr32-workbench .studio.compact .seq-panel-content label:not(.mock-check){display:flex;flex-direction:column;gap:3px;margin:0 0 8px;font-size:11px;letter-spacing:0;text-transform:none;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .seq-panel-content :is(input:not([type=checkbox]),select){width:100%;padding:5px 6px;font-size:12px;border:1px solid var(--mk-line);border-radius:4px;background:var(--mk-surface2);color:var(--mk-text)}
+.bcr32-workbench .studio.compact .seq-panel-content .mock-check{display:flex;flex-direction:row;align-items:center;gap:6px;margin:4px 0;font-size:12px;color:var(--mk-text)}
+.bcr32-workbench .studio.compact .seq-panel-content .fields.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bcr32-workbench .studio.compact .seq-panel-content .mock-title{margin:4px 0 6px;font-size:17px;font-weight:600}
+.bcr32-workbench .seq-status{margin:0;padding:6px 12px;font-size:12px;color:var(--mk-muted);background:var(--mk-surface2);border-top:1px solid var(--mk-line)}
+.bcr32-workbench .studio.compact .seq-entry .mock-check{display:flex;flex-direction:row;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--mk-text);text-transform:none;letter-spacing:0}
+@media(max-width:760px){.bcr32-workbench .sequencer-view{grid-template-columns:1fr}.bcr32-workbench .seq-grid,.bcr32-workbench .seq-bars,.bcr32-workbench .seq-roll-row{min-width:640px}}
+.bcr32-workbench .studio.compact .seq-entry .mock-check{white-space:nowrap;width:auto}

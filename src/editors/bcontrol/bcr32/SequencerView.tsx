@@ -1,0 +1,214 @@
+import { useEffect, useRef, useState, type MutableRefObject } from 'react'
+import { createZaqAssembler, decodeZaqBlock, patchStep, patternFile, readStep, type ZaqPattern, type ZaqStep } from './zaquencer'
+import { splitSysex } from './firmware-codec'
+import { parseMidiFile, stepsToMidiFile, suggestStepTicks, trackToSteps } from './midi-file'
+import { translate, useLanguage } from './i18n'
+import type { MidiAccess, MidiPort } from './web-midi'
+
+// Sequencer view (approved mockup of 2026-10-24): the four Zaquencer tracks × 32 steps as a grid, lanes, piano roll or
+// raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
+// stays in this browser: listening for a front-panel export sends nothing, and there is no path that sends a pattern.
+export const trackColors = ['#5fbf6f', '#e08a3c', '#4f8fd9', '#5fbf6f']
+const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+export const noteName = (n: number) => names[n % 12] + (Math.floor(n / 12) - 1)
+// Computer keyboard as one octave, like most DAWs: white keys A S D F G H J K, black keys W E T Y U.
+export const keyboardNotes: Record<string, number> = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12 }
+export const stepGrids = [{ label: '1/4', divisor: 1 }, { label: '1/8', divisor: 2 }, { label: '1/16', divisor: 4 }, { label: '1/32', divisor: 8 }]
+type Entry = { pattern: ZaqPattern; data: number[]; label: string }
+// A local template: eight empty kind-0 blocks. Its header is all zero (fields not located yet), so it is for files only.
+export function emptyPattern(): ZaqPattern {
+  const blocks = Array.from({ length: 8 }, (_, block) => ({ device: 0, kind: 0, bank: 0, page: 0, block, data: Array<number>(128).fill(0) }))
+  return { identity: 'template', blocks, data: blocks.flatMap(b => b.data) }
+}
+// Step entry: the note goes to the selected step, which becomes active and audible; the cursor moves to the next step.
+export function enterNote(data: readonly number[], track: number, step: number, note: number, velocity: number) {
+  if (!Number.isInteger(note) || note < 0 || note > 127) throw Error('Note 0–127')
+  return { data: patchStep(data, track, step, { note, velocity: Math.max(1, Math.min(127, Math.round(velocity))), mask: true, rest: false }), next: (step + 1) % 32 }
+}
+// MIDI file → pattern: up to four source tracks onto T1–T4, notes quantized to the chosen grid. Steps without a note are
+// switched off; gate codes, Alpha/Beta and voices stay as they were (their meaning is not established).
+export function applyMidiTracks(data: readonly number[], sources: ({ notes: Parameters<typeof trackToSteps>[0] } | null)[], stepTicks: number, startTick = 0) {
+  let next = [...data]; const report = { chordsDropped: 0, beyond: 0, delayClamped: 0 }
+  sources.slice(0, 4).forEach((source, track) => {
+    if (!source) return
+    const result = trackToSteps(source.notes, { stepTicks, startTick, steps: 32 })
+    report.chordsDropped += result.chordsDropped; report.beyond += result.beyond; report.delayClamped += result.delayClamped
+    result.steps.forEach((s, step) => { next = patchStep(next, track, step, s ? { note: s.note, velocity: s.velocity, delay: s.delay, mask: true, rest: false } : { mask: false }) })
+  })
+  return { data: next, report }
+}
+export function patternToMidi(data: readonly number[], ppq = 96) {
+  const tracks = [0, 1, 2, 3].map(track => ({ name: `T${track + 1}`, channel: track, steps: Array.from({ length: 32 }, (_, step) => { const s = readStep(data, track, step); return s.mask && !s.rest && s.velocity > 0 ? { note: s.note, velocity: s.velocity, lengthSteps: 1 } : null }) }))
+  return stepsToMidiFile({ ppq, stepTicks: ppq / 4, tracks })
+}
+
+export function SequencerView({ access, controllerInputId, receive, download, locked }: {
+  access: MidiAccess | null; controllerInputId: string; receive: MutableRefObject<(bytes: number[]) => void>
+  download: (data: BlobPart, name: string, type?: string) => void; locked: boolean
+}) {
+  const language = useLanguage(), t = (s: string) => translate(s, language)
+  const [entries, setEntries] = useState<Entry[]>(() => [{ pattern: emptyPattern(), data: emptyPattern().data, label: 'Empty template' }])
+  const [current, setCurrent] = useState(0), [track, setTrack] = useState(0), [step, setStep] = useState(0)
+  const [view, setView] = useState<'grid' | 'roll' | 'table'>('grid'), [panel, setPanel] = useState<'step' | 'track' | 'file'>('step')
+  const [octave, setOctave] = useState(4), [velocity, setVelocity] = useState(100), [keyboardEntry, setKeyboardEntry] = useState(true)
+  const [listen, setListen] = useState(false), [keyboardPort, setKeyboardPort] = useState(''), [notice, setNotice] = useState('Nothing is sent to the BCR32.')
+  const [undo, setUndo] = useState<number[][]>([]), [redo, setRedo] = useState<number[][]>([])
+  const [midi, setMidi] = useState<{ name: string; tracks: ReturnType<typeof parseMidiFile>['tracks']; ppq: number; map: (number | null)[]; grid: number; startBar: number } | null>(null)
+  const entry = entries[Math.min(current, entries.length - 1)], data = entry.data
+  const state = useRef({ data, track, step, octave, velocity, locked }); state.current = { data, track, step, octave, velocity, locked }
+  const commit = (next: number[], message?: string) => {
+    if (state.current.locked) return
+    setUndo(u => [...u.slice(-99), state.current.data]); setRedo([])
+    setEntries(list => list.map((e, i) => i === Math.min(current, list.length - 1) ? { ...e, data: next } : e)); if (message) setNotice(message)
+  }
+  const restore = (from: number[][], to: (f: (v: number[][]) => number[][]) => void, setFrom: (f: (v: number[][]) => number[][]) => void) => {
+    const last = from.at(-1); if (!last || locked) return
+    to(v => [...v, data]); setFrom(v => v.slice(0, -1)); setEntries(list => list.map((e, i) => i === Math.min(current, list.length - 1) ? { ...e, data: last } : e))
+  }
+  const patch = (p: Partial<ZaqStep>, s = step, tr = track) => commit(patchStep(data, tr, s, p))
+  const play = (note: number, vel: number) => { const { data: d, track: tr, step: st } = state.current; try { const r = enterNote(d, tr, st, note, vel); commit(r.data); setStep(r.next) } catch (e) { setNotice(String(e)) } }
+  const playRef = useRef(play); playRef.current = play
+  const addPattern = (pattern: ZaqPattern, label: string) => { setEntries(list => [...list, { pattern, data: [...pattern.data], label }].slice(-24)); setCurrent(Number.MAX_SAFE_INTEGER); setUndo([]); setRedo([]) }
+
+  // Listening for a front-panel pattern export: receive only, never a request.
+  useEffect(() => {
+    if (!listen) { receive.current = () => {}; return }
+    const assembler = createZaqAssembler()
+    receive.current = bytes => { const block = decodeZaqBlock(bytes); if (!block) return; const p = assembler.receive(block); if (p) { addPattern(p, `${t('Front-panel export')} · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); setNotice('Pattern received. Nothing was sent to the BCR32.') } }
+    return () => { receive.current = () => {} }
+  }, [listen])
+
+  // MIDI keyboard: any input except the BCR32 controller port; note-ons enter steps like the computer keyboard.
+  const keyboardInputs = access ? [...access.inputs.values()].filter(p => p.id !== controllerInputId && !/BCR[- ]?32/i.test(p.name ?? '')) : []
+  useEffect(() => {
+    const port = keyboardInputs.find(p => p.id === keyboardPort) as (MidiPort & { addEventListener?: (type: string, fn: (e: { data: Uint8Array }) => void) => void; removeEventListener?: (type: string, fn: (e: { data: Uint8Array }) => void) => void }) | undefined
+    if (!port) return
+    const handler = (event: { data: Uint8Array }) => { const [status, note, vel] = Array.from(event.data); if ((status & 0xf0) === 0x90 && vel > 0) playRef.current(note, vel) }
+    if (port.addEventListener) { port.addEventListener('midimessage', handler); return () => port.removeEventListener?.('midimessage', handler) }
+    const previous = port.onmidimessage; port.onmidimessage = e => { previous?.(e); handler(e) }; return () => { port.onmidimessage = previous }
+  }, [keyboardPort, access])
+
+  const onKey = (event: React.KeyboardEvent) => {
+    if ((event.target as HTMLElement).closest('input,select,textarea') || event.metaKey || event.ctrlKey || event.altKey) return
+    const key = event.key.toLowerCase()
+    if (keyboardEntry && key in keyboardNotes) { event.preventDefault(); play(Math.min(127, (octave + 1) * 12 + keyboardNotes[key]), velocity); return }
+    const moves: Record<string, () => void> = {
+      arrowright: () => setStep(s => (s + 1) % 32), arrowleft: () => setStep(s => (s + 31) % 32), arrowup: () => setTrack(v => (v + 3) % 4), arrowdown: () => setTrack(v => (v + 1) % 4),
+      z: () => setOctave(o => Math.max(-1, o - 1)), x: () => setOctave(o => Math.min(8, o + 1)), c: () => setVelocity(v => Math.max(1, v - 10)), v: () => setVelocity(v => Math.min(127, v + 10)),
+      ' ': () => { patch({ rest: !readStep(data, track, step).rest }); setStep(s => (s + 1) % 32) }, backspace: () => { patch({ mask: false }); setStep(s => (s + 31) % 32) }, delete: () => patch({ mask: false }),
+    }
+    if (moves[key]) { event.preventDefault(); moves[key]() }
+  }
+
+  async function importFile(file?: File) {
+    if (!file) return
+    try {
+      if (file.size > 4 * 1024 * 1024) throw Error('File limit')
+      const bytes = new Uint8Array(await file.arrayBuffer())
+      if (/\.(mid|midi|smf)$/i.test(file.name)) {
+        const parsed = parseMidiFile(bytes), suggested = suggestStepTicks(parsed.tracks.flatMap(tr => tr.notes), parsed.ppq)
+        const withNotes = parsed.tracks.filter(tr => tr.notes.length)
+        setMidi({ name: file.name, tracks: parsed.tracks, ppq: parsed.ppq, map: [0, 1, 2, 3].map(i => withNotes[i]?.index ?? null), grid: stepGrids.find(g => parsed.ppq / g.divisor === suggested)?.divisor ?? 4, startBar: 1 }); setPanel('file'); return
+      }
+      const assembler = createZaqAssembler(); let count = 0
+      for (const frame of splitSysex(bytes)) { const block = decodeZaqBlock(frame); if (!block || block.kind === 3) throw Error('Not a pattern export'); const p = assembler.receive(block); if (p) { addPattern(p, `${file.name}${count ? ` · ${count + 1}` : ''}`); count++ } }
+      if (!count) throw Error('No complete pattern in this file'); setNotice(`${count} ${t('pattern(s) imported. Nothing was sent to the BCR32.')}`)
+    } catch (e) { setNotice(`${t('Import rejected')}: ${e instanceof Error ? e.message : String(e)}`) }
+  }
+  const applyMidi = () => {
+    if (!midi) return
+    const stepTicks = midi.ppq / midi.grid, start = (midi.startBar - 1) * midi.ppq * 4
+    const sources = midi.map.map(index => { const source = midi.tracks.find(tr => tr.index === index); return source ? { notes: source.notes } : null })
+    const { data: next, report } = applyMidiTracks(data, sources, stepTicks, start)
+    commit(next, `${midi.name}: ${t('chord notes dropped')} ${report.chordsDropped} · ${t('notes after step 32')} ${report.beyond} · ${t('offsets clamped')} ${report.delayClamped}`); setMidi(null)
+  }
+
+  const s = readStep(data, track, step)
+  const lanes: { key: 'velocity' | 'gate' | 'delay'; label: string; max: number; min: number }[] = [{ key: 'velocity', label: 'Velocity', min: 0, max: 127 }, { key: 'gate', label: 'Gate code (raw)', min: 0, max: 15 }, { key: 'delay', label: 'Delay (ticks)', min: -127, max: 127 }]
+  const steps = Array.from({ length: 32 }, (_, i) => readStep(data, track, i))
+  const active = steps.filter(x => x.mask && !x.rest), low = Math.min(...active.map(x => x.note), 60) - 2, high = Math.max(low + 14, ...active.map(x => x.note + 1))
+  return <section className="sequencer-view" tabIndex={0} onKeyDown={onKey} aria-label={t('Sequencer')}>
+    <div className="seq-main">
+      <div className="seq-bar">
+        <label className="seq-pattern">{t('Pattern')}<select value={Math.min(current, entries.length - 1)} onChange={e => { setCurrent(Number(e.target.value)); setUndo([]); setRedo([]) }}>{entries.map((e, i) => <option key={i} value={i}>{t(e.label)}</option>)}</select></label>
+        <button aria-label={t('Undo')} title={t('Undo')} disabled={!undo.length || locked} onClick={() => restore(undo, setRedo, setUndo)}>↶</button><button aria-label={t('Redo')} title={t('Redo')} disabled={!redo.length || locked} onClick={() => restore(redo, setUndo, setRedo)}>↷</button>
+        <div className="mock-seg" role="group" aria-label={t('Pattern display')}>{(['grid', 'roll', 'table'] as const).map(v => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{t({ grid: 'Grid', roll: 'Piano roll', table: 'Table (Behringer)' }[v])}</button>)}</div>
+        <span className="seq-spacer" />
+        <span className="seq-offline">{t('Offline · nothing is sent to the BCR32')}</span>
+      </div>
+      <div className="seq-entry">
+        <label className="mock-check"><input type="checkbox" checked={keyboardEntry} onChange={e => setKeyboardEntry(e.target.checked)} />{t('Computer keyboard entry')}</label>
+        <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {t('Space: rest')} · ⌫</span>
+        <label className="seq-inline">{t('MIDI keyboard')}<select value={keyboardPort} onChange={e => setKeyboardPort(e.target.value)}><option value="">{t('None')}</option>{keyboardInputs.map(p => <option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select></label>
+      </div>
+      {view === 'grid' && <>
+        <h3>{t('Tracks T1–T4 · 32 steps')} <span className="mock-caption">{t('click: select · Shift+click: on/off · Alt+click: rest')}</span></h3>
+        <div className="seq-grid" role="grid" aria-label={t('Pattern grid')}>
+          <span />{Array.from({ length: 32 }, (_, i) => <span key={i} className={i % 4 ? 'seq-num' : 'seq-num beat'} data-i18n-skip>{i + 1}</span>)}
+          {[0, 1, 2, 3].map(tr => <div key={tr} className="seq-row" role="row" style={{ display: 'contents' }}>
+            <button className="seq-track" aria-pressed={tr === track} onClick={() => setTrack(tr)}><i style={{ background: trackColors[tr] }} />T{tr + 1}</button>
+            {Array.from({ length: 32 }, (_, i) => { const x = readStep(data, tr, i); return <button key={i} role="gridcell" className={`seq-cell${x.mask ? ' on' : ''}${x.rest ? ' rest' : ''}${tr === track && i === step ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[tr] }} aria-label={`T${tr + 1} · ${t('Step')} ${i + 1} · ${x.mask ? noteName(x.note) : t('Off')}`} title={`T${tr + 1} · ${i + 1} · ${noteName(x.note)} · ${x.velocity}`}
+              onClick={e => { setTrack(tr); setStep(i); if (e.shiftKey) patch({ mask: !x.mask }, i, tr); else if (e.altKey) patch({ rest: !x.rest }, i, tr) }}>{x.mask && <span className="seq-vel" style={{ height: `${100 - x.velocity / 127 * 100}%` }} />}</button> })}
+          </div>)}
+        </div>
+        <h3>{t('Track')} {track + 1} · {t('lanes')}</h3>
+        <div className="seq-lanes">{lanes.map(lane => <div key={lane.key} className="seq-lane"><span className="seq-lane-label">{t(lane.label)}</span><div className={`seq-bars ${lane.key}`}>{steps.map((x, i) => {
+          const value = x[lane.key], ratio = lane.min < 0 ? Math.abs(value) / lane.max / 2 : (value - lane.min) / (lane.max - lane.min)
+          return <button key={i} className={`seq-bar${x.mask ? '' : ' off'}${i === step ? ' sel' : ''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1} · ${value}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.min < 0 ? (value < 0 ? 'start' : 'end') : undefined }}
+            onClick={e => { setStep(i); const r = e.currentTarget.parentElement!.getBoundingClientRect(); const f = (r.bottom - e.clientY) / r.height; const v = lane.min < 0 ? Math.round((f - .5) * 2 * lane.max) : Math.round(lane.min + f * (lane.max - lane.min)); patch({ [lane.key]: Math.max(lane.key === 'velocity' ? 1 : lane.min, Math.min(lane.max, v)) } as Partial<ZaqStep>, i) }} />
+        })}</div></div>)}</div>
+      </>}
+      {view === 'roll' && <>
+        <h3>{t('Track')} {track + 1} · {t('piano roll')}</h3>
+        <div className="seq-roll" style={{ ['--rows' as string]: String(high - low + 1) }}>
+          {Array.from({ length: high - low + 1 }, (_, r) => { const n = high - r; return <div key={n} className={`seq-roll-row${names[n % 12].includes('#') ? ' black' : ''}`}><span className="seq-roll-key" data-i18n-skip>{noteName(n)}</span>{Array.from({ length: 32 }, (_, i) => { const x = steps[i], on = x.mask && !x.rest && x.note === n; return <button key={i} className={`seq-roll-cell${on ? ' on' : ''}${i % 4 ? '' : ' beat'}${i === step && n === s.note ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[track] }} aria-label={`${noteName(n)} · ${t('Step')} ${i + 1}`} onClick={() => { setStep(i); patch(on ? { mask: false } : { note: n, mask: true, rest: false, velocity: x.velocity || velocity }, i) }} /> })}</div> })}
+        </div>
+      </>}
+      {view === 'table' && <div className="seq-table-wrap"><table className="seq-table"><thead><tr>{['Step', 'Note', 'Velocity', 'Delay', 'Gate code', 'Alpha raw', 'Beta raw', 'Voices / chord raw', 'Rest', 'Step mask'].map(h => <th key={h}>{t(h)}</th>)}</tr></thead>
+        <tbody>{steps.map((x, i) => <tr key={i} aria-selected={i === step} onClick={() => setStep(i)}><th data-i18n-skip>{i + 1}</th>{(['note', 'velocity', 'delay', 'gate', 'alpha', 'beta', 'voices'] as const).map(k => <td key={k}><input type="number" aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x[k]} onChange={e => { const v = Number(e.target.value); if (Number.isFinite(v)) try { patch({ [k]: v } as Partial<ZaqStep>, i) } catch (error) { setNotice(String(error)) } }} /></td>)}
+          {(['rest', 'mask'] as const).map(k => <td key={k}><input type="checkbox" checked={x[k]} onChange={e => patch({ [k]: e.target.checked }, i)} /></td>)}</tr>)}</tbody></table></div>}
+    </div>
+    <aside className="seq-panel">
+      <nav className="seq-tabs" role="tablist">{(['step', 'track', 'file'] as const).map(p => <button key={p} role="tab" aria-selected={panel === p} onClick={() => setPanel(p)}>{t({ step: 'Step', track: 'Track', file: 'File' }[p])}</button>)}</nav>
+      <div className="seq-panel-content">
+        {panel === 'step' && <>
+          <p className="mock-caption mock-kind">{t('Track')} {track + 1} · {t('Step')} {step + 1}</p>
+          <h2 className="mock-title" data-i18n-skip>{noteName(s.note)} · {s.velocity}</h2>
+          <label className="mock-check"><input type="checkbox" checked={s.mask} onChange={e => patch({ mask: e.target.checked })} />{t('Step on')}</label>
+          <label className="mock-check"><input type="checkbox" checked={s.rest} onChange={e => patch({ rest: e.target.checked })} />{t('Rest')}</label>
+          <h3>{t('Note')}</h3>
+          <div className="fields two"><label>{t('Note')}<select value={s.note} onChange={e => patch({ note: Number(e.target.value) })}>{Array.from({ length: 128 }, (_, n) => <option key={n} value={n} data-i18n-skip>{noteName(n)} ({n})</option>)}</select></label>
+            <label>{t('Velocity')}<input type="number" min="1" max="127" value={s.velocity} onChange={e => patch({ velocity: Math.max(0, Math.min(127, Number(e.target.value) || 0)) })} /></label></div>
+          <h3>{t('Timing')} <span className="mock-caption">{t('meaning to confirm')}</span></h3>
+          <div className="fields two"><label>{t('Delay (ticks)')}<input type="number" min="-127" max="127" value={s.delay} onChange={e => patch({ delay: Math.max(-127, Math.min(127, Number(e.target.value) || 0)) })} /></label>
+            <label>{t('Gate code (raw 0–15)')}<input type="number" min="0" max="15" value={s.gate} onChange={e => patch({ gate: Math.max(0, Math.min(15, Number(e.target.value) || 0)) })} /></label></div>
+          <h3>{t('Modulation')} <span className="mock-caption">{t('raw')}</span></h3>
+          <div className="fields two"><label>Alpha<input type="number" min="0" max="255" value={s.alpha} onChange={e => patch({ alpha: Math.max(0, Math.min(255, Number(e.target.value) || 0)) })} /></label>
+            <label>Beta<input type="number" min="0" max="255" value={s.beta} onChange={e => patch({ beta: Math.max(0, Math.min(255, Number(e.target.value) || 0)) })} /></label></div>
+        </>}
+        {panel === 'track' && <>
+          <p className="mock-caption mock-kind">{t('Track')} {track + 1}</p>
+          <p className="mock-warn">{t('Track settings live in the header of each track; their positions are not all located yet. They are kept byte for byte.')}</p>
+          <p className="mock-caption" data-i18n-skip>{data.slice(track * 256, track * 256 + 16).map(b => b.toString(16).padStart(2, '0')).join(' ')}</p>
+          <p className="mock-caption">{t('Sequencer global settings (scale, root, transpose, quantization) are in the Device tab.')}</p>
+        </>}
+        {panel === 'file' && <>
+          <section className="mock-card"><b>{t('Front-panel export')}</b><p className="mock-caption">{t('Export the pattern on the BCR32: the editor only listens, nothing is sent.')}</p><div className="mock-actions"><button className={listen ? 'primary' : undefined} aria-pressed={listen} onClick={() => setListen(v => !v)}>{t(listen ? 'Stop listening' : 'Listen')}</button></div></section>
+          <section className="mock-card"><b>{t('Files')}</b><div className="mock-actions">
+            <label className="file">{t('Import .syx or MIDI…')}<input type="file" accept=".syx,.mid,.midi,.smf,application/octet-stream,audio/midi" onChange={e => { void importFile(e.target.files?.[0]); e.target.value = '' }} /></label>
+            <button onClick={() => { try { download(new Uint8Array(patternFile(entry.pattern, data)), 'bcr32-pattern.syx', 'application/octet-stream'); setNotice('File saved. Nothing was sent to the BCR32.') } catch (e) { setNotice(String(e)) } }}>{t('Export .syx')}</button>
+            <button onClick={() => { try { download(patternToMidi(data), 'bcr32-pattern.mid', 'audio/midi'); setNotice('File saved. Nothing was sent to the BCR32.') } catch (e) { setNotice(String(e)) } }}>{t('Export MIDI')}</button></div></section>
+          {midi && <section className="mock-card seq-midi-import"><b data-i18n-skip>{midi.name}</b>
+            <p className="mock-caption">{midi.tracks.length} {t('MIDI tracks')} · PPQ {midi.ppq}</p>
+            {[0, 1, 2, 3].map(i => <label key={i}>T{i + 1}<select value={midi.map[i] ?? ''} onChange={e => setMidi({ ...midi, map: midi.map.map((v, j) => j === i ? (e.target.value === '' ? null : Number(e.target.value)) : v) })}><option value="">{t('Leave unchanged')}</option>{midi.tracks.map(tr => <option key={tr.index} value={tr.index} data-i18n-skip>{tr.index + 1} · {tr.name || '—'} · {tr.notes.length}</option>)}</select></label>)}
+            <div className="fields two"><label>{t('Step size')}<select value={midi.grid} onChange={e => setMidi({ ...midi, grid: Number(e.target.value) })}>{stepGrids.map(g => <option key={g.divisor} value={g.divisor} data-i18n-skip>{g.label}</option>)}</select></label>
+              <label>{t('Start bar')}<input type="number" min="1" max="999" value={midi.startBar} onChange={e => setMidi({ ...midi, startBar: Math.max(1, Math.round(Number(e.target.value) || 1)) })} /></label></div>
+            <p className="mock-caption">{t('Note and velocity are imported; offsets from the grid become delays. Gate is not imported (its codes are not understood yet).')}</p>
+            <div className="mock-actions"><button className="primary" disabled={locked} onClick={applyMidi}>{t('Import into T1–T4')}</button><button onClick={() => setMidi(null)}>{t('Cancel')}</button></div></section>}
+          <section className="mock-card"><b>{t('Send to the BCR32')}</b><p className="mock-caption">{t('Disabled until the validation plan is done: backup, sacrificial slot, compared re-export, power-cycle check.')}</p><div className="mock-actions"><button disabled>{t('Send to a slot…')}</button></div></section>
+        </>}
+      </div>
+      <p className="seq-status" role="status">{t(notice)}</p>
+    </aside>
+  </section>
+}
