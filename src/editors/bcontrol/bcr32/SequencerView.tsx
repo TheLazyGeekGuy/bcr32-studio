@@ -10,8 +10,8 @@ import { translate, useLanguage } from './i18n'
 // Sequencer view (approved mockup of 2026-10-24): the four Zaquencer tracks × 32 steps as a grid, lanes, piano roll or
 // raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
 // stays in this browser: listening for a front-panel export sends nothing, and there is no path that sends a pattern.
-export { trackColors, noteName, keyboardNotes, stepGrids } from './sequencer-shared'
-import { trackColors, noteName, keyboardNotes, stepGrids, noteNames, noteLengths, clockDividers, directions } from './sequencer-shared'
+export { trackColors, noteName, keyboardNotes, stepGrids, noteDelayRange } from './sequencer-shared'
+import { trackColors, noteName, keyboardNotes, stepGrids, noteNames, noteLengths, noteDelayRange, clockDividers, directions } from './sequencer-shared'
 type Entry = { pattern: ZaqPattern; data: number[]; label: string }
 // A local template: eight empty kind-0 blocks. Its header is all zero (fields not located yet), so it is for files only.
 export function emptyPattern(): ZaqPattern {
@@ -38,11 +38,13 @@ export function enterNote(data: readonly number[], track: number, step: number, 
 // muted; note length, CC values and voices stay as they were (the note length unit is not established).
 export function applyMidiTracks(data: readonly number[], sources: ({ notes: Parameters<typeof trackToSteps>[0]; startTick?: number } | null)[], stepTicks: number, startTick = 0) {
   let next = [...data]; const report = { chordsDropped: 0, beyond: 0, delayClamped: 0 }
+  // Source offsets are a fraction of a step; on the device a 1/16 step is 6 clock ticks.
+  const clockDelay = (ticks: number) => Math.max(-noteDelayRange, Math.min(noteDelayRange, Math.round(ticks / stepTicks * 6)))
   sources.slice(0, 4).forEach((source, track) => {
     if (!source) return
     const result = trackToSteps(source.notes, { stepTicks, startTick: source.startTick ?? startTick, steps: 32 })
     report.chordsDropped += result.chordsDropped; report.beyond += result.beyond; report.delayClamped += result.delayClamped
-    result.steps.forEach((s, step) => { next = patchStep(next, track, step, s ? { note: s.note, velocity: s.velocity, delay: s.delay, mask: false, rest: false } : { rest: true }) })
+    result.steps.forEach((s, step) => { next = patchStep(next, track, step, s ? { note: s.note, velocity: s.velocity, delay: clockDelay(s.delay), mask: false, rest: false } : { rest: true }) })
   })
   return { data: next, report }
 }
@@ -59,7 +61,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   const [entries, setEntries] = useState<Entry[]>(() => [{ pattern: emptyPattern(), data: emptyPattern().data, label: 'Empty template' }])
   const [current, setCurrent] = useState(0), [track, setTrack] = useState(0), [step, setStep] = useState(0)
   const [view, setView] = useState<'grid' | 'roll' | 'table'>('grid'), [panel, setPanel] = useState<'step' | 'track' | 'file'>('step')
-  const [octave, setOctave] = useState(4), [velocity, setVelocity] = useState(100), [keyboardEntry, setKeyboardEntry] = useState(true)
+  const [octave, setOctave] = useState(3), [velocity, setVelocity] = useState(100), [keyboardEntry, setKeyboardEntry] = useState(true)
   const [listen, setListen] = useState(false), [notice, setNotice] = useState('Nothing is sent to the BCR32.')
   const [undo, setUndo] = useState<number[][]>([]), [redo, setRedo] = useState<number[][]>([])
   // Templates: built-in grooves, the user's own (saved in this browser) and a random generator.
@@ -100,10 +102,10 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   const onKey = (event: React.KeyboardEvent) => {
     if ((event.target as HTMLElement).closest('input,select,textarea') || event.metaKey || event.ctrlKey || event.altKey) return
     const key = event.key.toLowerCase()
-    if (keyboardEntry && key in keyboardNotes) { event.preventDefault(); play(Math.min(127, (octave + 1) * 12 + keyboardNotes[key]), velocity); return }
+    if (keyboardEntry && key in keyboardNotes) { event.preventDefault(); play(Math.min(127, (octave + 2) * 12 + keyboardNotes[key]), velocity); return }
     const moves: Record<string, () => void> = {
       arrowright: () => setStep(s => (s + 1) % 32), arrowleft: () => setStep(s => (s + 31) % 32), arrowup: () => setTrack(v => (v + 3) % 4), arrowdown: () => setTrack(v => (v + 1) % 4),
-      z: () => setOctave(o => Math.max(-1, o - 1)), x: () => setOctave(o => Math.min(8, o + 1)), c: () => setVelocity(v => Math.max(1, v - 10)), v: () => setVelocity(v => Math.min(127, v + 10)),
+      z: () => setOctave(o => Math.max(-2, o - 1)), x: () => setOctave(o => Math.min(8, o + 1)), c: () => setVelocity(v => Math.max(1, v - 10)), v: () => setVelocity(v => Math.min(127, v + 10)),
       ' ': () => { patch({ rest: !readStep(data, track, step).rest }); setStep(s => (s + 1) % 32) }, backspace: () => { patch({ rest: true }); setStep(s => (s + 31) % 32) }, delete: () => patch({ rest: true }),
     }
     if (moves[key]) { event.preventDefault(); moves[key]() }
@@ -139,7 +141,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
     if (moving && all[track][i][lane.key] === value) return
     setStep(i); patch({ [lane.key]: value } as Partial<ZaqStep>, i, track, moving && dragging.current); dragging.current = true
   }
-  const lanes: { key: 'velocity' | 'gate' | 'delay'; label: string; max: number; min: number }[] = [{ key: 'velocity', label: 'Velocity', min: 0, max: 127 }, { key: 'gate', label: 'Note length (0–15)', min: 0, max: 15 }, { key: 'delay', label: 'Start offset', min: -127, max: 127 }]
+  const lanes: { key: 'velocity' | 'gate' | 'delay'; label: string; max: number; min: number }[] = [{ key: 'velocity', label: 'Velocity', min: 0, max: 127 }, { key: 'gate', label: 'Note length', min: 0, max: 15 }, { key: 'delay', label: 'Start offset', min: -noteDelayRange, max: noteDelayRange }]
   const active = steps.filter(plays), low = Math.min(...active.map(x => x.note), 60) - 2, high = Math.max(low + 14, ...active.map(x => x.note + 1))
   return <section className="sequencer-view" tabIndex={0} onKeyDown={onKey} aria-label={t('Sequencer')}>
     <div className="seq-main">
@@ -184,7 +186,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         <h3>{t('Track')} {track + 1} · {t('lanes')}</h3>
         <div className="seq-lanes">{lanes.map(lane => <div key={lane.key} className="seq-lane"><span className="seq-lane-label">{t(lane.label)}</span><div className={`seq-bars ${lane.key}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); dragging.current = false; dragLane(e, lane, false) }} onPointerMove={e => { if (e.buttons & 1) dragLane(e, lane, true) }} onPointerUp={() => { dragging.current = false }}>{steps.map((x, i) => {
           const value = x[lane.key], ratio = lane.min < 0 ? Math.abs(value) / lane.max / 2 : (value - lane.min) / (lane.max - lane.min)
-          return <span key={i} role="slider" aria-valuemin={lane.min} aria-valuemax={lane.max} aria-valuenow={value} className={`seq-bar${plays(x) ? '' : ' off'}${i === step ? ' sel' : ''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.min < 0 ? (value < 0 ? 'start' : 'end') : undefined }} />
+          return <span key={i} role="slider" aria-valuemin={lane.min} aria-valuemax={lane.max} aria-valuenow={value} className={`seq-bar${plays(x) ? '' : ' off'}${i === step ? ' sel' : ''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.min < 0 ? (value < 0 ? 'start' : 'end') : undefined }}>{lane.key === 'gate' && <b className="seq-bar-value" data-i18n-skip>{noteLengths[value]}</b>}</span>
         })}</div></div>)}</div>
       </div>}
       {view === 'roll' && <div className="seq-rollview">
@@ -193,8 +195,8 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
           {Array.from({ length: high - low + 1 }, (_, r) => { const n = high - r; return <div key={n} className={`seq-roll-row${noteNames[n % 12].includes('#') ? ' black' : ''}`}><span className="seq-roll-key" data-i18n-skip>{noteName(n)}</span>{Array.from({ length: 32 }, (_, i) => { const x = steps[i], on = plays(x) && x.note === n; return <button key={i} className={`seq-roll-cell${on ? ' on' : ''}${i % 4 ? '' : ' beat'}${i === step && n === s.note ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[track] }} aria-label={`${noteName(n)} · ${t('Step')} ${i + 1}`} onClick={() => { setStep(i); patch(on ? { rest: true } : { note: n, mask: false, rest: false, velocity: x.velocity || velocity }, i) }} /> })}</div> })}
         </div>
       </div>}
-      {view === 'table' && <div className="seq-table-wrap"><table className="seq-table"><thead><tr>{['Step', 'Note', 'Velocity', 'Start offset', 'Note length (0–15)', 'CC 1 (raw)', 'CC 2 (raw)', 'Polyphony (raw)', 'Muted', 'Skipped'].map(h => <th key={h}>{t(h)}</th>)}</tr></thead>
-        <tbody>{steps.map((x, i) => <tr key={i} aria-selected={i === step} onClick={() => setStep(i)}><th data-i18n-skip>{i + 1}</th>{(['note', 'velocity', 'delay', 'gate', 'alpha', 'beta', 'voices'] as const).map(k => <td key={k}><input type="number" aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x[k]} onChange={e => { const v = Number(e.target.value); if (Number.isFinite(v)) try { patch({ [k]: v } as Partial<ZaqStep>, i) } catch (error) { setNotice(String(error)) } }} /></td>)}
+      {view === 'table' && <div className="seq-table-wrap"><table className="seq-table"><thead><tr>{['Step', 'Note', 'Velocity', 'Start offset', 'Note length', 'CC 1 (raw)', 'CC 2 (raw)', 'Polyphony (raw)', 'Muted', 'Skipped'].map(h => <th key={h}>{t(h)}</th>)}</tr></thead>
+        <tbody>{steps.map((x, i) => <tr key={i} aria-selected={i === step} onClick={() => setStep(i)}><th data-i18n-skip>{i + 1}</th>{(['note', 'velocity', 'delay', 'gate', 'alpha', 'beta', 'voices'] as const).map(k => <td key={k}>{k === 'gate' ? <select aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x.gate} onChange={e => patch({ gate: Number(e.target.value) }, i)}>{noteLengths.map((l, n) => <option key={n} value={n} data-i18n-skip>{l}</option>)}</select> : <input type="number" min={k === 'delay' ? -noteDelayRange : undefined} max={k === 'delay' ? noteDelayRange : undefined} aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x[k]} onChange={e => { const v = Number(e.target.value); if (Number.isFinite(v)) try { patch({ [k]: k === 'delay' ? Math.max(-noteDelayRange, Math.min(noteDelayRange, v)) : v } as Partial<ZaqStep>, i) } catch (error) { setNotice(String(error)) } }} />}</td>)}
           {(['rest', 'mask'] as const).map(k => <td key={k}><input type="checkbox" aria-label={`${t('Step')} ${i + 1} · ${t(k === 'rest' ? 'Muted' : 'Skipped')}`} checked={x[k]} onChange={e => patch({ [k]: e.target.checked }, i)} /></td>)}</tr>)}</tbody></table></div>}
     </div>
     <aside className="seq-panel">
@@ -208,9 +210,9 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
           <h3>{t('Note')}</h3>
           <div className="fields two"><label>{t('Note')}<select value={s.note} onChange={e => patch({ note: Number(e.target.value) })}>{Array.from({ length: 128 }, (_, n) => <option key={n} value={n} data-i18n-skip>{noteName(n)} ({n})</option>)}</select></label>
             <label>{t('Velocity')}<input type="number" min="1" max="127" value={s.velocity} onChange={e => patch({ velocity: Math.max(0, Math.min(127, Number(e.target.value) || 0)) })} /></label></div>
-          <h3>{t('Timing')} <span className="mock-caption">{t('units to confirm')}</span></h3>
-          <div className="fields two"><label>{t('Start offset')}<input type="number" min="-127" max="127" value={s.delay} onChange={e => patch({ delay: Math.max(-127, Math.min(127, Number(e.target.value) || 0)) })} /></label>
-            <label>{t('Note length (0–15)')}<select value={s.gate} onChange={e => patch({ gate: Number(e.target.value) })}>{noteLengths.map((l, i) => <option key={i} value={i} data-i18n-skip>{i} · {l}</option>)}</select></label></div>
+          <h3>{t('Timing')} <span className="mock-caption">{t('offset in MIDI clock ticks, ±5 as on the panel')}</span></h3>
+          <div className="fields two"><label>{t('Start offset')}<input type="number" min={-noteDelayRange} max={noteDelayRange} value={s.delay} onChange={e => patch({ delay: Math.max(-noteDelayRange, Math.min(noteDelayRange, Number(e.target.value) || 0)) })} /></label>
+            <label>{t('Note length')}<select value={s.gate} onChange={e => patch({ gate: Number(e.target.value) })}>{noteLengths.map((l, i) => <option key={i} value={i} data-i18n-skip>{l}</option>)}</select></label></div>
           <p className="mock-caption">{t('Length names from the manual; their order in the codes is deduced (same list as quantization).')}</p>
           <h3>{t('Track CC values')} <span className="mock-caption">{t('−1 = off')}</span></h3>
           <div className="fields two"><label>CC 1 (α)<input type="number" min="-1" max="127" value={ccValue(s.alpha)} onChange={e => patch({ alpha: ccRaw(Math.max(-1, Math.min(127, Math.round(Number(e.target.value) || 0)))) })} /></label>

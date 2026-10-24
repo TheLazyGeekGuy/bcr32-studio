@@ -20,7 +20,10 @@ assert.equal(one.filter((v,i)=>v!==empty[i]).length>0&&[0,2,3].every(tr=>Array.f
 assert.equal(m.readStep(m.enterNote(empty,0,0,60,0).data,0,0).velocity,1,'velocity 0 from a keyboard becomes 1 (audible)')
 assert.throws(()=>m.enterNote(empty,0,0,128,100),/Note/,'note out of range refused')
 assert.deepEqual(Object.values(m.keyboardNotes),[0,1,2,3,4,5,6,7,8,9,10,11,12],'one chromatic octave on the computer keyboard')
-assert.equal(m.noteName(60),'C4')
+assert.deepEqual([0,60,127].map(m.noteName),['C-2','C3','G8'],'notes named like the BCR32 display (octaves −2 to +8, default step C3 = 60)')
+{ const notes=[{tick:0,duration:10,note:60,velocity:100},{tick:24+11,duration:10,note:62,velocity:100},{tick:48-11,duration:10,note:64,velocity:100}]
+  const {data}=m.applyMidiTracks(empty,[{notes}],24,0)
+  assert.deepEqual([0,1,2].map(s=>m.readStep(data,0,s).delay),[0,3,-3],'MIDI offsets become clock ticks: a fraction of a 1/16 step × 6, within ±5') }
 
 // MIDI import: choose which source tracks go to T1–T4 (here from a 20-track, 64-step file), grid and start bar.
 const long=m.parseMidiFile(fixture('long-20tracks-64steps.mid')),withNotes=long.tracks.filter(t=>t.notes.length)
