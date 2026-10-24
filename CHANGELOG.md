@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.45.0-alpha.5] — 2026-10-24
+
+- MIDI settings icon beside the connection status (standalone and workspace hosts), as in the FireworX and M3000 editors. For the BCR32 it opens a MIDI connection window: MIDI/SysEx permission and retry, firmware read, input and output ports, CC sending and controller output routing. Opening it sends nothing; the Config tab links to it instead of holding the port selectors.
+
 ## [0.45.0-alpha.4] — 2026-10-21
 
 - Fix "Editor unavailable" after a new deployment: the offline service worker now precaches every JS/CSS file of the build it pins, so lazy modules (instrument library, PDF export, editor chunks) keep working after GitHub Pages removes the previous build's files.

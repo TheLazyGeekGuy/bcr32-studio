@@ -77,10 +77,10 @@ export interface WorkbenchProps {
  themeOverride:Theme; displayOverride:DisplayStyle; onAppearance:(change:{theme?:Theme;displayStyle?:DisplayStyle})=>void
  autoZoomOverride:boolean; onAutoZoom:(on:boolean)=>void; active:boolean; locked:boolean
  instanceId:string; presetsExchange?:PresetExchange; signal?:AbortSignal; monitor:Monitor
- parameters?:import('../../../translator/parameters').ParameterBus; presentation?:PresentationInstance; onHelpReady:(open:(()=>void)|undefined)=>void
+ parameters?:import('../../../translator/parameters').ParameterBus; presentation?:PresentationInstance; onHelpReady:(open:(()=>void)|undefined)=>void; onMidiSettingsReady?:(open:(()=>void)|undefined)=>void
  authorizeTransfer:(frames:number[][])=>(()=>void)
 }
-function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,presentation,onHelpReady,parameters}:WorkbenchProps) {
+function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,presentation,onHelpReady,onMidiSettingsReady,parameters}:WorkbenchProps) {
   const lockedRef=useRef(locked);lockedRef.current=locked
 function loadProfile(): Bcr32Profile {
   try {
@@ -135,6 +135,11 @@ function loadWorkspace() {
   const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files' | 'help'>('control')
   const [toolsCollapsed,setToolsCollapsed]=useState(false)
   useEffect(()=>{onHelpReady(()=>setTab('help'));return()=>onHelpReady(undefined)},[onHelpReady])
+  // Host MIDI icon beside the connection status: the MIDI connection window (permission, ports, CC sending).
+  const [midiSettingsOpen,setMidiSettingsOpen]=useState(false)
+  const midiSettingsDialog=useRef<HTMLDialogElement>(null)
+  useEffect(()=>{onMidiSettingsReady?.(()=>setMidiSettingsOpen(true));return()=>onMidiSettingsReady?.(undefined)},[onMidiSettingsReady])
+  useEffect(()=>{const dialog=midiSettingsDialog.current;if(!dialog)return;if(midiSettingsOpen&&!dialog.open)dialog.showModal();else if(!midiSettingsOpen&&dialog.open)dialog.close()},[midiSettingsOpen])
   const [profile, setProfile] = useState<Bcr32Profile>(initial.profile)
   const profileRef = useRef(profile); profileRef.current = profile
   // Only the fields the MIDI decoder reads: a label or LED edit must not recreate it.
@@ -1091,9 +1096,7 @@ function loadWorkspace() {
       <section className="ports" hidden={tab !== 'config'}>
         <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled && !firmwareOne(liveFirmware)} brightnessStatus={brightnessStatus} />
         <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
-        <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
-          <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
-          </div>
+        <button className="midi-settings-open" aria-haspopup="dialog" onClick={()=>setMidiSettingsOpen(true)}><Icon name="midi" />MIDI connection…</button>
       </section>
       {tab==='help'&&<Bcr32Help/>}
       <section className="log" hidden={tab !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
@@ -1101,6 +1104,18 @@ function loadWorkspace() {
         </fieldset></div>
       </aside>
     </section>
+    <dialog ref={midiSettingsDialog} className="midi-settings-dialog" aria-labelledby={`${instanceId}-midi-settings-title`} onClose={()=>setMidiSettingsOpen(false)} onClick={event=>{if(event.target===event.currentTarget)setMidiSettingsOpen(false)}}>
+      <header><h2 id={`${instanceId}-midi-settings-title`}>MIDI connection</h2><button className="midi-settings-close" aria-label="Close" title="Close" onClick={()=>setMidiSettingsOpen(false)}><Icon name="close" /></button></header>
+      <p className="midi-settings-status" role="status"><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span><FirmwareIdentity firmware={liveFirmware} previous={profile.device.firmwareObserved} canProbe={brightnessEnabled} probe={() => setProbeRevision(n => n + 1)} /></p>
+      <button className="primary" onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />{access?.sysexEnabled ? 'Search again for the BCR32' : 'Retry MIDI + SysEx'}</button>
+      {!supportsWebMidi()&&<p className="muted">Web MIDI is unavailable in this browser.</p>}
+      <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
+        <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
+      </div>
+      <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
+      <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span></p>
+      <p className="muted">Opening this window sends nothing to the BCR32; choosing ports never writes the controller.</p>
+    </dialog>
   </main>, language)
 }
 

@@ -65,6 +65,7 @@ const rows = [
   'Workspace saved locally.|Espace de travail sauvegardé localement.|Spazio di lavoro salvato localmente.|Arbeitsbereich lokal gespeichert.|ワークスペースをローカル保存しました。|Espacio de trabajo guardado localmente.|Рабочее пространство сохранено локально.|工作区已在本地保存。',
   'Editor workspace|Espace des éditeurs|Spazio degli editor|Editor-Arbeitsbereich|エディターのワークスペース|Espacio de editores|Рабочее пространство редакторов|编辑器工作区',
   'Editor tabs|Onglets des éditeurs|Schede degli editor|Editor-Tabs|エディタータブ|Pestañas de editores|Вкладки редакторов|编辑器标签页',
+  'MIDI settings|Configuration MIDI|Impostazioni MIDI|MIDI-Einstellungen|MIDI設定|Ajustes MIDI|Настройки MIDI|MIDI 设置',
   'Close editor|Fermer l’éditeur|Chiudi editor|Editor schließen|エディターを閉じる|Cerrar editor|Закрыть редактор|关闭编辑器',
   'Editor name|Nom de l’éditeur|Nome editor|Editorname|エディター名|Nombre del editor|Имя редактора|编辑器名称',
   'Pin tab|Épingler l’onglet|Fissa scheda|Tab anheften|タブを固定|Fijar pestaña|Закрепить вкладку|固定标签页',
