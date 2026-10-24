@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.45.0-alpha.11] — 2026-10-24
+
+BCR32 sequencer view (preview), preset store fixes and display options. Pattern transfer to and from the BCR32 is not
+available yet: firmware 1.0.2 gives no verified way to read or send a pattern over USB.
+
+- **Sequencer view** (Controller | Sequencer switch in the toolbar, full height): grid, piano roll and table for the
+  four tracks × 32 steps; lanes for velocity, note length and start offset (drag to draw); step and track panels;
+  bar accents on steps 1, 5, 9 … 29. Notes are named like the BCR32 display (C3 = MIDI 60), lengths use the manual's
+  names (96 … 4b), the offset is limited to ±5 clock ticks as on the panel, and a new pattern starts with the BCR32's
+  own defaults (C3, velocity 100, length 32).
+- Step entry from the computer keyboard (A W S E D … K, Z/X octave, C/V velocity, M rest) or a MIDI keyboard chosen
+  in the MIDI connection window.
+- **MIDI files**: import with a preview window (choose a source track and a start bar for each of T1–T4, grid
+  detection, timeline), export to a standard MIDI file. **.syx** import and export of `04 0B` pattern blocks.
+- **Templates**: built-in grooves (303-style acid line, four on the floor, breakbeat, techno), your own templates
+  saved in the browser, and a random pattern generator (scale, root, octaves, density).
+- The Play button and Space start/stop stay disabled: the BCR32 1.0.2 ignores a MIDI clock received over USB (tested).
+- **Toolbar**: the current preset name, double-click to rename, Enter or Store… to store it; option to switch to the
+  sequencer view with the ZQR/CTRL key (Device tab, off by default).
+- **Presets**: storing an initialized (empty) preset now works and uses a saved snapshot of preset 1 as its template;
+  the read-back after STORE is retried. Press EXIT on the BCR32 if the stored preset does not show at once.
+- Display menu: **Test mode** option (the Test block of the inspector is hidden without it); the floating display is
+  again a borderless picture-in-picture window. Panel logo 30 % larger.
+- Fix: the magnifier no longer covers the text of the control search.
+- Documentation: one protocol reference for firmware 1.0.2 and the Zaquencer pattern layout with the level of evidence
+  of each field; regression fixtures (MIDI and .syx) anyone can add to.
+
 ## [0.45.0-alpha.10] — 2026-10-24
 
 - An open tab now finds a new deployment without being reloaded: it checks every 5 minutes while visible and when it comes back into view (at most once a minute), then shows "New version available" with "Update and reload". It never reloads by itself, so a MIDI session is never cut.
