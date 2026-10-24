@@ -17,3 +17,16 @@ assert.match(narrow,/\.sidebar>\.tool-tabs\{position:sticky;top:0;/,'tabs stick 
 assert.match(narrow,/\.sidebar>\.sidebar-statusbar\{position:sticky;bottom:0;/,'status bar sticks to the bottom on narrow screens')
 assert.match(narrow,/\.studio\.standalone-editor>\.bcr32-workbench\{[^}]*overflow:clip visible/,'standalone wrapper is not a scroll container on narrow screens (sticky would bind to it)')
 console.log('PASS BCR32 sidebar: one-line connection summary opening the MIDI window (firmware, version and routing moved out), notice in a status bar after the content, sticky tabs and status bar on narrow screens')
+
+// Editor toolbar (steps 3–4): history, CC sending, one floating display and the Display menu sit above the front panel.
+const surface=workbench.slice(workbench.indexOf('<section className="surface"'),workbench.indexOf('<FrontPanel '))
+for(const part of ['className="editor-toolbar" role="toolbar"',"moveHistory('undo')","moveHistory('redo')",'className={`cc-toggle ','{floatingSupported() && <button className="floating-toggle"','className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen}'])assert.ok(surface.includes(part),`toolbar holds ${part}`)
+const sidebarTop=workbench.slice(workbench.indexOf('<aside className="sidebar"'),workbench.indexOf('<div className="sidebar-content">'))
+for(const moved of ['cc-toggle','editor-history-tools','floating-toggle','theme-swatches'])assert.ok(!sidebarTop.includes(moved),`sidebar no longer holds ${moved}`)
+assert.match(surface,/<div className="display-menu" role="dialog"[^>]*>.*?<fieldset className="host-lock-fields" disabled=\{locked\}>/s,'Display menu keeps the host lock')
+assert.match(surface,/disabled=\{locked\|\|!historyCounts\.undo\}[^]*disabled=\{locked\|\|!historyCounts\.redo\}/,'undo and redo stay locked with the host')
+assert.equal(workbench.match(/>Zoom while adjusting</g)?.length,1,'one zoom option')
+assert.match(surface,/<PresentationTools preferences=\{presentation\} screens=\{sharedScreens\} inline zoom=\{false\} floating=\{!floatingSupported\(\)\}\/>/,'host presentation tools without a second zoom; host floating window only as a fallback')
+assert.ok(!dialog.includes('cc-toggle')&&dialog.includes('className="midi-settings-cc" role="status"'),'MIDI window shows the CC state only')
+assert.match(workbench,/if\(displayOpen\)\{setDisplayOpen\(false\);event\.preventDefault\(\)\}/,'Escape closes the Display menu first')
+console.log('PASS BCR32 editor toolbar: history, CC sending, floating display and Display menu above the panel; one zoom option; menu keeps the host lock; MIDI window shows the CC state')

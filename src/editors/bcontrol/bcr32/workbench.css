@@ -665,3 +665,27 @@
  .bcr32-workbench .studio.compact .sidebar>.tool-tabs{position:sticky;top:0;z-index:6;margin:0;padding:4px 8px;background:var(--theme-surface)}
  .bcr32-workbench .studio.compact .sidebar>.sidebar-statusbar{position:sticky;bottom:0;z-index:6}
 }
+/* Editor toolbar above the front panel: live actions (history, CC sending, floating display) and the Display menu. */
+.bcr32-workbench .studio.compact>.workspace>.surface{grid-template-rows:auto minmax(0,1fr);gap:6px}
+.bcr32-workbench .editor-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 34px 0 0;min-width:0}
+.bcr32-workbench .studio .editor-toolbar>.cc-toggle,.bcr32-workbench .studio .editor-toolbar .editor-history-tools{margin:0}
+.bcr32-workbench .studio .editor-toolbar :is(.editor-toolbar>button,.editor-history-tools>button,.display-menu-toggle){display:inline-flex;align-items:center;gap:6px;padding:4px 9px;font-size:12px;border:1px solid var(--theme-line);border-radius:3px;background:transparent;color:var(--theme-text)}
+.bcr32-workbench .studio .editor-toolbar :is(.editor-toolbar>button,.editor-history-tools>button,.display-menu-toggle) svg{width:14px;height:14px}
+.bcr32-workbench .studio .editor-toolbar :is(.editor-toolbar>button,.editor-history-tools>button,.display-menu-toggle)[aria-pressed=true],.bcr32-workbench .studio .editor-toolbar .cc-toggle.enabled{color:var(--theme-accent);border-color:var(--theme-accent);background:var(--theme-selected,transparent)}
+.bcr32-workbench .studio .editor-toolbar :is(.editor-toolbar>button,.editor-history-tools>button,.display-menu-toggle):disabled{opacity:.45}
+.bcr32-workbench .editor-toolbar .editor-history-tools{display:flex;gap:4px}
+.bcr32-workbench .display-menu-anchor{position:relative}
+.bcr32-workbench .display-menu{position:absolute;z-index:30;top:calc(100% + 4px);left:0;width:min(340px,calc(100vw - 32px));max-height:min(70vh,640px);overflow:auto;padding:4px 14px 12px;background:var(--theme-surface,#1b1c1f);border:1px solid var(--theme-line);border-radius:6px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.bcr32-workbench .display-menu[hidden]{display:none}
+.bcr32-workbench .display-menu h3{margin:12px 0 6px}
+.bcr32-workbench .display-menu .theme-swatches{margin:0}
+.bcr32-workbench .display-menu .display-styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.bcr32-workbench .display-menu .display-styles h3{grid-column:1/-1}
+.bcr32-workbench .display-menu .sp-tools{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--theme-line)}
+.bcr32-workbench .display-menu .sp-options{display:grid;gap:8px}
+@media(max-width:760px){
+ .bcr32-workbench .editor-toolbar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+ .bcr32-workbench .editor-toolbar :is(.editor-toolbar>button,.editor-history-tools>button,.display-menu-toggle){flex:none}
+ .bcr32-workbench .display-menu{position:fixed;inset:auto 0 0 0;width:auto;max-height:85dvh;border-radius:10px 10px 0 0}
+}
+.bcr32-workbench .display-menu-head{display:flex;align-items:center;justify-content:space-between;margin:0 -14px 4px;padding:6px 8px 6px 14px;border-bottom:1px solid var(--theme-line)}
