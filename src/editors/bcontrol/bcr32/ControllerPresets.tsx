@@ -7,7 +7,7 @@ import { translate, useLanguage } from './i18n'
 import { bclFile } from './bcl'
 import { createBclSender, presetStorageValidated, storeHardwarePreset, type HardwarePresetStorePlan } from './preset-store'
 
-type Props = { onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
+type Props = { onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string; auto?: boolean }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
 export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
   const [menu,setMenu]=useState<'read'|'export'|null>(null),[saveOpen,setSaveOpen]=useState(false),[rawOpen,setRawOpen]=useState(false)
@@ -111,7 +111,10 @@ export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeT
   // (destination = that slot, source = the working preset), so every write still goes through the checked STORE path.
   const currentSlot = tracks ? tracks.presets[tracks.selected - 1] : null
   useEffect(() => { onCurrent?.(currentSlot === null ? null : { slot: currentSlot, name: Object.hasOwn(names, currentSlot - 1) ? names[currentSlot - 1] : null }) }, [currentSlot, names[(currentSlot ?? 0) - 1], Object.hasOwn(names, (currentSlot ?? 0) - 1)])
-  useEffect(() => { if (!storeRequest?.seq || currentSlot === null) return; setSource('working'); setDestination(currentSlot - 1); setName(storeRequest.name.replace(/[^\x20-\x7e]|'/g, '').slice(0, 24)); setSaveOpen(true) }, [storeRequest?.seq])
+  // auto: rename in place from the toolbar (Enter) — the sheet opens prefilled and store() runs once, with all its checks.
+  const autoStore = useRef(false)
+  useEffect(() => { if (!autoStore.current || !saveOpen || destination === null || !name.trim()) return; autoStore.current = false; void store() }, [saveOpen, destination, name])
+  useEffect(() => { if (!storeRequest?.seq || currentSlot === null) return; autoStore.current = !!storeRequest.auto; setSource('working'); setDestination(currentSlot - 1); setName(storeRequest.name.replace(/[^\x20-\x7e]|'/g, '').slice(0, 24)); setSaveOpen(true) }, [storeRequest?.seq])
   const label = (slot: number) => `${slot + 1} · ${names[slot] || t(Object.hasOwn(names, slot) ? 'Unnamed preset' : 'Name not read')}`
   function save(syx: boolean) {
     if (!snapshot) return

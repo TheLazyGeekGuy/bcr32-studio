@@ -3,8 +3,9 @@ import { createZaqAssembler, decodeZaqBlock, patchStep, patternFile, readStep, t
 import { splitSysex } from './firmware-codec'
 import { parseMidiFile, stepsToMidiFile, suggestStepTicks, trackToSteps, type MidiFile } from './midi-file'
 import { MidiImportDialog, type ImportSlot } from './MidiImportDialog'
+import { applyTemplate, randomPattern, scales, templates } from './sequencer-templates'
+import type { EditorStorage } from '../../../editor-environment'
 import { translate, useLanguage } from './i18n'
-import type { MidiAccess, MidiPort } from './web-midi'
 
 // Sequencer view (approved mockup of 2026-10-24): the four Zaquencer tracks × 32 steps as a grid, lanes, piano roll or
 // raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
@@ -50,8 +51,8 @@ export function patternToMidi(data: readonly number[], ppq = 96) {
   return stepsToMidiFile({ ppq, stepTicks: ppq / 4, tracks })
 }
 
-export function SequencerView({ access, controllerInputId, receive, download, locked }: {
-  access: MidiAccess | null; controllerInputId: string; receive: MutableRefObject<(bytes: number[]) => void>
+export function SequencerView({ storage, noteInput, noteInputName, openMidiSettings, receive, download, locked }: {
+  storage: EditorStorage; noteInput: MutableRefObject<((note: number, velocity: number) => void) | null>; noteInputName: string; openMidiSettings: () => void; receive: MutableRefObject<(bytes: number[]) => void>
   download: (data: BlobPart, name: string, type?: string) => void; locked: boolean
 }) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
@@ -59,8 +60,14 @@ export function SequencerView({ access, controllerInputId, receive, download, lo
   const [current, setCurrent] = useState(0), [track, setTrack] = useState(0), [step, setStep] = useState(0)
   const [view, setView] = useState<'grid' | 'roll' | 'table'>('grid'), [panel, setPanel] = useState<'step' | 'track' | 'file'>('step')
   const [octave, setOctave] = useState(4), [velocity, setVelocity] = useState(100), [keyboardEntry, setKeyboardEntry] = useState(true)
-  const [listen, setListen] = useState(false), [keyboardPort, setKeyboardPort] = useState(''), [notice, setNotice] = useState('Nothing is sent to the BCR32.')
+  const [listen, setListen] = useState(false), [notice, setNotice] = useState('Nothing is sent to the BCR32.')
   const [undo, setUndo] = useState<number[][]>([]), [redo, setRedo] = useState<number[][]>([])
+  // Templates: built-in grooves, the user's own (saved in this browser) and a random generator.
+  const templateKey = 'bcr32-studio.sequencer-templates.v1'
+  const [userTemplates, setUserTemplates] = useState<{ name: string; data: number[] }[]>(() => { try { const v = JSON.parse(storage.getItem(templateKey) ?? '[]'); return Array.isArray(v) ? v.filter(x => typeof x?.name === 'string' && Array.isArray(x?.data) && x.data.length === 1024) : [] } catch { return [] } })
+  const saveUserTemplates = (list: { name: string; data: number[] }[]) => { try { storage.setItem(templateKey, JSON.stringify(list)); setUserTemplates(list) } catch (e) { setNotice(String(e)) } }
+  const [templatesOpen, setTemplatesOpen] = useState(false), [templateName, setTemplateName] = useState('')
+  const [random, setRandom] = useState({ scale: 'minor', root: 45, octaves: 1, density: .5, allTracks: false })
   const [midi, setMidi] = useState<{ name: string; file: MidiFile; grid: number } | null>(null), dragging = useRef(false)
   const entry = entries[Math.min(current, entries.length - 1)], data = entry.data
   const state = useRef({ data, track, step, octave, velocity, locked }); state.current = { data, track, step, octave, velocity, locked }
@@ -87,24 +94,8 @@ export function SequencerView({ access, controllerInputId, receive, download, lo
     return () => { receive.current = () => {} }
   }, [listen])
 
-  // MIDI keyboard: the host's lease only exposes the BCR32, so note input asks the browser for its own MIDI access
-  // (inputs only, no SysEx). Any input except a BCR32 port can be chosen; note-ons enter steps like the computer keyboard.
-  type InputPort = MidiPort & { addEventListener?: (type: string, fn: (e: { data: Uint8Array }) => void) => void; removeEventListener?: (type: string, fn: (e: { data: Uint8Array }) => void) => void }
-  const [keyboardInputs, setKeyboardInputs] = useState<InputPort[]>([])
-  const listInputs = async () => {
-    try {
-      const own = await (navigator as Navigator & { requestMIDIAccess?: (o?: { sysex?: boolean }) => Promise<MidiAccess> }).requestMIDIAccess?.({ sysex: false })
-      const source = own ?? access
-      setKeyboardInputs(source ? [...source.inputs.values()].filter(p => p.id !== controllerInputId && !/BCR[- ]?32/i.test(p.name ?? '')) as InputPort[] : [])
-    } catch (e) { setNotice(`${t('MIDI keyboard')}: ${e instanceof Error ? e.message : String(e)}`) }
-  }
-  useEffect(() => {
-    const port = keyboardInputs.find(p => p.id === keyboardPort)
-    if (!port) return
-    const handler = (event: { data: Uint8Array }) => { const [status, note, vel] = Array.from(event.data); if ((status & 0xf0) === 0x90 && vel > 0) playRef.current(note, vel) }
-    if (port.addEventListener) { port.addEventListener('midimessage', handler); return () => port.removeEventListener?.('midimessage', handler) }
-    const previous = port.onmidimessage; port.onmidimessage = e => { previous?.(e); handler(e) }; return () => { port.onmidimessage = previous }
-  }, [keyboardPort, keyboardInputs])
+  // MIDI keyboard notes arrive from the Workbench (port chosen in the MIDI connection window) through noteInput.
+  useEffect(() => { noteInput.current = (note, vel) => playRef.current(note, vel); return () => { noteInput.current = null } }, [noteInput])
 
   const onKey = (event: React.KeyboardEvent) => {
     if ((event.target as HTMLElement).closest('input,select,textarea') || event.metaKey || event.ctrlKey || event.altKey) return
@@ -156,14 +147,29 @@ export function SequencerView({ access, controllerInputId, receive, download, lo
         <label className="seq-pattern">{t('Pattern')}<select value={Math.min(current, entries.length - 1)} onChange={e => { setCurrent(Number(e.target.value)); setUndo([]); setRedo([]) }}>{entries.map((e, i) => <option key={i} value={i}>{t(e.label)}</option>)}</select></label>
         <button aria-label={t('Undo')} title={t('Undo')} disabled={!undo.length || locked} onClick={() => restore(undo, setRedo, setUndo)}>↶</button><button aria-label={t('Redo')} title={t('Redo')} disabled={!redo.length || locked} onClick={() => restore(redo, setUndo, setRedo)}>↷</button>
         <div className="mock-seg" role="group" aria-label={t('Pattern display')}>{(['grid', 'roll', 'table'] as const).map(v => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{t({ grid: 'Grid', roll: 'Piano roll', table: 'Table (Behringer)' }[v])}</button>)}</div>
+        <button aria-expanded={templatesOpen} onClick={() => setTemplatesOpen(v => !v)}>{t('Templates')}<span aria-hidden="true" data-i18n-skip> ▾</span></button>
+        <button onClick={() => { addPattern(emptyPattern(), `${t('New pattern')} ${entries.length + 1}`); setNotice('Nothing is sent to the BCR32.') }}>{t('New pattern')}</button>
         <span className="seq-spacer" />
         <span className="seq-offline">{t('Offline · nothing is sent to the BCR32')}</span>
       </div>
+      {templatesOpen && <section className="seq-templates mock-card">
+        <div><b>{t('Built-in templates')}</b><div className="mock-actions">{templates.map(tp => <button key={tp.id} disabled={locked} onClick={() => { commit(applyTemplate(data, tp.id), t(tp.name)); setTemplatesOpen(false) }}>{t(tp.name)}</button>)}</div></div>
+        <div><b>{t('My templates')}</b><div className="mock-actions">{userTemplates.length ? userTemplates.map((tp, i) => <span key={i} className="seq-template-item"><button disabled={locked} onClick={() => { commit([...tp.data], tp.name); setTemplatesOpen(false) }} data-i18n-skip>{tp.name}</button><button aria-label={`${t('Delete')} ${tp.name}`} title={t('Delete')} onClick={() => { if (window.confirm(`${t('Delete')} « ${tp.name} » ?`)) saveUserTemplates(userTemplates.filter((_, j) => j !== i)) }}>✕</button></span>) : <span className="mock-caption">{t('None yet')}</span>}</div>
+          <div className="mock-actions"><input aria-label={t('Template name')} placeholder={t('Template name')} maxLength={48} value={templateName} onChange={e => setTemplateName(e.target.value)} /><button disabled={!templateName.trim()} onClick={() => { saveUserTemplates([...userTemplates.filter(x => x.name !== templateName.trim()), { name: templateName.trim(), data: [...data] }].slice(-64)); setTemplateName(''); setNotice('Template saved in this browser.') }}>{t('Save the pattern as a template')}</button></div></div>
+        <div><b>{t('Random pattern')}</b><div className="seq-random">
+          <label>{t('Scale')}<select value={random.scale} onChange={e => setRandom({ ...random, scale: e.target.value })}>{Object.keys(scales).map(k => <option key={k} value={k}>{t(k)}</option>)}</select></label>
+          <label>{t('Root')}<select value={random.root} onChange={e => setRandom({ ...random, root: Number(e.target.value) })}>{Array.from({ length: 49 }, (_, i) => 24 + i).map(n => <option key={n} value={n} data-i18n-skip>{noteName(n)}</option>)}</select></label>
+          <label>{t('Octaves')}<select value={random.octaves} onChange={e => setRandom({ ...random, octaves: Number(e.target.value) })}>{[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}</select></label>
+          <label>{t('Density')} · {Math.round(random.density * 100)} %<input type="range" min="0.1" max="1" step="0.05" value={random.density} onChange={e => setRandom({ ...random, density: Number(e.target.value) })} /></label>
+          <label className="mock-check"><input type="checkbox" checked={random.allTracks} onChange={e => setRandom({ ...random, allTracks: e.target.checked })} />{t('All four tracks')}</label>
+          <button className="primary" disabled={locked} onClick={() => commit(randomPattern(data, { tracks: random.allTracks ? [0, 1, 2, 3] : [track], scale: random.scale, root: random.root, octaves: random.octaves, density: random.density }), t('Random pattern'))}>{t('Generate')}</button>
+        </div></div>
+      </section>}
       <p className="mock-warn seq-preview-note">{t('Preview: MIDI and .syx files, keyboard and MIDI keyboard entry work in the editor. Capture from the BCR32 and sending to it are not implemented yet.')}</p>
       <div className="seq-entry">
         <label className="mock-check"><input type="checkbox" checked={keyboardEntry} onChange={e => setKeyboardEntry(e.target.checked)} />{t('Computer keyboard entry')}</label>
         <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {t('Space: rest')} · ⌫</span>
-        <label className="seq-inline">{t('MIDI keyboard')}<select value={keyboardPort} onFocus={() => { void listInputs() }} onPointerDown={() => { void listInputs() }} onChange={e => setKeyboardPort(e.target.value)}><option value="">{t('None')}</option>{keyboardInputs.map(p => <option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select></label>
+        <span className="mock-caption">{t('MIDI keyboard')}: <b data-i18n-skip>{noteInputName || t('None')}</b> · <button className="mock-link" onClick={openMidiSettings}>{t('MIDI connection…')}</button></span>
       </div>
       {view === 'grid' && <div className="seq-gridview">
         <h3>{t('Tracks T1–T4 · 32 steps')} <span className="mock-caption">{t('click: select · Shift+click: mute · Alt+click: skip')}</span></h3>

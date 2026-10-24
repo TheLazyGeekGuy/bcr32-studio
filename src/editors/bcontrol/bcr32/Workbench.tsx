@@ -144,8 +144,27 @@ function loadWorkspace() {
   // Display menu of the editor toolbar: closes on Escape or a pointer press outside it.
   const [displayOpen,setDisplayOpen]=useState(false),displayMenu=useRef<HTMLDivElement>(null)
   // Current BCR32 preset (selected track's slot) in the toolbar; double-click renames, Store… opens the checked save sheet.
-  const [currentPreset,setCurrentPreset]=useState<{slot:number;name:string|null}|null>(null),[renaming,setRenaming]=useState<string|null>(null),[storeRequest,setStoreRequest]=useState<{seq:number;name:string}>({seq:0,name:''})
-  const requestStore=(name:string)=>{setTab('presets');setHelpOpen(false);setPresetLocation('hardware');setRenaming(null);setStoreRequest(r=>({seq:r.seq+1,name}))}
+  const [currentPreset,setCurrentPreset]=useState<{slot:number;name:string|null}|null>(null),[renaming,setRenaming]=useState<string|null>(null),[storeRequest,setStoreRequest]=useState<{seq:number;name:string;auto?:boolean}>({seq:0,name:''})
+  const requestStore=(name:string,auto=false)=>{setTab('presets');setHelpOpen(false);setPresetLocation('hardware');setRenaming(null);setStoreRequest(r=>({seq:r.seq+1,name,auto}))}
+  // MIDI keyboard for sequencer step entry, chosen in the MIDI connection window. The host lease only exposes the BCR32,
+  // so the list comes from the browser's own MIDI access (inputs only, no SysEx); notes go to the sequencer via noteInput.
+  type InputPort = MidiPort & { addEventListener?: (type: string, fn: (e: { data: Uint8Array }) => void) => void; removeEventListener?: (type: string, fn: (e: { data: Uint8Array }) => void) => void }
+  const noteInput = useRef<((note: number, velocity: number) => void) | null>(null)
+  const [noteInputs, setNoteInputs] = useState<InputPort[]>([]), [notePort, setNotePort] = useState(() => { try { return storage.getItem('bcr32-studio.note-input') ?? '' } catch { return '' } })
+  useEffect(() => { try { storage.setItem('bcr32-studio.note-input', notePort) } catch { /* Optional preference. */ } }, [notePort])
+  const listNoteInputs = async () => {
+    try {
+      const own = await (navigator as Navigator & { requestMIDIAccess?: (o?: { sysex?: boolean }) => Promise<MidiAccess> }).requestMIDIAccess?.({ sysex: false })
+      setNoteInputs(own ? [...own.inputs.values()].filter(p => !/BCR[- ]?32/i.test(p.name ?? '')) as InputPort[] : [])
+    } catch { setNoteInputs([]) }
+  }
+  useEffect(() => { if (notePort) void listNoteInputs() }, [])
+  useEffect(() => {
+    const port = noteInputs.find(p => p.id === notePort); if (!port) return
+    const handler = (event: { data: Uint8Array }) => { const [status, note, vel] = Array.from(event.data); if ((status & 0xf0) === 0x90 && vel > 0) noteInput.current?.(note, vel) }
+    if (port.addEventListener) { port.addEventListener('midimessage', handler); return () => port.removeEventListener?.('midimessage', handler) }
+    const previous = port.onmidimessage; port.onmidimessage = e => { previous?.(e); handler(e) }; return () => { port.onmidimessage = previous }
+  }, [notePort, noteInputs])
   // Optional: the ZQR / CTRL key of the on-screen panel switches the editor between Controller and Sequencer (off by default).
   const [modeKeyLink,setModeKeyLink]=useState(()=>{try{return storage.getItem('bcr32-studio.mode-key-link')==='true'}catch{return false}})
   useEffect(()=>{try{storage.setItem('bcr32-studio.mode-key-link',String(modeKeyLink))}catch{/* Optional preference. */}},[modeKeyLink])
@@ -1007,7 +1026,7 @@ function loadWorkspace() {
           <div className="mock-seg editor-mode" role="group" aria-label="Editor view"><button aria-pressed={editorMode === 'controller'} onClick={() => setEditorMode('controller')}>Controller</button><button aria-pressed={editorMode === 'sequencer'} onClick={() => setEditorMode('sequencer')}>Sequencer</button></div>
           {editorMode === 'controller' && <>
           <span className="tb-sep" aria-hidden="true" />
-          {renaming !== null ? <input className="preset-chip-input" autoFocus aria-label="Preset name" maxLength={24} value={renaming} onChange={e=>setRenaming(e.target.value.replace(/[^\x20-\x7e]|'/g,''))} onKeyDown={e=>{if(e.key==='Enter'&&renaming.trim())requestStore(renaming.trim());if(e.key==='Escape'){e.stopPropagation();setRenaming(null)}}} onBlur={()=>setRenaming(null)} />
+          {renaming !== null ? <input className="preset-chip-input" autoFocus aria-label="Preset name" maxLength={24} value={renaming} onChange={e=>setRenaming(e.target.value.replace(/[^\x20-\x7e]|'/g,''))} onKeyDown={e=>{if(e.key==='Enter'&&renaming.trim())requestStore(renaming.trim(),true);if(e.key==='Escape'){e.stopPropagation();setRenaming(null)}}} onBlur={()=>setRenaming(null)} />
             : <span className="preset-chip" title="Double-click to rename" onDoubleClick={()=>{if(currentPreset&&!locked)setRenaming(currentPreset.name??'')}}>{currentPreset ? <><span data-i18n-skip>{currentPreset.slot} · </span>{currentPreset.name ? <strong data-i18n-skip>{currentPreset.name}</strong> : <small>{currentPreset.name === null ? 'Name not read' : 'Unnamed preset'}</small>}</> : <small>No BCR32 preset</small>}</span>}
           <button className="preset-store" disabled={!currentPreset||locked} title="Rename and store this preset on the BCR32 (backup, write, read-back)" onClick={()=>requestStore(renaming??currentPreset?.name??'')}>Store…</button>
           <span className="tb-sep" aria-hidden="true" />
@@ -1036,7 +1055,7 @@ function loadWorkspace() {
           </>}
           {editorMode === 'controller' && <button className="bcr32-tools-toggle" aria-label={toolsCollapsed?'Show editing tools':'Collapse editing tools'} aria-expanded={!toolsCollapsed} title={toolsCollapsed?'Show editing tools':'Collapse editing tools'} onClick={()=>setToolsCollapsed(on=>!on)}><span aria-hidden="true" data-i18n-skip>{toolsCollapsed?'◂':'▸'}</span></button>}
         </div>
-        {editorMode === 'sequencer' ? <SequencerView access={access} controllerInputId={inputId} receive={sequencerReceive} download={download} locked={locked} /> : <FrontPanel onModeKey={modeKeyLink ? () => setEditorMode('sequencer') : undefined} move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
+        {editorMode === 'sequencer' ? <SequencerView storage={storage} noteInput={noteInput} noteInputName={noteInputs.find(p => p.id === notePort)?.name ?? ''} openMidiSettings={() => setMidiSettingsOpen(true)} receive={sequencerReceive} download={download} locked={locked} /> : <FrontPanel onModeKey={modeKeyLink ? () => setEditorMode('sequencer') : undefined} move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
@@ -1099,6 +1118,7 @@ function loadWorkspace() {
         </section>
       <section className="inspector mock-inspector" hidden={view !== 'control'} aria-label={`Edit ${selection.kind} ${displayControlId(selection.kind, selected.id)}`}>
         <ControlSearch profile={profile} labels={customLabels} selection={selection} select={s=>selectUi(s,{},true)} />
+        <p className="mock-caption controller-read-status" role="status">{fromPresetCache ? 'Preset restored from UI cache' : controllerRead.status === 'reading' ? 'Reading controller assignments' : controllerRead.status === 'complete' ? 'Controller read complete' : controllerRead.status === 'no reply' ? 'Controller read incomplete · missing replies' : 'Controller synchronization'}{!fromPresetCache && controllerRead.total > 0 && <span data-i18n-skip> · {controllerRead.received}/{controllerRead.total}</span>}</p>
         <p className="mock-caption mock-kind">{selection.kind === 'buttons' ? 'Button' : selection.kind === 'pushes' ? 'Push' : 'Encoder'} <span data-i18n-skip>{displayControlId(selection.kind, selected.id)}</span></p>
         <h2 className="mock-title" data-i18n-skip>{controlLabel(selection.kind, selected.id, customLabels)}</h2>
         {selection.kind !== 'buttons' && <div className="mock-seg" role="group" aria-label="Action"><button aria-pressed={selection.kind === 'encoders'} onClick={() => selectUi({ ...selection, kind: 'encoders' },{},true)}>Rotation</button><button aria-pressed={selection.kind === 'pushes'} onClick={() => selectUi({ ...selection, kind: 'pushes' },{},true)}>Push</button></div>}
@@ -1173,6 +1193,7 @@ function loadWorkspace() {
       <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
         <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
       </div>
+      <label className="midi-note-input">MIDI keyboard (sequencer note entry)<select value={notePort} onFocus={() => { void listNoteInputs() }} onPointerDown={() => { void listNoteInputs() }} onChange={e => setNotePort(e.target.value)}><option value="">None</option>{notePort && !noteInputs.some(p => p.id === notePort) && <option value={notePort}>…</option>}{noteInputs.map(p => <option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select></label>
       <fieldset className="midi-settings-at-connection" disabled={locked}><legend>At connection:</legend>
         <label className="mock-check"><input type="checkbox" checked={autoReadController} onChange={e => setAutoReadController(e.target.checked)} />read the assignments</label>
         <label className="mock-check"><input type="checkbox" checked={autoLoadDevice} onChange={e => setAutoLoadDevice(e.target.checked)} />load the BCR32 settings</label>

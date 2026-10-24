@@ -67,8 +67,11 @@ console.log('PASS BCR32 layout as in the mockup: DIN icon in the header; text ta
 // Current preset in the toolbar: rename and store go through the existing save sheet (backup, write, read-back);
 // the ZQR / CTRL link only changes the editor view and is off by default.
 const presetsSrc=readFileSync('src/editors/bcontrol/bcr32/ControllerPresets.tsx','utf8')
-assert.match(presetsSrc,/if \(!storeRequest\?\.seq \|\| currentSlot === null\) return; setSource\('working'\); setDestination\(currentSlot - 1\);[^]*setSaveOpen\(true\)/,'store request opens the checked save sheet, prefilled, without writing')
-assert.match(workbench,/const requestStore=\(name:string\)=>\{setTab\('presets'\);setHelpOpen\(false\);setPresetLocation\('hardware'\)/,'Store… and rename lead to Presets › BCR32')
+assert.match(presetsSrc,/if \(!storeRequest\?\.seq \|\| currentSlot === null\) return; autoStore\.current = !!storeRequest\.auto; setSource\('working'\); setDestination\(currentSlot - 1\);[^]*setSaveOpen\(true\)/,'store request opens the save sheet prefilled (in place: destination = current slot)')
+assert.match(presetsSrc,/if \(!autoStore\.current \|\| !saveOpen \|\| destination === null \|\| !name\.trim\(\)\) return; autoStore\.current = false; void store\(\)/,'Enter stores through store() and its checks, once')
+assert.match(workbench,/if\(e\.key==='Enter'&&renaming\.trim\(\)\)requestStore\(renaming\.trim\(\),true\)/,'only Enter in the rename field stores directly')
+assert.match(workbench,/onClick=\{\(\)=>requestStore\(renaming\?\?currentPreset\?\.name\?\?''\)\}>Store…<\/button>/,'Store… opens the sheet without writing')
+assert.match(workbench,/const requestStore=\(name:string,auto=false\)=>\{setTab\('presets'\);setHelpOpen\(false\);setPresetLocation\('hardware'\)/,'Store… and rename lead to Presets › BCR32')
 assert.ok(!/requestStore[^\n]*(sendWrite|transfer|output\.send)/.test(workbench),'the toolbar never writes by itself')
 assert.match(workbench,/storage\.getItem\('bcr32-studio\.mode-key-link'\)==='true'/,'ZQR / CTRL link off unless chosen')
 assert.match(workbench,/<FrontPanel onModeKey=\{modeKeyLink \? \(\) => setEditorMode\('sequencer'\) : undefined\}/,'the link only switches the editor view')

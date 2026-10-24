@@ -7,7 +7,7 @@ import {createRequire} from 'node:module'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
 const dir=mkdtempSync(join(tmpdir(),'bcr32-sequencer-')),file=join(dir,'b.cjs')
-await build({stdin:{contents:`export {emptyPattern,enterNote,applyMidiTracks,patternToMidi,keyboardNotes,noteName,plays,trackHeader,ccValue,ccRaw} from './src/editors/bcontrol/bcr32/SequencerView';export {readStep,patchStep} from './src/editors/bcontrol/bcr32/zaquencer';export {parseMidiFile,suggestStepTicks,trackToSteps} from './src/editors/bcontrol/bcr32/midi-file';export {firstNoteBar} from './src/editors/bcontrol/bcr32/MidiImportDialog'`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,outfile:file,platform:'node',format:'cjs',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},logLevel:'error'})
+await build({stdin:{contents:`export {emptyPattern,enterNote,applyMidiTracks,patternToMidi,keyboardNotes,noteName,plays,trackHeader,ccValue,ccRaw} from './src/editors/bcontrol/bcr32/SequencerView';export {readStep,patchStep} from './src/editors/bcontrol/bcr32/zaquencer';export {parseMidiFile,suggestStepTicks,trackToSteps} from './src/editors/bcontrol/bcr32/midi-file';export {firstNoteBar} from './src/editors/bcontrol/bcr32/MidiImportDialog';export {applyTemplate,randomPattern,templates,scales} from './src/editors/bcontrol/bcr32/sequencer-templates'`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,outfile:file,platform:'node',format:'cjs',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},logLevel:'error'})
 const m=createRequire(import.meta.url)(file);rmSync(dir,{recursive:true})
 const fixture=name=>new Uint8Array(readFileSync(`scripts/fixtures/sequencer/${name}`))
 
@@ -58,6 +58,19 @@ const sections=m.applyMidiTracks(empty,[{notes:late,startTick:18*384},{notes:lat
 assert.ok(m.plays(m.readStep(sections.data,0,0))&&m.readStep(sections.data,0,0).note===60&&m.readStep(sections.data,0,4).note===62,'T1 from bar 19: notes on steps 1 and 5')
 assert.ok(Array.from({length:32},(_,s)=>m.readStep(sections.data,1,s)).every(x=>!m.plays(x)),'T2 from bar 1 of the same track: nothing in its 32 steps')
 assert.equal(sections.report.beyond,2,'notes outside a slot window are reported')
+
+// Templates and random patterns: steps only, the track headers (bytes 0–15 of each track) are never touched.
+for(const tp of m.templates){const d=m.applyTemplate(empty,tp.id);assert.ok(d.length===1024&&[0,1,2,3].every(tr=>d.slice(tr*256,tr*256+4).every((v,i)=>v===empty[tr*256+i])),`${tp.id}: no skip flag set`);assert.ok(Array.from({length:32},(_,s2)=>m.readStep(d,0,s2)).some(m.plays),`${tp.id}: T1 plays`)}
+const fourFloor=m.applyTemplate(empty,'four-on-the-floor');assert.deepEqual(Array.from({length:32},(_,s2)=>m.plays(m.readStep(fourFloor,0,s2))).map((p,i)=>p?i:-1).filter(i=>i>=0),[0,4,8,12,16,20,24,28],'kick on every beat')
+let seed=1;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647
+const r1=m.randomPattern(empty,{tracks:[1],scale:'minor pentatonic',root:45,octaves:2,density:.6,random:rnd});seed=1
+const r2=m.randomPattern(empty,{tracks:[1],scale:'minor pentatonic',root:45,octaves:2,density:.6,random:rnd})
+assert.deepEqual(r1,r2,'random patterns are reproducible with the same random source')
+const played=Array.from({length:32},(_,s2)=>m.readStep(r1,1,s2)).filter(m.plays)
+assert.ok(played.length>8&&played.length<28,'density respected roughly')
+assert.ok(played.every(x=>[0,3,5,7,10].includes((x.note-45)%12)&&x.note>=45&&x.note<45+24),'notes from the chosen scale and span')
+assert.deepEqual(r1.slice(0,256),empty.slice(0,256),'other tracks untouched')
+assert.throws(()=>m.randomPattern(empty,{tracks:[0],scale:'nope',root:45}),/scale/)
 
 // The view never sends: no output port use, receive only.
 const view=readFileSync('src/editors/bcontrol/bcr32/SequencerView.tsx','utf8')
