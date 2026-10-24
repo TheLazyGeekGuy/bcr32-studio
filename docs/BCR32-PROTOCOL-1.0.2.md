@@ -265,6 +265,8 @@ For step *s* ≥ 24, gate bits 0–3 are bit 7 of velocity bytes `30 + 4·(s−2
 
 On the configured remote channel (0 disables, 1–16). *v* = CC value.
 
+Hardware test 2026-10-24 22:47, firmware 1.0.2: with ZAQ global 33 TRIGGER ENABLE set to CH 16 on the panel, CC 4 = 1 then CC 4 = 0 on channel 16 (USB) produced no note and no other message. TRIGGER ENABLE is therefore not shown to be this remote channel; how the remote channel is set stays unknown (`scripts/hw/bcr32-remote-transport.mjs`).
+
 | CC | Values | Action | Status | Source |
 | --- | --- | --- | --- | --- |
 | 0 / 1 | 0–127 / 0–63 | Recall pattern *v* / *v* + 128 | Implemented, not yet verified on hardware | `docs/firmware-1.0.2-command-map.json` `zaquencer_cc_defaults` |
