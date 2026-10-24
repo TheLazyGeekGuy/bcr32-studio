@@ -15,7 +15,10 @@ export function isBclWrite(bytes: readonly number[], device: number) {
 export function presetStorePlan(source: string, slot: number, name: string) {
   integer(slot, 0, 63)
   if (!name.trim() || name.length > 24 || /[^\x20-\x7e]|'/.test(name)) throw Error('Preset name requires 1–24 ASCII characters without quotes')
-  const lines = source.split('\n')
+  // An initialized preset read from the BCR32 (".init", no ".name" line; seen on 1.0.2, 2026-10-24) gets its name line
+  // right after "$preset", where named presets carry it; any other source must have exactly one.
+  const raw = source.split('\n'), named = raw.filter(l => /^\s*\.name /.test(l)).length
+  const lines = named === 0 && raw[1] === '$preset' ? [raw[0], raw[1], "  .name ''", ...raw.slice(2)] : raw
   if (lines[0] !== '$rev BCR32' || lines[1] !== '$preset' || lines.at(-1) !== '$end' || lines.filter(l => l.trim() === '$preset').length !== 1 || lines.filter(l => /^\s*\.name /.test(l)).length !== 1) throw Error('A complete single hardware preset is required')
   for (const [index, line] of lines.entries()) {
     bclLine(index, line)

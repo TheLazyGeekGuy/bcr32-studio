@@ -15,4 +15,10 @@ let failedAcknowledgements=0
 await assert.rejects(()=>storeHardwarePreset({source:'working',slot:61,name:'Test',read:async request=>({status:'complete',request,names:{},frames:[],text:working}),backup(){},transfer:async()=>{throw Error('missing ACK')},onAcknowledged:()=>failedAcknowledgements++}),/missing ACK/);assert.equal(failedAcknowledgements,0)
 let mismatchAcknowledged=0
 await assert.rejects(()=>storeHardwarePreset({source:'working',slot:61,name:'Test',read:async request=>({status:'complete',request,names:{},frames:[],text:working}),backup(){},transfer:async()=>{},onAcknowledged:()=>mismatchAcknowledged++}),/Stored preset differs/);assert.equal(mismatchAcknowledged,1)
+// An initialized preset (read on 1.0.2 as "$rev BCR32 / $preset / .snapshot off / .request off / .init / $end", no name)
+// gets its name line after "$preset"; a source with two names is still refused.
+const init="$rev BCR32\n$preset\n  .snapshot off\n  .request off\n  .init\n$end",initPlan=presetStorePlan(init,12,'test Fred')
+assert.equal(initPlan.expected,"$rev BCR32\n$preset\n  .name 'test Fred'\n  .snapshot off\n  .request off\n  .init\n$end",'name inserted after $preset')
+assert.deepEqual(initPlan.lines.slice(-2),['$store 13','$end'],'stored into slot 13')
+assert.throws(()=>presetStorePlan("$rev BCR32\n$preset\n  .name 'a'\n  .name 'b'\n$end",12,'x'),/complete single/,'two names refused')
 console.log('PASS BCR32 preset store: slot62 Test cache event immediately after ACK, before independent verification/restoration; no names query, trimmed name, no event on failed transfer, failed readback still rejects after acknowledgement')
