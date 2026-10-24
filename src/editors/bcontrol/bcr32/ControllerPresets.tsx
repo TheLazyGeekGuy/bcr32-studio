@@ -5,10 +5,11 @@ import { useEffect, useId, useRef, useState, type MutableRefObject } from 'react
 import { createPresetReader, type PresetRead, type PresetReadResult } from './controller-presets'
 import { translate, useLanguage } from './i18n'
 import { bclFile } from './bcl'
+import { defaultPresetBcl } from './default-preset'
 import { createBclSender, presetStorageValidated, storeHardwarePreset, type HardwarePresetStorePlan } from './preset-store'
 
-type Props = { storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
-export function ControllerPresets({ storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
+type Props = { onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string; auto?: boolean }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
+export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
   const [menu,setMenu]=useState<'read'|'export'|null>(null),[saveOpen,setSaveOpen]=useState(false),[rawOpen,setRawOpen]=useState(false)
   const toolbar=useRef<HTMLDivElement>(null),menuId=useId()
@@ -90,7 +91,7 @@ export function ControllerPresets({ storage, authorizeTransfer, onStored, trackS
     setStoreBusy(true); setStoreError(''); setNotice('Saving complete controller preset…'); setCount(0)
     let acknowledged: HardwarePresetStorePlan | undefined
     try {
-      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name,
+      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name, template: defaultPresetBcl,
         onAcknowledged: saved => {
           if(reader.current!==transport)return
           acknowledged=saved
@@ -100,13 +101,21 @@ export function ControllerPresets({ storage, authorizeTransfer, onStored, trackS
         backup: contents => { const key = 'bcr32-studio.before-hardware-store.v1'; storage.setItem(key, contents); if (storage.getItem(key) !== contents) throw Error('Backup could not be verified; nothing sent') },
       })
       if (reader.current !== transport) return
-      setSaveOpen(false); setNotice('Preset stored and read back. Working contents restored.')
+      setSaveOpen(false); setNotice('Preset stored and read back. Working contents restored. If the BCR32 screen stays on the transfer, press EXIT on the BCR32.')
     } catch (error) { if (reader.current === transport) {
       // A failed verification makes the acknowledged destination uncertain; do not retain a false label.
       if(acknowledged){const slot=acknowledged.slot;setNames(current=>{const next={...current};delete next[slot];return next})}
       setNotice('Preset save stopped. Backup retained; hardware may be partially changed.'); setStoreError(String(error)) } }
     finally { if (reader.current === transport) setStoreBusy(false) }
   }
+  // The toolbar shows the preset of the selected track; renaming or storing it opens the save sheet below, prefilled
+  // (destination = that slot, source = the working preset), so every write still goes through the checked STORE path.
+  const currentSlot = tracks ? tracks.presets[tracks.selected - 1] : null
+  useEffect(() => { onCurrent?.(currentSlot === null ? null : { slot: currentSlot, name: Object.hasOwn(names, currentSlot - 1) ? names[currentSlot - 1] : null }) }, [currentSlot, names[(currentSlot ?? 0) - 1], Object.hasOwn(names, (currentSlot ?? 0) - 1)])
+  // auto: rename in place from the toolbar (Enter) — the sheet opens prefilled and store() runs once, with all its checks.
+  const autoStore = useRef(false)
+  useEffect(() => { if (!autoStore.current || !saveOpen || destination === null || !name.trim()) return; autoStore.current = false; void store() }, [saveOpen, destination, name])
+  useEffect(() => { if (!storeRequest?.seq || currentSlot === null) return; autoStore.current = !!storeRequest.auto; setSource('working'); setDestination(currentSlot - 1); setName(storeRequest.name.replace(/[^\x20-\x7e]|'/g, '').slice(0, 24)); setSaveOpen(true) }, [storeRequest?.seq])
   const label = (slot: number) => `${slot + 1} · ${names[slot] || t(Object.hasOwn(names, slot) ? 'Unnamed preset' : 'Name not read')}`
   function save(syx: boolean) {
     if (!snapshot) return
@@ -118,10 +127,13 @@ export function ControllerPresets({ storage, authorizeTransfer, onStored, trackS
   function chooseRead(request:PresetRead){setMenu(null);void read(request)}
   return <section className="controller-presets" aria-label={t('BCR32 hardware presets')}>
     <div hidden={saveOpen}>
-      <div className="preset-commandbar" ref={toolbar} onKeyDown={e=>{if(e.key==='Escape'){setMenu(null);(toolbar.current?.querySelector(`[data-command=${menu}]`) as HTMLButtonElement|null)?.focus()}}} onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setMenu(null)}}>
-        <button data-command="read" type="button" aria-expanded={menu==='read'} aria-controls={`${menuId}-read`} onClick={()=>setMenu(menu==='read'?null:'read')}><Icon name="rotate"/>{t('Read')}<span aria-hidden="true">⌄</span></button>
-        <button className="primary" type="button" disabled={locked} onClick={()=>{setMenu(null);setSaveOpen(true)}}><Icon name="save"/>{t('Save')}</button>
-        <button data-command="export" type="button" disabled={!snapshot} aria-expanded={menu==='export'} aria-controls={`${menuId}-export`} onClick={()=>setMenu(menu==='export'?null:'export')}><Icon name="import"/>{t('Export')}<span aria-hidden="true">⌄</span></button>
+      <div className="mock-card">
+      <div className="preset-picker-heading"><b>{t('BCR32 hardware presets')}</b><button type="button" disabled={locked} aria-label={t('Read 64 preset names')} title={t('Read 64 preset names')} onClick={()=>chooseRead({kind:'names'})}><Icon name="rotate"/></button></div>
+      <label className="preset-source-label">{t('Preset')}<select aria-label={t('Preset to read')} value={source} disabled={busy||storeBusy} onChange={e=>setSource(e.target.value)}><option value="working">{t('Current working preset')}</option>{Array.from({length:64},(_,i)=><option key={i} value={i}>{label(i)}</option>)}</select></label>
+      <div className="preset-commandbar mock-actions" ref={toolbar} onKeyDown={e=>{if(e.key==='Escape'){setMenu(null);(toolbar.current?.querySelector(`[data-command=${menu}]`) as HTMLButtonElement|null)?.focus()}}} onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setMenu(null)}}>
+        <button data-command="read" type="button" aria-expanded={menu==='read'} aria-controls={`${menuId}-read`} onClick={()=>setMenu(menu==='read'?null:'read')}>{t('Read')}<span aria-hidden="true"> ▾</span></button>
+        <button type="button" disabled={locked} onClick={()=>{setMenu(null);setSaveOpen(true)}}>{t('Save to…')}</button>
+        <button data-command="export" type="button" disabled={!snapshot} aria-expanded={menu==='export'} aria-controls={`${menuId}-export`} onClick={()=>setMenu(menu==='export'?null:'export')}>{t('Export')}<span aria-hidden="true"> ▾</span></button>
         <div className="preset-action-menu" id={`${menuId}-read`} role="group" aria-label={t('Read options')} hidden={menu!=='read'}>
           <small>{t('Read from BCR32')}</small>
           <button disabled={locked} onClick={()=>chooseRead(source==='working'?{kind:'working'}:{kind:'slot',slot:Number(source)})}><Icon name="folder"/><span>{t('Read complete preset')}<small data-i18n-skip>{source==='working'?t('Current working preset'):label(Number(source))}</small></span></button>
@@ -135,16 +147,16 @@ export function ControllerPresets({ storage, authorizeTransfer, onStored, trackS
           <button onClick={()=>{setMenu(null);setRawOpen(true)}}><Icon name="sliders"/>{t('View BCL text')}</button>
         </div>
       </div>
-      <div className="preset-picker-heading"><span>{t('Controller memory')}</span><button type="button" disabled={locked} aria-label={t('Read 64 preset names')} title={t('Read 64 preset names')} onClick={()=>chooseRead({kind:'names'})}><Icon name="rotate"/></button></div>
-      <label className="preset-source-label">{t('Preset to read')}<select aria-label={t('Preset to read')} value={source} disabled={busy||storeBusy} onChange={e=>setSource(e.target.value)}><option value="working">{t('Current working preset')}</option>{Array.from({length:64},(_,i)=><option key={i} value={i}>{label(i)}</option>)}</select></label>
       <p className="preset-read-context">{t('Last read content')}: <span data-i18n-skip>{snapshotLabel}</span></p>
       {snapshot&&<details open={rawOpen} onToggle={e=>setRawOpen(e.currentTarget.open)}><summary>{t('Raw hardware preset')}</summary><pre data-i18n-skip>{snapshot.text}</pre></details>}
-    <details className="track-shortcuts"><summary>{t('T1–T4 preset shortcuts')}</summary>
+      </div>
+      <div className="mock-card track-shortcuts">
+      <div className="preset-picker-heading"><b>{t('T1–T4 preset shortcuts')}</b> <span className="writes-hardware" title={t('Writes the BCR32')}>⬆ BCR32</span></div>
       <p className="surface-help">{t('Each shortcut recalls a BCR32 preset. Selecting it reloads the preset; the working contents are backed up first.')}</p>
       <div className="track-shortcut-grid">{Array.from({length:4},(_,i)=><label key={i}>T{i+1}<select aria-label={`T${i+1} preset`} disabled={!tracks||busy||storeBusy} value={trackDraft[i]} onChange={e=>setTrackDraft(p=>p.map((v,j)=>j===i?Number(e.target.value):v) as ControllerTracks['presets'])}>{Array.from({length:64},(_,slot)=><option key={slot} value={slot+1}>{label(slot)}</option>)}</select></label>)}</div>
       <button disabled={!tracks||!available||busy||storeBusy||tracks.presets.every((v,i)=>v===trackDraft[i])} onClick={()=>{void changeTracks()}}>{t('Assign shortcut presets')}</button>
       <p className="surface-help">{t('Selected shortcut')}: <span data-i18n-skip>{tracks?`T${tracks.selected} · ${tracks.presets[tracks.selected-1]}`:'—'}</span></p>
-    </details>
+      </div>
     </div>
     {saveOpen&&<form className="preset-save-sheet" aria-label={t('Save to BCR32')} onSubmit={e=>{e.preventDefault();void store()}}>
       <button type="button" className="preset-back" disabled={storeBusy} onClick={()=>setSaveOpen(false)}><Icon name="close"/>{t('Back to presets')}</button>

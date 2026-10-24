@@ -1,5 +1,7 @@
 # BCR32 firmware 1.0.2 support
 
+Full protocol reference: [BCR32-PROTOCOL-1.0.2.md](BCR32-PROTOCOL-1.0.2.md).
+
 This release uses the controller/CTRL endpoint. ZAQ/Zaquencer ports are excluded from controller operations. The observed unit exposes one CoreMIDI pair. A live product reply supplies firmware and addressed device ID; imported metadata is only a last-known observation.
 
 ## Assignment synchronization
@@ -23,5 +25,7 @@ Do not use the historical legacy-brightness command as a generic write on firmwa
 ## Evidence boundary
 
 The command-map and parameter JSON files are retained static-analysis inventories, not a manufacturer protocol specification or hardware certification. Local readback tests separately confirmed CC/NRPN rotation settings, an explicit preset 63 save/readback/restoration, and OFF on rotation 1, button 16 and push 1. The OFF tests read zero in 163–165 ms and restored all eight original fields without STORE. A footswitch was not physically tested. No power-cycle persistence claim is made.
+
+The Zaquencer pattern layout, its evidence levels and the validation plan are in [ZAQUENCER-PATTERN.md](ZAQUENCER-PATTERN.md).
 
 The reproducible software scenarios and remaining migration limits are listed in [BCR32 Studio integration](controllers/BCR32-STUDIO-INTEGRATION.md). Public release sources are a BCR32-only extraction of the tested MIDI Studio integration; other development modules and private research inputs are excluded.

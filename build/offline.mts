@@ -19,5 +19,9 @@ export function offlineCachePlugin():Plugin{
   return {name:'studio-offline-cache',apply:'build',enforce:'post',configResolved(config){outDir=resolve(config.root,config.build.outDir);root=config.root},generateBundle(_options,bundle){
     const visit=(file:string)=>{if(shell.has(file))return;shell.add(file);const entry=bundle[file];if(entry?.type==='chunk'){entry.imports.forEach(visit);const metadata=(entry as unknown as {viteMetadata?:{importedCss?:Set<string>;importedAssets?:Set<string>}}).viteMetadata;metadata?.importedCss?.forEach(visit);metadata?.importedAssets?.forEach(visit)}}
     for(const entry of Object.values(bundle))if(entry.type==='chunk'&&(entry.isEntry||entry.moduleIds.some(id=>/\/editor-host\/(?:WorkspaceApp|StandaloneEditorApp)\.tsx$/.test(id))))visit(entry.fileName)
+    // A pinned build must be complete: GitHub Pages deletes the previous build's files on every deployment, so a
+    // lazy chunk that was never cached becomes a 404 and the whole app fails. All code is precached; images/fonts
+    // stay cached on use (a missing picture does not break the app).
+    for(const entry of Object.values(bundle))if(entry.type==='chunk'||/\.(?:css|m?js)$/.test(entry.fileName))shell.add(entry.fileName)
   },writeBundle(){buildOfflineCache(outDir,readFileSync(join(root,'build/offline-worker.js'),'utf8'),shell)}}
 }

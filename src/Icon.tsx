@@ -1,4 +1,4 @@
-export type IconName = 'folder' | 'save' | 'copy' | 'import' | 'export' | 'print' | 'palette' | 'sliders' | 'midi' | 'log' | 'expand' | 'collapse' | 'send' | 'power' | 'rotate' | 'push' | 'close' | 'language' | 'gear' | 'help'
+export type IconName = 'folder' | 'save' | 'copy' | 'import' | 'export' | 'print' | 'palette' | 'sliders' | 'midi' | 'log' | 'expand' | 'collapse' | 'send' | 'power' | 'rotate' | 'push' | 'close' | 'language' | 'gear' | 'help' | 'din'
 const paths: Record<IconName, string[]> = {
   gear: ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z','M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z'],
   help: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z','M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3','M12 17h.01'],
@@ -19,6 +19,7 @@ const paths: Record<IconName, string[]> = {
   rotate: ['M21 9a9 9 0 1 0-2 10','M21 3v6h-6'],
   push: ['M12 3v10','m8 9 4 4 4-4','M4 16h16v5H4Z'],
   close: ['m6 6 12 12M18 6 6 18'],
+  din: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z','M7 10a1 1 0 1 0 2 0 1 1 0 1 0-2 0M11 8a1 1 0 1 0 2 0 1 1 0 1 0-2 0M15 10a1 1 0 1 0 2 0 1 1 0 1 0-2 0M8.5 14.5a1 1 0 1 0 2 0 1 1 0 1 0-2 0M13.5 14.5a1 1 0 1 0 2 0 1 1 0 1 0-2 0'],
   language: ['M3 5h12M9 3v2M13 5c-1 6-4 9-9 11M5 8c1 3 4 6 7 8', 'm14 21 4-10 4 10M15.5 17h5'],
 }
 export function Icon({ name }: { name: IconName }) {

@@ -14,7 +14,7 @@ import Workbench from './Workbench'
 import './workbench.css'
 
 export function createWorkbenchBridge(context:EditorViewContext){
- let help:(()=>void)|undefined
+ let help:(()=>void)|undefined,midiSettings:(()=>void)|undefined
  let disposed=false,locked=false
  let identity:{firmware:string;device:number}|null=null
  const monitor=createMonitor()
@@ -45,6 +45,7 @@ export function createWorkbenchBridge(context:EditorViewContext){
   },
  })
  return {monitor,access:midi.access,setHelp(open:(()=>void)|undefined){help=open},openHelp(){help?.()},
+  setMidiSettings(open:(()=>void)|undefined){midiSettings=open},openMidiSettings(){midiSettings?.()},
   setLocked(value:boolean){locked=value;if(value)revokePrepared()},
   async request(){const result=await context.request();if(disposed)throw Error('BCR32 view disposed');midi.refresh();const pair=automaticPorts(midi.access);if(pair.input&&pair.output)midi.bind(pair.input.id,pair.output.id);return {access:midi.access,sysexError:result.sysexError}},
   bind(input:string,output:string){midi.bind(input,output)},
@@ -56,7 +57,7 @@ export function createWorkbenchBridge(context:EditorViewContext){
    const job={frames:frames.map(b=>[...b]),cursor:0,grant:context.broker.authorize(context.id,operation),generation};prepared=job
    return ()=>{context.broker.revoke(job.grant);if(prepared===job)prepared=null}
   },
-  dispose(){if(disposed)return;disposed=true;help=undefined;revokePrepared();offRx();offState();midi.close();grants.forEach(g=>context.broker.revoke(g));grants.clear();monitor.dispose()},
+  dispose(){if(disposed)return;disposed=true;help=undefined;midiSettings=undefined;revokePrepared();offRx();offState();midi.close();grants.forEach(g=>context.broker.revoke(g));grants.clear();monitor.dispose()},
  }
 }
 function MountedWorkbench({context,bridge,storage,initial,...props}:EditorViewProps&{context:EditorViewContext;bridge:ReturnType<typeof createWorkbenchBridge>;storage:ReturnType<typeof createEditorEnvironment>['storage'];initial:ReturnType<typeof parseControllerState>}){
@@ -67,7 +68,7 @@ function MountedWorkbench({context,bridge,storage,initial,...props}:EditorViewPr
    requestAccess={bridge.request} bindPair={bridge.bind} onSnapshot={props.checkpoint}
    themeOverride={props.appearance.theme} displayOverride={props.appearance.displayStyle} onAppearance={props.onAppearance}
    autoZoomOverride={inherited.settings.activeZoom} onAutoZoom={value=>props.presentation?.set({activeZoom:value})}
-   parameters={context.parameters} presetsExchange={context.presets} signal={context.lifecycle?.signal} presentation={props.presentation} onHelpReady={bridge.setHelp} monitor={bridge.monitor} authorizeTransfer={bridge.authorizeTransfer}/>
+   parameters={context.parameters} presetsExchange={context.presets} signal={context.lifecycle?.signal} presentation={props.presentation} onHelpReady={bridge.setHelp} onMidiSettingsReady={bridge.setMidiSettings} monitor={bridge.monitor} authorizeTransfer={bridge.authorizeTransfer}/>
  </div>
 }
 export const bcr32View:EditorViewRegistration={
@@ -82,6 +83,6 @@ export const bcr32View:EditorViewRegistration={
   }
   const initial=parseControllerState(context.initial)
   const off=context.lifecycle?.onDispose(bridge.dispose)
-  return {render:props=><MountedWorkbench {...props} context={context} bridge={bridge} storage={env.storage} initial={initial}/>,openDocumentation:bridge.openHelp,refresh:bridge.refresh,dispose(){off?.();bridge.dispose()}}
+  return {render:props=><MountedWorkbench {...props} context={context} bridge={bridge} storage={env.storage} initial={initial}/>,openDocumentation:bridge.openHelp,openMidiSettings:bridge.openMidiSettings,refresh:bridge.refresh,dispose(){off?.();bridge.dispose()}}
  },
 }

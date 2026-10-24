@@ -15,7 +15,10 @@ export function isBclWrite(bytes: readonly number[], device: number) {
 export function presetStorePlan(source: string, slot: number, name: string) {
   integer(slot, 0, 63)
   if (!name.trim() || name.length > 24 || /[^\x20-\x7e]|'/.test(name)) throw Error('Preset name requires 1–24 ASCII characters without quotes')
-  const lines = source.split('\n')
+  // An initialized preset read from the BCR32 (".init", no ".name" line; seen on 1.0.2, 2026-10-24) gets its name line
+  // right after "$preset", where named presets carry it; any other source must have exactly one.
+  const raw = source.split('\n'), named = raw.filter(l => /^\s*\.name /.test(l)).length
+  const lines = named === 0 && raw[1] === '$preset' ? [raw[0], raw[1], "  .name ''", ...raw.slice(2)] : raw
   if (lines[0] !== '$rev BCR32' || lines[1] !== '$preset' || lines.at(-1) !== '$end' || lines.filter(l => l.trim() === '$preset').length !== 1 || lines.filter(l => /^\s*\.name /.test(l)).length !== 1) throw Error('A complete single hardware preset is required')
   for (const [index, line] of lines.entries()) {
     bclLine(index, line)
@@ -66,12 +69,18 @@ export function createBclSender(send: (bytes: number[]) => void, device: number,
 }
 
 export type HardwarePresetStorePlan = ReturnType<typeof presetStorePlan>
-export async function storeHardwarePreset({ read, transfer, backup, source, slot, name, onAcknowledged }: {
+// An initialized preset ('.init', no name) has no content of its own: storing it uses the default template instead.
+export const isInitializedPreset = (text: string) => { const l = text.split('\n'); return l[1] === '$preset' && !l.some(x => /^\s*\.name /.test(x)) && l.some(x => x.trim() === '.init') }
+export async function storeHardwarePreset({ read, transfer, backup, source, slot, name, onAcknowledged, template, pause = 1000 }: {
   read: (request: PresetRead) => Promise<PresetReadResult>
   transfer: (lines: readonly string[]) => Promise<void>
   backup: (contents: string) => void
   source: 'working' | number; slot: number; name: string
   onAcknowledged?: (plan: HardwarePresetStorePlan) => void
+  /** BCL text stored (under the new name) instead of an initialized working preset; see default-preset.ts. */
+  template?: string
+  /** Pause between verification retries after the store (ms). */
+  pause?: number
 }) {
   async function complete(request: PresetRead) {
     const result = await read(request)
@@ -80,14 +89,18 @@ export async function storeHardwarePreset({ read, transfer, backup, source, slot
   }
   const working = await complete({ kind: 'working' })
   presetStorePlan(working, slot, name) // Validate the restoration source before any mutation as well.
-  const contents = source === 'working' ? working : await complete({ kind: 'slot', slot: source })
+  const fromTemplate = source === 'working' && template !== undefined && isInitializedPreset(working)
+  const contents = fromTemplate ? template! : source === 'working' ? working : await complete({ kind: 'slot', slot: source })
   const plan = presetStorePlan(contents, slot, name)
   const destination = await complete({ kind: 'slot', slot })
   // Storage must be durable and checked by the caller before the first import line.
   backup(JSON.stringify({ at: new Date().toISOString(), slot, working, destination, proposed: plan.expected }))
   await transfer(plan.lines)
   onAcknowledged?.(plan)
-  const stored = await complete({ kind: 'slot', slot })
+  // Right after $store the BCR32 may not answer the first read (seen on 1.0.2, 2026-10-24: the store was written and read
+  // back identical a moment later). Retry the verification read a few times before giving up.
+  const settle = async (request: PresetRead) => { for (let attempt = 0; ; attempt++) { const result = await read(request); if (result.status === 'complete' || attempt >= 3) { if (result.status !== 'complete') throw Error('Complete hardware read required; transfer stopped. See the retained backup if import has started.'); return result.text } await new Promise(r => setTimeout(r, pause)) } }
+  const stored = await settle({ kind: 'slot', slot })
   if (stored !== plan.expected) throw Error('Stored preset differs; backup retained. Working preset may have changed.')
   await transfer(working.split('\n'))
   const restored = await complete({ kind: 'working' })

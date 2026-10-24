@@ -4,7 +4,13 @@ const listeners=new Set<()=>void>()
 export const getOfflineState=()=>({...state})
 export const subscribeOffline=(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn)}}
 const update=(patch:Partial<OfflineState>)=>{state={...state,...patch};for(const fn of listeners)try{fn()}catch{/* observer isolation */}}
-let started=false
+let started=false,updating=false,current:ServiceWorkerRegistration|undefined
+/** Explicit user action: let the waiting build take over, then reload into it. Without a waiting build, reload. */
+export function applyOfflineUpdate(){
+  const waiting=current?.waiting
+  if(!waiting||!('serviceWorker'in navigator)){window.location.reload();return}
+  updating=true;waiting.postMessage({type:'SKIP_WAITING'})
+}
 export function startOffline(base:URL,enabled:boolean){
   // Local previews are rebuilt in place. Pinning them to an offline build hides fixes
   // even after a reload with the HTTP cache disabled. Published offline apps retain
@@ -26,8 +32,8 @@ export function startOffline(base:URL,enabled:boolean){
     try{
       // A cold offline navigation may reject register()'s network update check even though our worker is active.
       const existing=await navigator.serviceWorker.getRegistration(base.href)
-      if(existing?.scope===base.href){registration=existing;update({waiting:!!existing.waiting});if(existing.active)await inspect();if(!navigator.onLine)return}
-      registration=await navigator.serviceWorker.register(new URL('sw.js',base),{scope:base.pathname,updateViaCache:'none'})
+      if(existing?.scope===base.href){registration=existing;current=existing;update({waiting:!!existing.waiting});if(existing.active)await inspect();if(!navigator.onLine)return}
+      registration=await navigator.serviceWorker.register(new URL('sw.js',base),{scope:base.pathname,updateViaCache:'none'});current=registration
       const watch=(worker:ServiceWorker|null)=>worker?.addEventListener('statechange',()=>{update({waiting:!!registration?.waiting});if(worker.state==='activated')void inspect();if(worker.state==='redundant'&&!registration?.active)update({failed:true})})
       if(!observed.has(registration)){observed.add(registration);watch(registration.installing);registration.addEventListener('updatefound',()=>watch(registration?.installing??null))}
       update({waiting:!!registration.waiting});if(registration.active){await inspect();if(!state.ready&&navigator.onLine)await inspect(true)}
@@ -35,6 +41,12 @@ export function startOffline(base:URL,enabled:boolean){
   }
   window.addEventListener('offline',()=>update({online:false}))
   window.addEventListener('online',()=>{update({online:true});void register()})
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{void inspect()})
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updating){window.location.reload();return}void inspect()})
+  // An open tab learns about a deployment without a reload: check every 5 minutes while visible and when the tab
+  // comes back into view, at most once a minute. A new build found this way only waits; the user applies it.
+  let lastCheck=0
+  const check=()=>{if(!registration||!navigator.onLine||document.visibilityState!=='visible'||Date.now()-lastCheck<60000)return;lastCheck=Date.now();void registration.update().catch(()=>{/* the next check retries */})}
+  setInterval(check,300000)
+  document.addEventListener('visibilitychange',check)
   void register()
 }

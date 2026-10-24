@@ -1,9 +1,10 @@
-import { StrictMode,Suspense,lazy,Component,type ReactNode } from 'react'
+import { StrictMode,Suspense,lazy } from 'react'
 import { createRoot,type Root } from 'react-dom/client'
 import {createLazyEditorInstallation} from './editor-host/lazy-installation'
 import {generatedLazyEditors,distribution,loadWorkspace,loadLegacy,loadLibrary} from 'virtual:midi-studio-distribution'
 import {createNativePresenceClient} from './editor-host/native-presence'
-import { I18nProvider,useLanguage,translate } from './i18n'
+import { I18nProvider } from './i18n'
+import {RouteBoundary} from './RouteBoundary'
 import './styles.css'
 import './offline.css'
 import './editor-host/midi-connection.css'
@@ -17,12 +18,6 @@ const LibraryTool=loadLibrary?lazy(loadLibrary):null
 const presetExchange=createPresetExchange()
 const tools=<><DocumentationLink/>{LibraryTool?<Suspense fallback={<span>…</span>}><LibraryTool exchange={presetExchange}/></Suspense>:null}</>
 const installation=createLazyEditorInstallation(generatedLazyEditors)
-function RouteError(){const language=useLanguage();return <div role="alert"><p>{translate('Editor unavailable',language)}</p><button onClick={()=>window.location.reload()}>{translate('Retry editor',language)}</button></div>}
-class RouteBoundary extends Component<{children:ReactNode},{failed:boolean}>{
-  state={failed:false}
-  static getDerivedStateFromError(){return {failed:true}}
-  render(){return this.state.failed?<RouteError/>:this.props.children}
-}
 
 startOffline(new URL(import.meta.env.BASE_URL,document.baseURI),import.meta.env.PROD)
 const params=new URLSearchParams(window.location.search),editorId=params.get('editor')??(distribution.mode==='standalone'?distribution.modules[0]:null)

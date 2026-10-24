@@ -53,9 +53,9 @@ function InlineName({ initial, style, name, commit, cancel }: { initial: string;
     onKeyDown={event => { event.stopPropagation(); if (event.key === 'Enter') { event.preventDefault(); finish() } else if (event.key === 'Escape') { event.preventDefault(); finished.current = true; cancel() } }} />
 }
 
-export function FrontPanel({ profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, auxValues, auxSources = {}, buttonFeedback, trackFeedback, onTrackSelect, indicators, brightness = null, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = false, displayStyle = 'ice', move }: {
+export function FrontPanel({ onModeKey, profile, selection, selections = [selection], mouseMulti = false, selectMany = () => {}, select, action, values = {}, auxValues, auxSources = {}, buttonFeedback, trackFeedback, onTrackSelect, indicators, brightness = null, setValue = () => {}, ringMode = 'bar', compact = false, customLabels = emptyLabels(), rename = () => {}, activity = idleActivity, screenControl = selection, screenValue, setScreenValue, autoZoom = false, showNumbers = true, nameScreen = false, displayStyle = 'ice', move }: {
   move?:(kind:MoveKind,from:number,to:number,mode:MoveMode)=>void
-  profile: Bcr32Profile; selection: Selection; selections?: Selection[]; select: (value: Selection, gesture?: SelectionGesture) => void; action: (name: string) => void
+  onModeKey?: () => void; profile: Bcr32Profile; selection: Selection; selections?: Selection[]; select: (value: Selection, gesture?: SelectionGesture) => void; action: (name: string) => void
   values?: LiveValues; setValue?: (id: number, value: number) => void; ringMode?: LedMode
   auxValues?: { buttons: (number | null)[]; pushes: (number | null)[] }
   trackFeedback?: TrackFeedback
@@ -199,7 +199,7 @@ export function FrontPanel({ profile, selection, selections = [selection], mouse
       </div>
     })}
     <button style={region(1168, 124, 140, 55)} className="panel-hit key-hit zaq-toggle" aria-label="ZQR / CTRL"
-      onClick={() => action('Editor Controller mode only. No hardware change.')}><span className="silver-key-label">ZQR / CTRL</span></button>
+      onClick={() => onModeKey ? onModeKey() : action('Editor Controller mode only. No hardware change.')}><span className="silver-key-label">ZQR / CTRL</span></button>
     {nameScreen && <NameDisplay text={controlLabel(screenControl.kind, screenControl.id, customLabels)} blank={displayed.display === false} style={region(1374, 463, 192, 49)} />}
     <OledDisplay control={screenControl} config={displayed} value={displayValue.value} source={displayValue.source} style={region(1374, 518, 192, 98)}
       inspect={() => select(screenControl)} setValue={v => { if (setScreenValue) setScreenValue(v); else if (screenControl.kind === 'encoders') setValue(screenControl.id, v) }} />

@@ -61,4 +61,9 @@ export function parseLibrary(value: unknown): ControllerPreset[] {
   return result
 }
 export const libraryFile = (presets: ControllerPreset[]) => ({ format: 'bcr32-preset-library', version: 1, presets })
+// Library order is the user's: moving one entry keeps every other entry, and an out-of-range move changes nothing.
+export function movePreset<T>(list: readonly T[], from: number, to: number): T[] {
+  if (!Number.isInteger(from) || !Number.isInteger(to) || from < 0 || from >= list.length || to < 0 || to >= list.length || from === to) return [...list]
+  const next = [...list]; const [moved] = next.splice(from, 1); next.splice(to, 0, moved); return next
+}
 export const sameState = (a: ControllerState, b: ControllerState) => JSON.stringify(parseControllerState(a)) === JSON.stringify(parseControllerState(b))

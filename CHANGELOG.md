@@ -1,5 +1,79 @@
 # Changelog
 
+## [0.45.0-alpha.11] — 2026-10-24
+
+BCR32 sequencer view (preview), preset store fixes and display options. Pattern transfer to and from the BCR32 is not
+available yet: firmware 1.0.2 gives no verified way to read or send a pattern over USB.
+
+- **Sequencer view** (Controller | Sequencer switch in the toolbar, full height): grid, piano roll and table for the
+  four tracks × 32 steps; lanes for velocity, note length and start offset (drag to draw); step and track panels;
+  bar accents on steps 1, 5, 9 … 29. Notes are named like the BCR32 display (C3 = MIDI 60), lengths use the manual's
+  names (96 … 4b), the offset is limited to ±5 clock ticks as on the panel, and a new pattern starts with the BCR32's
+  own defaults (C3, velocity 100, length 32).
+- Step entry from the computer keyboard (A W S E D … K, Z/X octave, C/V velocity, M rest) or a MIDI keyboard chosen
+  in the MIDI connection window.
+- **MIDI files**: import with a preview window (choose a source track and a start bar for each of T1–T4, grid
+  detection, timeline), export to a standard MIDI file. **.syx** import and export of `04 0B` pattern blocks.
+- **Templates**: built-in grooves (303-style acid line, four on the floor, breakbeat, techno), your own templates
+  saved in the browser, and a random pattern generator (scale, root, octaves, density).
+- The Play button and Space start/stop stay disabled: the BCR32 1.0.2 ignores a MIDI clock received over USB (tested).
+- **Toolbar**: the current preset name, double-click to rename, Enter or Store… to store it; option to switch to the
+  sequencer view with the ZQR/CTRL key (Device tab, off by default).
+- **Presets**: storing an initialized (empty) preset now works and uses a saved snapshot of preset 1 as its template;
+  the read-back after STORE is retried. Press EXIT on the BCR32 if the stored preset does not show at once.
+- Display menu: **Test mode** option (the Test block of the inspector is hidden without it); the floating display is
+  again a borderless picture-in-picture window. Panel logo 30 % larger.
+- Fix: the magnifier no longer covers the text of the control search.
+- Documentation: one protocol reference for firmware 1.0.2 and the Zaquencer pattern layout with the level of evidence
+  of each field; regression fixtures (MIDI and .syx) anyone can add to.
+
+## [0.45.0-alpha.10] — 2026-10-24
+
+- An open tab now finds a new deployment without being reloaded: it checks every 5 minutes while visible and when it comes back into view (at most once a minute), then shows "New version available" with "Update and reload". It never reloads by itself, so a MIDI session is never cut.
+
+## [0.45.0-alpha.9] — 2026-10-24
+
+- Presets › On this computer: the browser library is now a list instead of a drop-down. Drag a row, or use ↑ ↓, to reorder; the order is saved and kept by Export. Import sits next to Export: an imported file is appended as copies with new identifiers, never over an existing preset. Choosing a row only loads it into the editor; nothing is sent to the BCR32.
+
+## [0.45.0-alpha.8] — 2026-10-24
+
+BCR32 editor brought in line with the approved mockup (the owner found alpha.7 too far from it).
+
+- Host header: the MIDI settings icon is a DIN connector.
+- Toolbar: ↶ ↷, switches "CC → BCR32" and "Assignments → BCR32", ▣ Floating display, Display ▾, and the panel toggle at the right end.
+- Display menu: round theme swatches, display style as a list, three options, "Use global presentation" as a checkbox; screen and floating window under one disclosure.
+- Panel: text tabs with no connection line above them (the status lives in the header); a warning appears only when SysEx is missing. The status bar sums up assignments, read progress and CC sending, with the latest action below.
+- Control tab in the mockup order: search, control kind and name, Rotation/Push, selection links, MIDI message, Display, Test, Advanced.
+- Presets as cards (Synchronize assignments, BCR32 presets, T1–T4 shortcuts); Device with a sticky Read bar, warning box, link anchors and right-aligned BCR32 values; Files as cards; compact MIDI window.
+
+## [0.45.0-alpha.7] — 2026-10-24
+
+BCR32 sidebar reorganisation, steps 3 to 10 (study of 2026-10-24, approved by the owner).
+
+- **Editor toolbar** above the front panel: Undo/Redo, Send CC to BCR32, Assignments → BCR32, the floating display and a **Display** menu (theme of this editor, display style, one "Zoom while adjusting" instead of two, control numbers, label screen, screen and scale). The host floating window is offered only where the BCR32 one is unavailable.
+- **Device** tab replaces Config: every BCR32 global setting once, in open groups (footswitches, MIDI routing, mode, clock, sequencer, LED), with the editor value, the value read on the BCR32 and a ≠ marker, a filter and a "≠ BCR32" view; Device ID and bootloader status under Advanced. Global writes stay disabled. The tab is about half as long as Config was.
+- **Presets › BCR32** gains "Synchronize assignments" (read now, status, Read options). Reading assignments and loading the device settings at connection are chosen in the MIDI connection window.
+- **Files**: Export, Import and front-panel export blocks, then one Advanced disclosure holding the firmware tools, parameter names and the legacy profile format.
+- **Help** is no longer a tab: Documentation opens it over the current tab, with Back.
+- Narrow screens: the toolbar scrolls, the Display menu and the MIDI window open as bottom sheets, and the panel can no longer stay hidden by a collapsed state saved on a wide screen.
+- Fixes: "On this computer" presets were squeezed into a narrow column; the help texts are translated; the connection line says when the BCR32 is not detected; the T1–T4 shortcuts are marked as writing the BCR32.
+
+## [0.45.0-alpha.6] — 2026-10-24
+
+- BCR32 sidebar, first steps of the reorganisation: the area above the tabs is now one line, the MIDI status (and the firmware once read) that opens the MIDI connection window, so the scrolling content gains 53 px at 1440×900 (590 → 643 px) even with the new status bar. Firmware read, controller output routing and the Studio version left that area: the first two are in the MIDI window, the version under the help.
+- Action feedback is a status bar fixed at the bottom of the sidebar on every tab, instead of moving between the top, middle and bottom of the content.
+- Narrow screens: the tabs and the status bar stay visible while scrolling a long tab.
+
+## [0.45.0-alpha.5] — 2026-10-24
+
+- MIDI settings icon beside the connection status (standalone and workspace hosts), as in the FireworX and M3000 editors. For the BCR32 it opens a MIDI connection window: MIDI/SysEx permission and retry, firmware read, input and output ports, CC sending and controller output routing. Opening it sends nothing; the Config tab links to it instead of holding the port selectors.
+
+## [0.45.0-alpha.4] — 2026-10-21
+
+- Fix "Editor unavailable" after a new deployment: the offline service worker now precaches every JS/CSS file of the build it pins, so lazy modules (instrument library, PDF export, editor chunks) keep working after GitHub Pages removes the previous build's files.
+- Show the offline status in standalone editors, with an explicit "Update and reload" action when a new version is waiting; a new build still never takes over on its own during a MIDI session.
+- The last-resort error screen logs the error, shows its message and offers the update when one is waiting.
+
 ## [0.45.0-alpha.3] — 2026-10-20
 
 - Update the cached destination preset name as soon as the controller acknowledges the complete save transfer, without rereading the 64 preset names. Keep read/save/shortcut lists in sync, and invalidate an uncertain label if the save later fails.

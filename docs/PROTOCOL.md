@@ -1,5 +1,7 @@
 > Historical guide for the pre-1.0.2 editor. For the current release use the in-editor Documentation button and [firmware 1.0.2 notes](FIRMWARE-1.0.2.md). Legacy command assumptions do not establish firmware 1.0.2 support.
 
+> Consolidated protocol reference for firmware 1.0.2: [BCR32-PROTOCOL-1.0.2.md](BCR32-PROTOCOL-1.0.2.md).
+
 # BCR32 SysEx protocol: what is known
 
 This page collects what has been **observed on the wire** between a BCR32 (firmware 0.56.0) and its official editor,
