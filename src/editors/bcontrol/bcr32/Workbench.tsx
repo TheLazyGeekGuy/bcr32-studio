@@ -1,5 +1,6 @@
 import {Bcr32Help} from './Help'
 import {PresentationTools,usePresentationSettings,type EditorScreen} from '../../../editor-host/PresentationTools'
+import {floatingScreenSupported,openFloatingScreen,type FloatingScreen} from '../../../editor-host/floating-screen'
 import type {PresentationInstance} from '../../../editor-host/presentation-preferences'
 import {drawScreens,screenText,canvasSize} from '../../../display-canvas'
 import {moveControl,type MoveKind,type MoveMode} from '../../../control-move'
@@ -130,6 +131,9 @@ function loadWorkspace() {
   // Screen style of the OLED and the label screen (Config), remembered per browser.
   const displayStyle=displayOverride
   const setDisplayStyle=(displayStyle:DisplayStyle)=>onAppearance({displayStyle})
+  // Test mode shows the Test block of the Control tab (value fader, test press); off by default.
+  const [testMode, setTestMode] = useState(() => { try { return storage.getItem('bcr32-studio.test-mode') === 'true' } catch { return false } })
+  useEffect(() => { try { storage.setItem('bcr32-studio.test-mode', String(testMode)) } catch { /* Optional preference. */ } }, [testMode])
   const [showNumbers, setShowNumbers] = useState(() => { try { return storage.getItem('bcr32-studio.show-numbers') !== 'false' } catch { return true } })
   useEffect(() => { try { storage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
   const [presetLocation,setPresetLocation]=useState<'hardware'|'browser'>('hardware')
@@ -194,6 +198,17 @@ function loadWorkspace() {
   useEffect(() => () => arbiter.stop(), [arbiter])
   const alive=useRef(false)
   useEffect(() => {alive.current=true;return()=>{alive.current=false;pipRef.current?.close()}}, [])
+  // Borderless floating screen: the OLED drawn into a canvas shown as video picture-in-picture (no title bar, like a
+  // video player). Redrawn on every render while open; closing it from the system control updates the button.
+  const [videoFloating,setVideoFloating]=useState(false),videoFloat=useRef<FloatingScreen|null>(null),latestScreen=useRef<EditorScreen|null>(null)
+  useEffect(()=>{try{videoFloat.current?.redraw()}catch{/* closed by the failure */}})
+  useEffect(()=>()=>videoFloat.current?.close(),[])
+  async function toggleVideoFloating() {
+    if (videoFloat.current) { videoFloat.current.close(); return }
+    const screen = latestScreen.current; if (!screen) return
+    try { videoFloat.current = await openFloatingScreen({ width: screen.width, height: screen.height, draw: ctx => latestScreen.current?.draw(ctx) }, () => { videoFloat.current = null; if (alive.current) setVideoFloating(false) }, signal); setVideoFloating(true) }
+    catch (error) { setNotice(error instanceof Error ? error.message : String(error)) }
+  }
   async function toggleFloatingDisplay() {
     if (pipRef.current) { pipRef.current.close(); return }
     try {
@@ -967,11 +982,12 @@ function loadWorkspace() {
   }
   indicatorRef.current = indicators
   const screenValue = screenControl.kind === 'encoders' ? { value: values[screenControl.id]?.value ?? null, source: values[screenControl.id]?.source ?? 'local' } : { value: auxValues[screenControl.kind][controlIndex(screenControl.kind, screenControl.id)], source: auxSources[`${screenControl.kind}:${screenControl.id}`] ?? 'local' }
-  const sharedScreens:EditorScreen[]=[{id:'bcr32-oled',label:'BCR32 OLED',...canvasSize,draw(ctx){
+  const sharedScreens:EditorScreen[]=latestScreenList([{id:'bcr32-oled',label:'BCR32 OLED',...canvasSize,draw(ctx){
     const original=profile[screenControl.kind].find(e=>e.id===screenControl.id)!
     const config=original.type==='pc'&&screenControl.kind!=='encoders'?{...original,parameter:buttonValues(original)[0]}:original
     const text=screenText({...screenControl,id:displayControlId(screenControl.kind,screenControl.id)},config,screenValue.value,screenValue.source,controlLabel(screenControl.kind,screenControl.id,customLabels));drawScreens(ctx,text,displayStyle)
-  }}]
+  }}])
+  function latestScreenList(list:EditorScreen[]){latestScreen.current=list[0];return list}
   const assignmentAvailable = brightnessEnabled && liveFirmware === '1.0.2' && liveDeviceId !== null && liveDeviceId !== 127 && controllerRead.status === 'complete'
   return translatedTree(<main className="studio compact" data-theme={theme} data-tools-collapsed={toolsCollapsed||undefined} onKeyDown={event=>{if(event.key!=='Escape')return;if(displayOpen){setDisplayOpen(false);event.preventDefault()}else if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <section className="workspace">
@@ -982,7 +998,7 @@ function loadWorkspace() {
           <button className={`cc-toggle tb-switch ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} title="Send CC to BCR32" onClick={toggleSend} disabled={!isBcrOutput(output)}><span className="switch" aria-hidden="true" />CC → BCR32</button>
           <button className={`cc-toggle tb-switch assignment-toggle ${assignmentLive ? 'enabled' : ''}`} aria-pressed={assignmentLive} disabled={locked} title="Send assignment edits immediately" onClick={() => setAssignmentLive(on => !on)}><span className="switch" aria-hidden="true" />Assignments → BCR32</button>
           <span className="tb-sep" aria-hidden="true" />
-          {floatingSupported() && <button className="floating-toggle" aria-pressed={!!pipWindow} title="Small always-on-top window with the screen, movable and resizable" onClick={() => { void toggleFloatingDisplay() }}><span aria-hidden="true" data-i18n-skip>▣ </span>{pipWindow ? 'Close floating display' : 'Floating display'}</button>}
+          {floatingScreenSupported() && <button className="floating-toggle" aria-pressed={videoFloating} title="Borderless always-on-top screen, like a video player" onClick={() => { void toggleVideoFloating() }}><span aria-hidden="true" data-i18n-skip>▣ </span>{videoFloating ? 'Close floating display' : 'Floating display'}</button>}
           <div className="display-menu-anchor" ref={displayMenu}>
             <button className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen} onClick={()=>setDisplayOpen(open=>!open)}>Display<span aria-hidden="true" data-i18n-skip> ▾</span></button>
             <div className="display-menu" role="dialog" aria-label="Display" hidden={!displayOpen}><header className="display-menu-head"><strong>Display</strong><button className="midi-settings-close" aria-label="Close" title="Close" onClick={()=>setDisplayOpen(false)}><Icon name="close" /></button></header><fieldset className="host-lock-fields" disabled={locked}>
@@ -992,8 +1008,10 @@ function loadWorkspace() {
               <label className="mock-check"><input type="checkbox" checked={autoZoom} onChange={event => setAutoZoom(event.target.checked)} />Zoom while adjusting</label>
               <label className="mock-check"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
               <label className="mock-check"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
+              <label className="mock-check"><input type="checkbox" checked={testMode} onChange={event => setTestMode(event.target.checked)} />Test mode</label>
               <label className="mock-check"><input type="checkbox" checked={inheritsPresentation} onChange={event => {if(event.target.checked)presentationStore.reset();else presentationStore.set({...presentationStore.getSnapshot()});setInheritTick(n=>n+1)}} />Use global presentation</label>
-              <details className="adv"><summary>Screen and floating window</summary><PresentationTools preferences={presentation} screens={sharedScreens} inline zoom={false} floating={!floatingSupported()}/></details>
+              {floatingSupported() && <button className="mock-link display-interactive-window" aria-pressed={!!pipWindow} title="Small always-on-top window with the screen, movable and resizable" onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close interactive window' : 'Interactive window (browser)'}</button>}
+              <details className="adv"><summary>Screen and floating window</summary><PresentationTools preferences={presentation} screens={sharedScreens} inline zoom={false} floating={false}/></details>
             </fieldset></div>
           </div>
           <span className="tb-spacer" />
@@ -1092,6 +1110,7 @@ function loadWorkspace() {
         <h3 className="mock-h3">Display</h3>
         <label>Label<input maxLength={48} placeholder={multiple?'Mixed / batch label':'Default printed name'} value={sharedField(selections.map(s=>customLabels[s.kind][controlIndex(s.kind,s.id)]))} onChange={event => setCustomLabels(current => ({ ...current,...Object.fromEntries((['encoders','pushes','buttons'] as const).map(kind=>[kind,current[kind].map((label,i)=>selectedKeys.has(selectionKey({kind,id:profile[kind][i].id}))?cleanLabel(event.target.value):label)])) }))} /></label>
         <div className="fields two mock-display-row"><label className="zoom-option" data-i18n-skip><input type="checkbox" checked={selected.display !== false} onChange={e=>updateSelected({display:e.target.checked})} />Display</label>{!!selectedRotations.length && <label>LED ring<select value={batchLed} onChange={event=>updateSelected({ledMode:event.target.value as LedMode})}>{batchLed===''&&<option value="" disabled>Mixed</option>}{ledModes.map(mode=><option data-i18n-skip key={mode} value={mode}>{ledModeLabel[mode]}</option>)}</select></label>}</div>
+        {testMode && <>
         <h3 className="mock-h3">Test</h3>
         {selection.kind === 'encoders' && <section className="value-preview">
           <label>Value · {values[selected.id]?.source === 'relative' ? 'relative estimate' : values[selected.id]?.source === 'midi' ? 'MIDI received' : sendCC ? 'UI adjustment' : 'local preview'}<output>{values[selected.id]?.value ?? '—'}</output>
@@ -1104,6 +1123,7 @@ function loadWorkspace() {
             onBlur={() => { if (selected.mode === 'momentary') pressSelected(false) }}><Icon name="push" />Test press / release</button>
         </section>}
         <p className="mock-caption">{sendCC ? 'CC values sent · assignments unchanged.' : 'Receive / local preview · CC sending disabled.'}</p>
+        </>}
         <details className="adv"><summary>Advanced</summary>
         {selected.type === 'pc' && <label className="zoom-option"><input type="checkbox" disabled={multiple} checked={!!selected.bankOff} onChange={e=>updateSelected({bankOff:e.target.checked})} />Bank Off</label>}
         {selected.type === 'at' && selection.kind !== 'encoders' && <label className="zoom-option" data-i18n-skip><input disabled={multiple} type="checkbox" checked={!!selected.aftertouchAll} onChange={e=>updateSelected({aftertouchAll:e.target.checked})} />Aftertouch: All</label>}

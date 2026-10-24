@@ -237,4 +237,8 @@ export const bcr32Rows=[
   "No preset on this computer yet.|Aucun preset sur cet ordinateur pour l’instant.|Ancora nessun preset su questo computer.|Noch kein Preset auf diesem Computer.|このコンピューターにはまだプリセットがありません。|Aún no hay presets en este ordenador.|На этом компьютере пока нет пресетов.|此电脑上暂无预设。",
   "Drag to reorder|Glisser pour réordonner|Trascina per riordinare|Zum Umsortieren ziehen|ドラッグで並べ替え|Arrastrar para reordenar|Перетащите, чтобы изменить порядок|拖动以重新排序",
   "Library order saved on this computer.|Ordre de la bibliothèque enregistré sur cet ordinateur.|Ordine della libreria salvato su questo computer.|Reihenfolge der Bibliothek auf diesem Computer gespeichert.|ライブラリの順序をこのコンピューターに保存しました。|Orden de la biblioteca guardado en este ordenador.|Порядок библиотеки сохранён на этом компьютере.|已在此电脑上保存库顺序。",
+  "Test mode|Mode test|Modalità test|Testmodus|テストモード|Modo de prueba|Режим проверки|测试模式",
+  "Borderless always-on-top screen, like a video player|Écran sans bordure toujours au premier plan, comme un lecteur vidéo|Schermo senza bordi sempre in primo piano, come un lettore video|Randlose Anzeige immer im Vordergrund, wie ein Videoplayer|動画プレーヤーのような枠なしの最前面画面|Pantalla sin bordes siempre visible, como un reproductor de vídeo|Экран без рамки поверх всех окон, как видеоплеер|无边框置顶屏幕，类似视频播放器",
+  "Interactive window (browser)|Fenêtre interactive (navigateur)|Finestra interattiva (browser)|Interaktives Fenster (Browser)|操作可能なウィンドウ（ブラウザー）|Ventana interactiva (navegador)|Интерактивное окно (браузер)|交互窗口（浏览器）",
+  "Close interactive window|Fermer la fenêtre interactive|Chiudi la finestra interattiva|Interaktives Fenster schließen|操作可能なウィンドウを閉じる|Cerrar la ventana interactiva|Закрыть интерактивное окно|关闭交互窗口",
 ]

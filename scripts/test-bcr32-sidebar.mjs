@@ -27,19 +27,24 @@ assert.match(workbench,/<\/fieldset><\/div>\s*<footer className="sidebar-meta si
 
 // Toolbar above the front panel.
 const toolbar=slice('<div className="editor-toolbar" role="toolbar"','<FrontPanel ')
-for(const part of ["moveHistory('undo')","moveHistory('redo')",'className={`cc-toggle tb-switch ','CC → BCR32</button>','assignment-toggle','Assignments → BCR32</button>','{floatingSupported() && <button className="floating-toggle"','className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen}','<span className="tb-spacer" />','className="bcr32-tools-toggle"'])assert.ok(toolbar.includes(part),`toolbar holds ${part}`)
+for(const part of ["moveHistory('undo')","moveHistory('redo')",'className={`cc-toggle tb-switch ','CC → BCR32</button>','assignment-toggle','Assignments → BCR32</button>','{floatingScreenSupported() && <button className="floating-toggle" aria-pressed={videoFloating}','className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen}','<span className="tb-spacer" />','className="bcr32-tools-toggle"'])assert.ok(toolbar.includes(part),`toolbar holds ${part}`)
 assert.match(toolbar,/disabled=\{locked\|\|!historyCounts\.undo\}[^]*disabled=\{locked\|\|!historyCounts\.redo\}/,'undo and redo stay locked with the host')
 assert.match(toolbar,/aria-pressed=\{assignmentLive\} disabled=\{locked\}/,'assignment switch locked with the host')
 assert.match(toolbar,/<div className="display-menu" role="dialog"[^>]*>.*?<fieldset className="host-lock-fields" disabled=\{locked\}>/s,'Display menu keeps the host lock')
 assert.match(toolbar,/<label className="mock-field">Display style<select/,'display style as a list')
 assert.match(toolbar,/checked=\{inheritsPresentation\}[^]*?presentationStore\.reset\(\)/,'inherit the global presentation as a checkbox')
-assert.match(toolbar,/<PresentationTools preferences=\{presentation\} screens=\{sharedScreens\} inline zoom=\{false\} floating=\{!floatingSupported\(\)\}\/>/,'host presentation tools without a second zoom; host floating window only as a fallback')
+assert.match(toolbar,/<PresentationTools preferences=\{presentation\} screens=\{sharedScreens\} inline zoom=\{false\} floating=\{false\}\/>/,'host presentation tools without a second zoom nor a second floating button')
+assert.match(toolbar,/onClick=\{\(\) => \{ void toggleVideoFloating\(\) \}\}/,'toolbar floating display is the borderless video picture-in-picture')
+assert.match(toolbar,/\{floatingSupported\(\) && <button className="mock-link display-interactive-window"[^]*?toggleFloatingDisplay\(\)/,'interactive browser window offered in the Display menu')
+assert.match(toolbar,/checked=\{testMode\} onChange=\{event => setTestMode\(event\.target\.checked\)\} \/>Test mode/,'Test mode option in the Display menu')
 assert.equal(workbench.match(/>Zoom while adjusting</g)?.length,1,'one zoom option')
 assert.match(workbench,/if\(displayOpen\)\{setDisplayOpen\(false\);event\.preventDefault\(\)\}/,'Escape closes the Display menu first')
 
 // Control tab, in the mockup order: search, kind, name, Rotation/Push, selection, MIDI message, Display, Test, Advanced.
 const inspector=slice('<section className="inspector mock-inspector"','<section className="lower">')
-const order=['<ControlSearch ','className="mock-caption mock-kind"','className="mock-title"','className="mock-seg"','className="selection-tools mock-selection"','>MIDI message</h3>','>Display</h3>','>Test</h3>','<details className="adv"><summary>Advanced</summary>']
+const order=['<ControlSearch ','className="mock-caption mock-kind"','className="mock-title"','className="mock-seg"','className="selection-tools mock-selection"','>MIDI message</h3>','>Display</h3>','{testMode && <>','>Test</h3>','<details className="adv"><summary>Advanced</summary>']
+const test=inspector.slice(inspector.indexOf('{testMode && <>'),inspector.indexOf('<details className="adv"><summary>Advanced</summary>'))
+assert.ok(test.includes('className="value-preview"')&&test.trimEnd().endsWith('</>}'),'the whole Test block, fader included, only in test mode')
 order.reduce((at,part)=>{const i=inspector.indexOf(part);assert.ok(i>at,`inspector order: ${part}`);return i},-1)
 assert.ok(inspector.slice(inspector.indexOf('<summary>Advanced</summary>')).includes('<ControllerReadValues '),'raw controller read under Advanced')
 
