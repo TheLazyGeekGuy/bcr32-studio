@@ -689,3 +689,30 @@
  .bcr32-workbench .display-menu{position:fixed;inset:auto 0 0 0;width:auto;max-height:85dvh;border-radius:10px 10px 0 0}
 }
 .bcr32-workbench .display-menu-head{display:flex;align-items:center;justify-content:space-between;margin:0 -14px 4px;padding:6px 8px 6px 14px;border-bottom:1px solid var(--theme-line)}
+/* Device tab: one grouped list, editor value and BCR32 value side by side, groups always open. */
+.bcr32-workbench .device-list{display:block}
+.bcr32-workbench .device-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0;background:var(--theme-surface)}
+@media(min-width:761px){.bcr32-workbench .device-actions{position:sticky;top:0;z-index:2}}
+.bcr32-workbench .device-actions small{color:var(--theme-muted)}
+.bcr32-workbench .device-filter{display:flex;gap:6px;align-items:center;margin:6px 0}
+.bcr32-workbench .device-filter input{flex:1;min-width:0}
+.bcr32-workbench .device-filter-scope{display:flex}
+.bcr32-workbench .device-anchors{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 8px}
+.bcr32-workbench .studio .device-anchors button{font-size:11px;padding:2px 6px}
+.bcr32-workbench .device-columns,.bcr32-workbench .device-row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,.8fr);gap:6px;align-items:center}
+.bcr32-workbench .device-columns{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--theme-muted)}
+.bcr32-workbench .device-row{padding:3px 0;font-size:12px}
+.bcr32-workbench .device-row>small,.bcr32-workbench .device-row>.device-write{grid-column:1/-1}
+.bcr32-workbench .device-row-differs .device-reported{color:var(--theme-accent)}
+.bcr32-workbench .device-reported{font-size:11px;overflow-wrap:anywhere}
+.bcr32-workbench .device-group{scroll-margin-top:44px;padding:4px 0 8px;border-top:1px solid var(--theme-line)}
+.bcr32-workbench .device-group h3{margin:8px 0 4px}
+.bcr32-workbench .device-group-actions{display:flex;gap:6px;margin-top:4px}
+.bcr32-workbench .device-advanced{margin-top:8px}
+.bcr32-workbench .controller-read-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12px}
+.bcr32-workbench .info-tip{cursor:help;color:var(--theme-muted);font-weight:400}
+.bcr32-workbench .controller-read-panel{margin-top:14px;padding-top:6px;border-top:1px solid var(--theme-line)}
+.midi-settings-at-connection{border:1px solid var(--theme-line);border-radius:4px;padding:6px 10px;display:grid;gap:4px}
+.midi-settings-at-connection legend{font-size:11px;color:var(--theme-muted);padding:0 4px}
+/* Preset locations stack their content: the generic ".profile-actions > div" row layout squeezed them into columns. */
+.bcr32-workbench .profile-actions>.hardware-presets:not([hidden]),.bcr32-workbench .profile-actions>.browser-presets:not([hidden]){display:block}

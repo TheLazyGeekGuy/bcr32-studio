@@ -10,26 +10,27 @@ export function FirmwareIdentity({ firmware, previous, canProbe, probe }: { firm
   </div>
 }
 
-export function ControllerReadPanel({ cacheEnabled, setCacheEnabled, fromCache, autoRead, setAutoRead, groups, setGroups, canRead, state, read, cancel }: {
+// Presets › BCR32 › Synchronize assignments: read the active controller assignments. Automatic reading at connection is
+// chosen in the MIDI connection window; the groups to read and the preset cache sit under one Read options disclosure.
+export function ControllerReadPanel({ cacheEnabled, setCacheEnabled, fromCache, groups, setGroups, canRead, state, read, cancel }: {
   cacheEnabled: boolean; setCacheEnabled: (on: boolean) => void; fromCache: boolean
-  autoRead: boolean; setAutoRead: (on: boolean) => void; groups: ControllerGroup[]; setGroups: (groups: ControllerGroup[]) => void
+  groups: ControllerGroup[]; setGroups: (groups: ControllerGroup[]) => void
   canRead: boolean; state: ControllerReadState; read: () => void; cancel: () => void
 }) {
   const language = useLanguage(), t = (text: string) => translate(text, language)
   const busy = state.status === 'reading'
   const labels = ['Buttons 1–16', 'Encoder pushes 1–32', 'Footswitches 1–2', 'Encoder rotations 1–32']
   const status = { idle: 'Waiting for controller read', reading: 'Reading controller assignments', complete: 'Controller read complete', cancelled: 'Read cancelled', 'no reply': 'Controller read incomplete · missing replies', failed: 'Read failed' }
-  return <section className="controller-read-panel" aria-label={t('Controller synchronization')}>
-    <h3>{t('Controller synchronization')}</h3>
-    <label className="zoom-option"><input type="checkbox" checked={autoRead} onChange={e => setAutoRead(e.target.checked)} />{t('Auto-read controller assignments at connection')}</label>
-    <label className="zoom-option"><input type="checkbox" checked={cacheEnabled} onChange={e => setCacheEnabled(e.target.checked)} />{t('UI preset cache · UI is the source of truth')}</label>
-    <p className="surface-help">{t('Read each preset once per connection. T1–T4 then restore cached assignments and values, including UI edits. Unobserved hardware changes are ignored. Read controller now refreshes this preset. Cached edits are not automatically resent or stored.')}</p>
-    <fieldset disabled={busy}><legend>{t('Controls to read')}</legend>{controllerGroups.map((group, i) => <label className="zoom-option" key={group}><input type="checkbox" checked={groups.includes(group)} onChange={e => setGroups(e.target.checked ? [...groups, group] : groups.filter(g => g !== group))} />{t(labels[i])}</label>)}</fieldset>
-    <p className="surface-help">{t('Reads the active controller assignments. No sequencer track reads or preset changes. Live knob positions are separate MIDI values.')}</p>
-    <button disabled={!canRead || busy || !groups.length} onClick={read}>{t('Read controller now')}</button>{busy && <button onClick={cancel}>{t('Cancel read')}</button>}
-    <p role="status">{t(fromCache ? 'Preset restored from UI cache' : status[state.status])}{!fromCache && state.total > 0 && <span data-i18n-skip> · {state.received}/{state.total}</span>}</p>
+  return <section className="controller-read-panel" aria-label={t('Synchronize assignments')}>
+    <h3>{t('Synchronize assignments')} <span className="info-tip" title={t('Reads the active controller assignments. No sequencer track reads or preset changes. Live knob positions are separate MIDI values.')} aria-label={t('Reads the active controller assignments. No sequencer track reads or preset changes. Live knob positions are separate MIDI values.')}>ⓘ</span></h3>
+    <div className="controller-read-actions"><button disabled={!canRead || busy || !groups.length} onClick={read}>{t('Read controller now')}</button>{busy && <button onClick={cancel}>{t('Cancel read')}</button>}
+    <span role="status">{t(fromCache ? 'Preset restored from UI cache' : status[state.status])}{!fromCache && state.total > 0 && <span data-i18n-skip> · {state.received}/{state.total}</span>}</span></div>
     {busy && <progress aria-label={t('Controller read progress')} value={state.done} max={state.total || 1} />}
-    <p className="surface-help">{t('In CTRL mode, T1–T4 recall four preset shortcuts. Their bindings and selected track are read separately from the global BCL.')}</p>
+    <details className="controller-read-options"><summary>{t('Read options')}</summary>
+      <fieldset disabled={busy}><legend>{t('Controls to read')}</legend>{controllerGroups.map((group, i) => <label className="zoom-option" key={group}><input type="checkbox" checked={groups.includes(group)} onChange={e => setGroups(e.target.checked ? [...groups, group] : groups.filter(g => g !== group))} />{t(labels[i])}</label>)}</fieldset>
+      <label className="zoom-option"><input type="checkbox" checked={cacheEnabled} onChange={e => setCacheEnabled(e.target.checked)} />{t('UI preset cache · UI is the source of truth')}<span className="info-tip" title={t('Read each preset once per connection. T1–T4 then restore cached assignments and values, including UI edits. Unobserved hardware changes are ignored. Read controller now refreshes this preset. Cached edits are not automatically resent or stored.')}> ⓘ</span></label>
+      <p className="surface-help">{t('In CTRL mode, T1–T4 recall four preset shortcuts. Their bindings and selected track are read separately from the global BCL.')}</p>
+    </details>
   </section>
 }
 

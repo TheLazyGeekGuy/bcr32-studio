@@ -34,7 +34,7 @@ import { cleanLabel, controlIndex, draftStorageKey, emptyLabels, emptyValues, li
 import { idleActivity, type Activity } from './ActivityLeds'
 import { modeText, controlForChanges } from './oled-model'
 import { applyChange, buttonValue, createMidiDecoder, decoderKey, transportIssue, type LiveValue } from './controller-midi'
-import { StudioConfig } from './StudioConfig'
+import { buttonNames } from './panel-layout'
 import { ControlSearch } from './ControlSearch'
 import { createBrightnessTransport } from './led-brightness'
 import { applySelectionChange, selectControls, selectedControls, selectionKey, sharedField, type SelectionGesture, type ControlChange } from './multi-selection'
@@ -51,7 +51,7 @@ import { firmwareOne, isFirmwareRead } from './firmware-codec'
 import { controllerGroups, controllerTargets, createControllerReader, emptyControllerRead, mergeControllerRead, assignmentFromRead, type ControllerGroup, type ControllerReadState } from './controller-read'
 import { ControllerReadPanel, ControllerReadValues, FirmwareIdentity } from './ControllerReadPanel'
 import { changedControllerFields, createAssignmentWriter, isEncoderAssignmentWrite, type AssignmentWriteState } from './controller-write'
-import { AssignmentWritePanel, AssignmentWriteStatus } from './AssignmentWritePanel'
+import { AssignmentWriteStatus } from './AssignmentWritePanel'
 import { createPortal } from 'react-dom'
 import { FloatingDisplay, delegatingTimers, floatingSupported, openFloatingWindow } from './FloatingDisplay'
 import { controlLabel } from './FrontPanel'
@@ -132,7 +132,7 @@ function loadWorkspace() {
   useEffect(() => { try { storage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
   const [presetLocation,setPresetLocation]=useState<'hardware'|'browser'>('hardware')
   const [localSaveOpen,setLocalSaveOpen]=useState(false)
-  const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files' | 'help'>('control')
+  const [tab, setTab] = useState<'control' | 'device' | 'log' | 'presets' | 'files' | 'help'>('control')
   const [toolsCollapsed,setToolsCollapsed]=useState(false)
   // Display menu of the editor toolbar: closes on Escape or a pointer press outside it.
   const [displayOpen,setDisplayOpen]=useState(false),displayMenu=useRef<HTMLDivElement>(null)
@@ -757,7 +757,7 @@ function loadWorkspace() {
     brightnessTransport.current=transport;transport.read()
     return ()=>{transport.close();if(brightnessTransport.current===transport)brightnessTransport.current=null}
   },[access,inputId,output,brightnessEnabled,portVersion,liveFirmware,liveDeviceId])
-  useEffect(()=>{if(tab==='config'&&brightness===null)brightnessTransport.current?.read()},[tab])
+  useEffect(()=>{if(tab==='device'&&brightness===null)brightnessTransport.current?.read()},[tab])
   useEffect(() => {
     if (!brightnessEnabled || !output?.send || !liveFirmware || liveDeviceId === null) { globalsReader.current = null; return }
     const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes), 400, undefined, liveFirmware, liveDeviceId)
@@ -973,6 +973,7 @@ function loadWorkspace() {
         <div className="editor-toolbar" role="toolbar" aria-label="Editor toolbar">
           <div className="editor-history-tools" role="group" aria-label="History"><button disabled={locked||!historyCounts.undo} onClick={()=>moveHistory('undo')}>Undo</button><button disabled={locked||!historyCounts.redo} onClick={()=>moveHistory('redo')}>Redo</button></div>
           <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
+          <button className={`cc-toggle assignment-toggle ${assignmentLive ? 'enabled' : ''}`} aria-pressed={assignmentLive} disabled={locked} title="Send assignment edits immediately" onClick={() => setAssignmentLive(on => !on)}><Icon name="send" />Assignments → BCR32</button>
           {floatingSupported() && <button className="floating-toggle" aria-pressed={!!pipWindow} title="Small always-on-top window with the screen, movable and resizable" onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close floating display' : 'Floating display'}</button>}
           <div className="display-menu-anchor" ref={displayMenu}>
             <button className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen} onClick={()=>setDisplayOpen(open=>!open)}><Icon name="palette" />Display<span aria-hidden="true" data-i18n-skip> ▾</span></button>
@@ -993,7 +994,7 @@ function loadWorkspace() {
       <aside className="sidebar" aria-label="Editing and MIDI tools">
         <div className="connection"><button className="connection-summary" aria-haspopup="dialog" title="MIDI connection…" onClick={()=>setMidiSettingsOpen(true)}><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span>{liveFirmware && <span className="firmware-status" data-i18n-skip>FW {liveFirmware}</span>}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button></div>
         {pipWindow && createPortal(<FloatingDisplay theme={theme} displayStyle={displayStyle} control={screenControl} config={profile[screenControl.kind].find(e => e.id === screenControl.id)!} label={controlLabel(screenControl.kind, screenControl.id, customLabels)} value={screenValue.value} source={screenValue.source} inspect={() => selectUi(screenControl, {}, true)} setValue={setScreenValue} />, pipWindow.document.body)}
-        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'files', 'config', 'log','help'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Files', 'Config', 'Log','Help'][i]} onClick={() => setTab(item)}><Icon name={(['sliders', 'folder', 'import', 'sliders', 'log','help'] as const)[i]} />{['Control', 'Presets', 'Files', 'Config', 'Log','Help'][i]}</button>)}</nav>
+        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'device', 'files', 'log','help'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Device', 'Files', 'Log','Help'][i]} onClick={() => setTab(item)}><Icon name={(['sliders', 'folder', 'gear', 'import', 'log','help'] as const)[i]} />{['Control', 'Presets', 'Device', 'Files', 'Log','Help'][i]}</button>)}</nav>
         <div className="sidebar-content"><fieldset className="host-lock-fields" disabled={locked}>
         <section className="profile-actions preset-panel" hidden={tab !== 'presets'} aria-label="Preset management">
           <h2>Presets{dirty ? ' *' : ''}</h2>
@@ -1001,7 +1002,7 @@ function loadWorkspace() {
             <button aria-pressed={presetLocation==='hardware'} onClick={()=>setPresetLocation('hardware')}><Icon name="midi"/>BCR32</button>
             <button aria-pressed={presetLocation==='browser'} onClick={()=>setPresetLocation('browser')}><Icon name="folder"/>On this computer</button>
           </div>
-          <div hidden={presetLocation!=='hardware'}>
+          <div className="hardware-presets" hidden={presetLocation!=='hardware'}>
           <ControllerPresets storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && brightnessEnabled && !deviceSettingsBusy && liveFirmware === '1.0.2' && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
             if (lockedRef.current || !presetStorageValidated || !brightnessEnabled || !output?.send || liveFirmware !== '1.0.2' || liveDeviceId === null || !isBclWrite(bytes, liveDeviceId)) throw Error('Preset write unavailable')
             output.send(bytes)
@@ -1009,6 +1010,7 @@ function loadWorkspace() {
             if (!brightnessEnabled || !output?.send || liveFirmware !== '1.0.2' || !(isFirmwareRead(bytes) || isControllerPageRequest(bytes))) throw Error('Preset read unavailable')
             output.send(bytes)
           }} download={download} />
+          <ControllerReadPanel cacheEnabled={presetCacheEnabled} setCacheEnabled={setPresetCacheEnabled} fromCache={fromPresetCache} groups={readGroups} setGroups={setReadGroups} canRead={brightnessEnabled && firmwareOne(liveFirmware)} state={controllerRead} read={() => { void readControllerAssignments() }} cancel={cancelControllerRead} />
           </div>
           <div className="browser-presets" hidden={presetLocation!=='browser'}>
           <div className="preset-local-toolbar" hidden={localSaveOpen}>
@@ -1026,11 +1028,9 @@ function loadWorkspace() {
           <div className="preset-actions"><button className="primary" onClick={() => {savePreset();setLocalSaveOpen(false)}} disabled={!presetName.trim()}><Icon name="save" />{activePreset ? 'Save / rename' : 'Create preset'}</button><button onClick={() => {savePreset(true);setLocalSaveOpen(false)}} disabled={!presetName.trim()}><Icon name="copy" />Save as new</button></div>
           </div></div>
         </section>
-        <section className="profile-actions config-appearance" hidden={tab !== 'config'}>
-          <h2>Config</h2>
-          <ControllerReadPanel cacheEnabled={presetCacheEnabled} setCacheEnabled={setPresetCacheEnabled} fromCache={fromPresetCache} autoRead={autoReadController} setAutoRead={setAutoReadController} groups={readGroups} setGroups={setReadGroups} canRead={brightnessEnabled && firmwareOne(liveFirmware)} state={controllerRead} read={() => { void readControllerAssignments() }} cancel={cancelControllerRead} />
-          <AssignmentWritePanel enabled={assignmentLive} setEnabled={setAssignmentLive} available={brightnessEnabled && liveFirmware === '1.0.2' && liveDeviceId !== null && liveDeviceId !== 127 && controllerRead.status === 'complete'} state={assignmentWrite} />
-          <DeviceSettings firmware={liveFirmware} results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings(), liveFirmware) }))} autoLoad={autoLoadDevice} setAutoLoad={setAutoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} />
+        <section className="profile-actions device-panel" hidden={tab !== 'device'} aria-label="Device">
+          <h2>Device</h2>
+          <DeviceSettings firmware={liveFirmware} results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings(), liveFirmware) }))} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} autoLoad={autoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} readAt={deviceSnapshot?.at ?? null} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled && !firmwareOne(liveFirmware)} brightnessStatus={brightnessStatus} editFootswitch={i=>{selectUi({kind:'buttons',id:profile.buttons[buttonNames.indexOf(`FOOTSW ${i+1}`)].id},{},true);setTab('control')}} />
         </section>
         <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
@@ -1102,11 +1102,6 @@ function loadWorkspace() {
       </section>
 
     <section className="lower">
-      <section className="ports" hidden={tab !== 'config'}>
-        <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled && !firmwareOne(liveFirmware)} brightnessStatus={brightnessStatus} />
-        <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
-        <button className="midi-settings-open" aria-haspopup="dialog" onClick={()=>setMidiSettingsOpen(true)}><Icon name="midi" />MIDI connection…</button>
-      </section>
       {tab==='help'&&<><Bcr32Help/><p className="muted studio-version" data-i18n-skip>Studio v{studioVersion}</p></>}
       <section className="log" hidden={tab !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
     </section>
@@ -1122,6 +1117,10 @@ function loadWorkspace() {
       <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
         <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
       </div>
+      <fieldset className="midi-settings-at-connection" disabled={locked}><legend>At connection</legend>
+        <label className="zoom-option"><input type="checkbox" checked={autoReadController} onChange={e => setAutoReadController(e.target.checked)} />Auto-read controller assignments at connection</label>
+        <label className="zoom-option"><input type="checkbox" checked={autoLoadDevice} onChange={e => setAutoLoadDevice(e.target.checked)} />Load the settings from the BCR32 at connection</label>
+      </fieldset>
       <p className="midi-settings-cc" role="status">{sendCC ? 'CC sending on · switch it in the editor toolbar' : 'CC sending off · switch it in the editor toolbar'}</p>
       <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span>{indicators.routeSource === 'bcl' && indicators.outputRouting && <small> · BCR32 global export</small>}</p>
       <p className="muted">Opening this window sends nothing to the BCR32; choosing ports never writes the controller.</p>
