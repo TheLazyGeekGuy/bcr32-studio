@@ -34,7 +34,7 @@ import { cleanLabel, controlIndex, draftStorageKey, emptyLabels, emptyValues, li
 import { idleActivity, type Activity } from './ActivityLeds'
 import { modeText, controlForChanges } from './oled-model'
 import { applyChange, buttonValue, createMidiDecoder, decoderKey, transportIssue, type LiveValue } from './controller-midi'
-import { StudioConfig } from './StudioConfig'
+import { buttonNames } from './panel-layout'
 import { ControlSearch } from './ControlSearch'
 import { createBrightnessTransport } from './led-brightness'
 import { applySelectionChange, selectControls, selectedControls, selectionKey, sharedField, type SelectionGesture, type ControlChange } from './multi-selection'
@@ -51,7 +51,7 @@ import { firmwareOne, isFirmwareRead } from './firmware-codec'
 import { controllerGroups, controllerTargets, createControllerReader, emptyControllerRead, mergeControllerRead, assignmentFromRead, type ControllerGroup, type ControllerReadState } from './controller-read'
 import { ControllerReadPanel, ControllerReadValues, FirmwareIdentity } from './ControllerReadPanel'
 import { changedControllerFields, createAssignmentWriter, isEncoderAssignmentWrite, type AssignmentWriteState } from './controller-write'
-import { AssignmentWritePanel, AssignmentWriteStatus } from './AssignmentWritePanel'
+import { AssignmentWriteStatus } from './AssignmentWritePanel'
 import { createPortal } from 'react-dom'
 import { FloatingDisplay, delegatingTimers, floatingSupported, openFloatingWindow } from './FloatingDisplay'
 import { controlLabel } from './FrontPanel'
@@ -132,9 +132,14 @@ function loadWorkspace() {
   useEffect(() => { try { storage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
   const [presetLocation,setPresetLocation]=useState<'hardware'|'browser'>('hardware')
   const [localSaveOpen,setLocalSaveOpen]=useState(false)
-  const [tab, setTab] = useState<'control' | 'config' | 'log' | 'presets' | 'files' | 'help'>('control')
+  const [tab, setTab] = useState<'control' | 'device' | 'log' | 'presets' | 'files'>('control')
   const [toolsCollapsed,setToolsCollapsed]=useState(false)
-  useEffect(()=>{onHelpReady(()=>setTab('help'));return()=>onHelpReady(undefined)},[onHelpReady])
+  // Display menu of the editor toolbar: closes on Escape or a pointer press outside it.
+  const [displayOpen,setDisplayOpen]=useState(false),displayMenu=useRef<HTMLDivElement>(null)
+  useEffect(()=>{if(!displayOpen)return;const close=(event:PointerEvent)=>{if(!displayMenu.current?.contains(event.target as Node))setDisplayOpen(false)};document.addEventListener('pointerdown',close);return()=>document.removeEventListener('pointerdown',close)},[displayOpen])
+  // Documentation (host header) opens the help over the current tab; the tab itself, and what it arms, is unchanged.
+  const [helpOpen,setHelpOpen]=useState(false),view=helpOpen?'help':tab
+  useEffect(()=>{onHelpReady(()=>setHelpOpen(true));return()=>onHelpReady(undefined)},[onHelpReady])
   // Host MIDI icon beside the connection status: the MIDI connection window (permission, ports, CC sending).
   const [midiSettingsOpen,setMidiSettingsOpen]=useState(false)
   const midiSettingsDialog=useRef<HTMLDialogElement>(null)
@@ -754,7 +759,7 @@ function loadWorkspace() {
     brightnessTransport.current=transport;transport.read()
     return ()=>{transport.close();if(brightnessTransport.current===transport)brightnessTransport.current=null}
   },[access,inputId,output,brightnessEnabled,portVersion,liveFirmware,liveDeviceId])
-  useEffect(()=>{if(tab==='config'&&brightness===null)brightnessTransport.current?.read()},[tab])
+  useEffect(()=>{if(tab==='device'&&brightness===null)brightnessTransport.current?.read()},[tab])
   useEffect(() => {
     if (!brightnessEnabled || !output?.send || !liveFirmware || liveDeviceId === null) { globalsReader.current = null; return }
     const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes), 400, undefined, liveFirmware, liveDeviceId)
@@ -963,28 +968,43 @@ function loadWorkspace() {
     const config=original.type==='pc'&&screenControl.kind!=='encoders'?{...original,parameter:buttonValues(original)[0]}:original
     const text=screenText({...screenControl,id:displayControlId(screenControl.kind,screenControl.id)},config,screenValue.value,screenValue.source,controlLabel(screenControl.kind,screenControl.id,customLabels));drawScreens(ctx,text,displayStyle)
   }}]
-  return translatedTree(<main className="studio compact" data-theme={theme} data-tools-collapsed={toolsCollapsed||undefined} onKeyDown={event=>{if(event.key!=='Escape')return;if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
+  return translatedTree(<main className="studio compact" data-theme={theme} data-tools-collapsed={toolsCollapsed||undefined} onKeyDown={event=>{if(event.key!=='Escape')return;if(displayOpen){setDisplayOpen(false);event.preventDefault()}else if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <button className="bcr32-tools-toggle" aria-label={toolsCollapsed?'Show editing tools':'Collapse editing tools'} aria-expanded={!toolsCollapsed} title={toolsCollapsed?'Show editing tools':'Collapse editing tools'} onClick={()=>setToolsCollapsed(on=>!on)}><Icon name={toolsCollapsed?'expand':'collapse'}/></button>
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
+        <div className="editor-toolbar" role="toolbar" aria-label="Editor toolbar">
+          <div className="editor-history-tools" role="group" aria-label="History"><button disabled={locked||!historyCounts.undo} onClick={()=>moveHistory('undo')}>Undo</button><button disabled={locked||!historyCounts.redo} onClick={()=>moveHistory('redo')}>Redo</button></div>
+          <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
+          <button className={`cc-toggle assignment-toggle ${assignmentLive ? 'enabled' : ''}`} aria-pressed={assignmentLive} disabled={locked} title="Send assignment edits immediately" onClick={() => setAssignmentLive(on => !on)}><Icon name="send" />Assignments → BCR32</button>
+          {floatingSupported() && <button className="floating-toggle" aria-pressed={!!pipWindow} title="Small always-on-top window with the screen, movable and resizable" onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close floating display' : 'Floating display'}</button>}
+          <div className="display-menu-anchor" ref={displayMenu}>
+            <button className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen} onClick={()=>setDisplayOpen(open=>!open)}><Icon name="palette" />Display<span aria-hidden="true" data-i18n-skip> ▾</span></button>
+            <div className="display-menu" role="dialog" aria-label="Display" hidden={!displayOpen}><header className="display-menu-head"><strong>Display</strong><button className="midi-settings-close" aria-label="Close" title="Close" onClick={()=>setDisplayOpen(false)}><Icon name="close" /></button></header><fieldset className="host-lock-fields" disabled={locked}>
+              <h3>Theme of this editor</h3>
+              <div className="theme-swatches" role="group" aria-label="Controller and interface theme">{themes.map(t => <button key={t.id} className={`theme-swatch swatch-${t.id}`} aria-label={`Theme ${t.name}`} aria-pressed={theme === t.id} title={t.name} onClick={() => setTheme(parseTheme(t.id))}><span className="sr-only">{t.name}</span><span className="swatch-tooltip" aria-hidden="true">{t.name}</span></button>)}</div>
+              <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
+              <label className="zoom-option"><input type="checkbox" checked={autoZoom} onChange={event => setAutoZoom(event.target.checked)} />Zoom while adjusting</label>
+              <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
+              <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
+              <PresentationTools preferences={presentation} screens={sharedScreens} inline zoom={false} floating={!floatingSupported()}/>
+            </fieldset></div>
+          </div>
+        </div>
         <FrontPanel move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
-        <div className="connection"><div className="connection-state"><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span><span className="firmware-status studio-version" data-i18n-skip>Studio v{studioVersion}</span><FirmwareIdentity firmware={liveFirmware} previous={profile.device.firmwareObserved} canProbe={brightnessEnabled} probe={() => setProbeRevision(n => n + 1)} /></div><button className="floating-toggle" aria-pressed={!!pipWindow} disabled={!floatingSupported()} title={floatingSupported() ? 'Small always-on-top window with the screen, movable and resizable' : 'Needs Chrome or Edge 116 or later'} onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close floating display' : 'Floating display'}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button></div>
+        <div className="connection"><button className="connection-summary" aria-haspopup="dialog" title="MIDI connection…" onClick={()=>setMidiSettingsOpen(true)}><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span>{liveFirmware ? <span className="firmware-status" data-i18n-skip>FW {liveFirmware}</span> : access && <span className="firmware-status">BCR32 not detected</span>}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button></div>
         {pipWindow && createPortal(<FloatingDisplay theme={theme} displayStyle={displayStyle} control={screenControl} config={profile[screenControl.kind].find(e => e.id === screenControl.id)!} label={controlLabel(screenControl.kind, screenControl.id, customLabels)} value={screenValue.value} source={screenValue.source} inspect={() => selectUi(screenControl, {}, true)} setValue={setScreenValue} />, pipWindow.document.body)}
-        <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
-        <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span>{indicators.routeSource === 'bcl' && indicators.outputRouting && <small> · BCR32 global export</small>}</p>
-        <div className="editor-history-tools" role="group" aria-label="History"><button disabled={locked||!historyCounts.undo} onClick={()=>moveHistory('undo')}>Undo</button><button disabled={locked||!historyCounts.redo} onClick={()=>moveHistory('redo')}>Redo</button></div>
-        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'files', 'config', 'log','help'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Files', 'Config', 'Log','Help'][i]} onClick={() => setTab(item)}><Icon name={(['sliders', 'folder', 'import', 'sliders', 'log','help'] as const)[i]} />{['Control', 'Presets', 'Files', 'Config', 'Log','Help'][i]}</button>)}</nav>
+        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'device', 'files', 'log'] as const).map((item, i) => <button key={item} aria-pressed={view === item} title={['Control', 'Presets', 'Device', 'Files', 'Log'][i]} onClick={() => {setTab(item);setHelpOpen(false)}}><Icon name={(['sliders', 'folder', 'gear', 'import', 'log'] as const)[i]} />{['Control', 'Presets', 'Device', 'Files', 'Log'][i]}</button>)}</nav>
         <div className="sidebar-content"><fieldset className="host-lock-fields" disabled={locked}>
-        <section className="profile-actions preset-panel" hidden={tab !== 'presets'} aria-label="Preset management">
+        <section className="profile-actions preset-panel" hidden={view !== 'presets'} aria-label="Preset management">
           <h2>Presets{dirty ? ' *' : ''}</h2>
           <div className="preset-location-tabs" role="group" aria-label="Preset location">
             <button aria-pressed={presetLocation==='hardware'} onClick={()=>setPresetLocation('hardware')}><Icon name="midi"/>BCR32</button>
             <button aria-pressed={presetLocation==='browser'} onClick={()=>setPresetLocation('browser')}><Icon name="folder"/>On this computer</button>
           </div>
-          <div hidden={presetLocation!=='hardware'}>
+          <div className="hardware-presets" hidden={presetLocation!=='hardware'}>
           <ControllerPresets storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && brightnessEnabled && !deviceSettingsBusy && liveFirmware === '1.0.2' && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
             if (lockedRef.current || !presetStorageValidated || !brightnessEnabled || !output?.send || liveFirmware !== '1.0.2' || liveDeviceId === null || !isBclWrite(bytes, liveDeviceId)) throw Error('Preset write unavailable')
             output.send(bytes)
@@ -992,6 +1012,7 @@ function loadWorkspace() {
             if (!brightnessEnabled || !output?.send || liveFirmware !== '1.0.2' || !(isFirmwareRead(bytes) || isControllerPageRequest(bytes))) throw Error('Preset read unavailable')
             output.send(bytes)
           }} download={download} />
+          <ControllerReadPanel cacheEnabled={presetCacheEnabled} setCacheEnabled={setPresetCacheEnabled} fromCache={fromPresetCache} groups={readGroups} setGroups={setReadGroups} canRead={brightnessEnabled && firmwareOne(liveFirmware)} state={controllerRead} read={() => { void readControllerAssignments() }} cancel={cancelControllerRead} />
           </div>
           <div className="browser-presets" hidden={presetLocation!=='browser'}>
           <div className="preset-local-toolbar" hidden={localSaveOpen}>
@@ -1009,34 +1030,31 @@ function loadWorkspace() {
           <div className="preset-actions"><button className="primary" onClick={() => {savePreset();setLocalSaveOpen(false)}} disabled={!presetName.trim()}><Icon name="save" />{activePreset ? 'Save / rename' : 'Create preset'}</button><button onClick={() => {savePreset(true);setLocalSaveOpen(false)}} disabled={!presetName.trim()}><Icon name="copy" />Save as new</button></div>
           </div></div>
         </section>
-        <section className="profile-actions config-appearance" hidden={tab !== 'config'}>
-          <h2>Config</h2><PresentationTools preferences={presentation} screens={sharedScreens}/>
-          <ControllerReadPanel cacheEnabled={presetCacheEnabled} setCacheEnabled={setPresetCacheEnabled} fromCache={fromPresetCache} autoRead={autoReadController} setAutoRead={setAutoReadController} groups={readGroups} setGroups={setReadGroups} canRead={brightnessEnabled && firmwareOne(liveFirmware)} state={controllerRead} read={() => { void readControllerAssignments() }} cancel={cancelControllerRead} />
-          <AssignmentWritePanel enabled={assignmentLive} setEnabled={setAssignmentLive} available={brightnessEnabled && liveFirmware === '1.0.2' && liveDeviceId !== null && liveDeviceId !== 127 && controllerRead.status === 'complete'} state={assignmentWrite} />
-          <div className="theme-swatches" role="group" aria-label="Controller and interface theme"><Icon name="palette" />{themes.map(t => <button key={t.id} className={`theme-swatch swatch-${t.id}`} aria-label={`Theme ${t.name}`} aria-pressed={theme === t.id} title={t.name} onClick={() => setTheme(parseTheme(t.id))}><span className="sr-only">{t.name}</span><span className="swatch-tooltip" aria-hidden="true">{t.name}</span></button>)}</div>
-          <label className="zoom-option"><input type="checkbox" checked={autoZoom} onChange={event => setAutoZoom(event.target.checked)} />Zoom while adjusting</label>
-          <label className="zoom-option"><input type="checkbox" checked={showNumbers} onChange={event => setShowNumbers(event.target.checked)} />Show control numbers</label>
-          <label className="zoom-option"><input type="checkbox" checked={nameScreen} onChange={event => setNameScreen(event.target.checked)} />Label screen</label>
-          <div className="display-styles" role="group" aria-label="Display style"><h3>Display style</h3>{displayStyles.map(s => <button key={s.id} className="display-style-option" aria-pressed={displayStyle === s.id} onClick={() => setDisplayStyle(s.id)}><DisplayPreview style={s.id} /><span>{s.name}</span></button>)}</div>
-          <DeviceSettings firmware={liveFirmware} results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings(), liveFirmware) }))} autoLoad={autoLoadDevice} setAutoLoad={setAutoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} />
+        <section className="profile-actions device-panel" hidden={view !== 'device'} aria-label="Device">
+          <h2>Device</h2>
+          <DeviceSettings firmware={liveFirmware} results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings(), liveFirmware) }))} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} autoLoad={autoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} readAt={deviceSnapshot?.at ?? null} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled && !firmwareOne(liveFirmware)} brightnessStatus={brightnessStatus} editFootswitch={i=>{selectUi({kind:'buttons',id:profile.buttons[buttonNames.indexOf(`FOOTSW ${i+1}`)].id},{},true);setTab('control')}} />
         </section>
-        <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
+        <section className="profile-actions preset-panel" hidden={view !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
+          <section className="files-block" aria-label="Export"><h3>Export</h3>
+          <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
+          <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
+          <div className="cubase-export"><h4>Cubase · MIDI Remote</h4><p className="surface-help">Surface script for Cubase 12 and later: encoders, pushes and buttons with their exact MIDI messages. No function is assigned: map them in Cubase with the Mapping Assistant.</p><p className="surface-help" data-i18n-skip><code>MIDI Remote/{cubaseFolder}/</code></p><button onClick={exportCubase}><Icon name="export" />Export Cubase script</button></div>
+          </section>
+          <section className="files-block" aria-label="Import"><h3>Import</h3><div className="preset-actions"><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label></div></section>
+          <section className="files-block">
           <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} saveAll={list => download(new Uint8Array([...list].reverse().flatMap(d => d.raw)), `bcr32-exports-${list.length}.syx`, 'application/octet-stream')} />
+          </section>
+          <details className="files-advanced"><summary>Advanced</summary>
           <FirmwareTools firmware={liveFirmware} replyDevice={liveDeviceId ?? 127} connectionKey={`${inputId}:${outputId}:${portVersion}:${!!access}:${liveFirmware}`} canRead={!presetBusy && brightnessEnabled && !!output?.send && firmwareOne(liveFirmware) && controllerRead.status !== 'reading' && !['pending','writing'].includes(assignmentWrite.status)} receive={firmwareReceive} sendRead={bytes => {
             if (!brightnessEnabled || !output?.send || !firmwareOne(liveFirmware) || !isFirmwareRead(bytes)) throw Error('Firmware read unavailable')
             output.send(bytes)
-          }} download={download} />
-          <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} />
-          <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
-          <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
-          <div className="cubase-export"><h3>Cubase · MIDI Remote</h3><p className="surface-help">Surface script for Cubase 12 and later: encoders, pushes and buttons with their exact MIDI messages. No function is assigned: map them in Cubase with the Mapping Assistant.</p><p className="surface-help" data-i18n-skip><code>MIDI Remote/{cubaseFolder}/</code></p><button onClick={exportCubase}><Icon name="export" />Export Cubase script</button></div>
-          <details><summary>Legacy profile format</summary><div className="preset-actions"><button onClick={exportProfile}><Icon name="export" />Export profile v2</button><label className="file">Import profile v1/v2<input type="file" accept="application/json" onChange={event => { void importProfile(event.target.files?.[0]); event.target.value = '' }} /></label></div></details>
+          }} download={download} flat />
+          <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} flat />
+          <section className="legacy-profile"><h4>Legacy profile format</h4><div className="preset-actions"><button onClick={exportProfile}><Icon name="export" />Export profile v2</button><label className="file">Import profile v1/v2<input type="file" accept="application/json" onChange={event => { void importProfile(event.target.files?.[0]); event.target.value = '' }} /></label></div></section>
+          </details>
         </section>
-        <section className="sidebar-meta">
-          <p className="sidebar-notice" role="status">{notice}</p>
-        </section>
-      <section className="inspector" hidden={tab !== 'control'} aria-label={`Edit ${selection.kind} ${displayControlId(selection.kind, selected.id)}`}>
+      <section className="inspector" hidden={view !== 'control'} aria-label={`Edit ${selection.kind} ${displayControlId(selection.kind, selected.id)}`}>
         <p className="controller-read-status" role="status">{fromPresetCache ? 'Preset restored from UI cache' : controllerRead.status === 'reading' ? 'Reading controller assignments' : controllerRead.status === 'complete' ? 'Controller read complete' : controllerRead.status === 'no reply' ? 'Controller read incomplete · missing replies' : 'Controller synchronization'}{!fromPresetCache && controllerRead.total > 0 && <span data-i18n-skip> · {controllerRead.received}/{controllerRead.total}</span>}</p>
         {unsupportedRead && <p role="alert">Controller assignment cannot be represented. The fields below remain the local draft; inspect the raw replies.</p>}
         <ControllerReadValues snapshot={selectedRead} />
@@ -1093,15 +1111,11 @@ function loadWorkspace() {
       </section>
 
     <section className="lower">
-      <section className="ports" hidden={tab !== 'config'}>
-        <StudioConfig deviceSnapshot={deviceSnapshot} profile={profile} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} select={s=>{selectUi(s,{},true);setTab('control')}} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled && !firmwareOne(liveFirmware)} brightnessStatus={brightnessStatus} />
-        <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
-        <button className="midi-settings-open" aria-haspopup="dialog" onClick={()=>setMidiSettingsOpen(true)}><Icon name="midi" />MIDI connection…</button>
-      </section>
-      {tab==='help'&&<Bcr32Help/>}
-      <section className="log" hidden={tab !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
+      {helpOpen&&<section className="help-view"><button className="help-back" onClick={()=>setHelpOpen(false)}>← Back</button><Bcr32Help/><p className="muted studio-version" data-i18n-skip>Studio v{studioVersion}</p></section>}
+      <section className="log" hidden={view !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
     </section>
         </fieldset></div>
+        <footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-notice" role="status" title={notice}>{notice}</p></footer>
       </aside>
     </section>
     <dialog ref={midiSettingsDialog} className="midi-settings-dialog" aria-labelledby={`${instanceId}-midi-settings-title`} onClose={()=>setMidiSettingsOpen(false)} onClick={event=>{if(event.target===event.currentTarget)setMidiSettingsOpen(false)}}>
@@ -1112,8 +1126,12 @@ function loadWorkspace() {
       <div className="fields ports-fields"><label>Input<select value={inputId} onChange={(event) => setInputId(event.target.value)}><option value="">Choose…</option>{inputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
         <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
       </div>
-      <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
-      <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span></p>
+      <fieldset className="midi-settings-at-connection" disabled={locked}><legend>At connection</legend>
+        <label className="zoom-option"><input type="checkbox" checked={autoReadController} onChange={e => setAutoReadController(e.target.checked)} />Auto-read controller assignments at connection</label>
+        <label className="zoom-option"><input type="checkbox" checked={autoLoadDevice} onChange={e => setAutoLoadDevice(e.target.checked)} />Load the settings from the BCR32 at connection</label>
+      </fieldset>
+      <p className="midi-settings-cc" role="status">{sendCC ? 'CC sending on · switch it in the editor toolbar' : 'CC sending off · switch it in the editor toolbar'}</p>
+      <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span>{indicators.routeSource === 'bcl' && indicators.outputRouting && <small> · BCR32 global export</small>}</p>
       <p className="muted">Opening this window sends nothing to the BCR32; choosing ports never writes the controller.</p>
     </dialog>
   </main>, language)

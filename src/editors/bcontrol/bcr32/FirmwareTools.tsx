@@ -5,7 +5,7 @@ import { bclFile, bclQuery, bclResponse, bclText, bclTokens } from './bcl'
 import { createTargetReader, createTrackReader, firmwareOne, splitSysex, targetFields, trackFields, type TrackField } from './firmware-codec'
 import { createZaqAssembler, decodeZaqBlock, patchStep, patternFile, readStep, type ZaqPattern, type ZaqStep } from './zaquencer'
 
-export interface FirmwareToolsProps {
+export interface FirmwareToolsProps { flat?: boolean;
   firmware: string | null
   replyDevice?: number
   connectionKey: string
@@ -14,7 +14,7 @@ export interface FirmwareToolsProps {
   receive: MutableRefObject<(bytes: number[]) => void>
   download: (content: BlobPart, name: string, type?: string) => void
 }
-export function FirmwareTools({ firmware, replyDevice = 127, connectionKey, canRead, sendRead, receive, download }: FirmwareToolsProps) {
+export function FirmwareTools({ firmware, replyDevice = 127, connectionKey, canRead, sendRead, receive, download, flat = false }: FirmwareToolsProps) {
   const language = useLanguage(), t = (text: string) => translate(text, language)
   const [patterns, setPatterns] = useState<ZaqPattern[]>([]), [selected, setSelected] = useState(''), [track, setTrack] = useState(0)
   const [bcl, setBcl] = useState(''), [capture, setCapture] = useState(false), [notice, setNotice] = useState('')
@@ -115,9 +115,11 @@ export function FirmwareTools({ firmware, replyDevice = 127, connectionKey, canR
   }
   const labels = ['Type', 'Channel', 'Parameter', 'Value 1', 'Value 2', 'Mode', 'Option', 'Display']
   const targetName = (index: number) => index < 16 ? `${t('Button')} ${index + 1}` : index < 48 ? `${t('Push')} ${index - 15}` : index < 50 ? `${t('Footswitch')} ${index - 47}` : `${t('Encoder')} ${index - 49}`
-  return <details className="firmware-tools">
-    <summary>{t('Firmware tools · BCL and Zaquencer')}</summary>
-    <p className="surface-help">{t('BCL and Zaquencer file editing stays offline. Hardware assignment sending is controlled in Config.')}</p>
+  // flat: shown as a titled block inside Files › Advanced instead of a nested disclosure.
+  const Box = (flat ? 'section' : 'details') as 'details', Title = (flat ? 'h4' : 'summary') as 'summary'
+  return <Box className="firmware-tools">
+    <Title>{t('Firmware tools · BCL and Zaquencer')}</Title>
+    <p className="surface-help">{t('BCL and Zaquencer file editing stays offline. Hardware assignment sending is switched in the editor toolbar (Assignments → BCR32).')}</p>
     <label className="file">{t('Open pattern or BCL file')}<input type="file" accept=".syx,.bcl" onChange={event => { void importFile(event.target.files?.[0]); event.target.value = '' }} /></label>
     <fieldset><legend>{t('Controller parameter read')}</legend>
       <label>{t('Control')}<select disabled={busy} value={target} onChange={e => { setTarget(Number(e.target.value)); setValue('') }}>{Array.from({ length: 82 }, (_, i) => <option key={i} value={i}>{targetName(i)}</option>)}</select></label>
@@ -162,5 +164,5 @@ export function FirmwareTools({ firmware, replyDevice = 127, connectionKey, canR
       </>}
     </fieldset>
     {notice && <p role="status">{t(notice)}</p>}
-  </details>
+  </Box>
 }

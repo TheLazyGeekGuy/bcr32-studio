@@ -23,13 +23,14 @@ export function ParameterPicker({ config, entries, choose, save, openSignal = 0 
     </div>}
   </div>, language)
 }
-export function ParameterTable({ entries, save, download }: { entries: ParameterName[]; save: (entries: ParameterName[]) => void; download: (text: string, name: string) => void }) {
+export function ParameterTable({ entries, save, download, flat = false }: { entries: ParameterName[]; save: (entries: ParameterName[]) => void; download: (text: string, name: string) => void; flat?: boolean }) {
+  const Box = (flat ? 'section' : 'details') as 'details', Title = (flat ? 'h4' : 'summary') as 'summary'
   const language = useLanguage()
   const [pending, setPending] = useState<ParameterName[]>([]), [checked, setChecked] = useState<Set<string>>(new Set()), [error, setError] = useState('')
   const [bankId, setBankId] = useState<string>(parameterBanks[0].id)
   const bank = parameterBanks.find(b => b.id === bankId)!
   const read = async (file?: File) => { if (!file) return; try { if (file.size > 1048576) throw Error('File too large.'); const rows = parseNames(JSON.parse(await file.text())); setPending(rows); setChecked(new Set(rows.map(nameKey))); setError('') } catch (e) { setError(e instanceof Error ? e.message : 'Invalid import') } }
-  return translatedTree(<details className="parameter-table"><summary>Parameter names · {entries.length}</summary>
+  return translatedTree(<Box className="parameter-table"><Title>Parameter names · {entries.length}</Title>
     <label>Documented tables<select aria-label="Documented tables" value={bankId} onChange={e => setBankId(e.target.value)}>{parameterBanks.map(b => <option data-i18n-skip key={b.id} value={b.id}>{b.name}</option>)}</select></label>
     <p className="muted" data-i18n-skip>{bank.url ? <a href={bank.url} target="_blank" rel="noreferrer">{bank.source}</a> : bank.source}</p>
     {bank.localIndices && <p className="muted">GS: local indices, hardware encoding unconfirmed.</p>}
@@ -41,5 +42,5 @@ export function ParameterTable({ entries, save, download }: { entries: Parameter
       <div className="parameter-results">{pending.map(e => <label data-i18n-skip key={nameKey(e)}><input type="checkbox" checked={checked.has(nameKey(e))} onChange={event => setChecked(current => { const next = new Set(current); if (event.target.checked) next.add(nameKey(e)); else next.delete(nameKey(e)); return next })} />{e.type.toUpperCase()} {e.parameter} · {e.name}</label>)}</div>
       <button disabled={!checked.size} onClick={() => { try { save(mergeNames(entries, pending.filter(e => checked.has(nameKey(e))))); setPending([]) } catch (e) { setError(String(e)) } }}>Import {checked.size} entries</button></div>}
     {error && <p role="alert">{error}</p>}
-  </details>, language)
+  </Box>, language)
 }
