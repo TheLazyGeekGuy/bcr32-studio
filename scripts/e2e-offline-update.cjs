@@ -35,6 +35,11 @@ const fail=m=>{throw Error('FAIL '+m)}
   if(await entry(pg)!==indexOf(distA))fail('build A not loaded')
   if(!await pg.evaluate(()=>!!navigator.serviceWorker.controller))fail('service worker does not control build A')
   served=distB // redeployment: build A's files are gone from the server
+  // Without any reload: the open tab checks for a new build when it comes back into view, then offers the update.
+  await pg.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));await sleep(5000)
+  if(!await waiting(pg))fail('an open tab did not find build B without a reload')
+  if(!await pg.getByRole('button',{name:'Mettre à jour et recharger'}).count())fail('no update action offered without a reload')
+  if(!(await pg.innerText('body')).includes('Nouvelle version disponible'))fail('the new version is not announced')
   await pg.reload({waitUntil:'networkidle'});await sleep(3000)
   if(await entry(pg)!==indexOf(distA))fail('build A should stay pinned until the user updates')
   if(!await waiting(pg))fail('build B should be installed and waiting')
@@ -50,6 +55,6 @@ const fail=m=>{throw Error('FAIL '+m)}
   if(await entry(pg)!==indexOf(distB))fail(`update action did not move the page to build B: before ${JSON.stringify(before)} after ${JSON.stringify(after)} logs ${JSON.stringify(logs.slice(0,8))}`)
   if(await entry(pg)!==indexOf(distB))fail('update action did not move the page to build B')
   if(await broken(pg))fail('build B shows Editor unavailable')
-  console.log(`PASS offline update e2e: build A pinned across redeployment with all lazy code precached; "Mettre à jour et recharger" moved the page to build B (${indexOf(distA)} -> ${indexOf(distB)})`)
+  console.log(`PASS offline update e2e: an open tab found build B without a reload and announced it; build A pinned across redeployment with all lazy code precached; "Mettre à jour et recharger" moved the page to build B (${indexOf(distA)} -> ${indexOf(distB)})`)
  }finally{await ctx.close();server.close();fs.rmSync(profile,{recursive:true,force:true})}
 })().catch(e=>{console.error(String(e));process.exit(1)})

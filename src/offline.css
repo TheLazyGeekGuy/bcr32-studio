@@ -2,3 +2,4 @@
 .offline-update{margin-left:6px;padding:2px 8px;font-size:12px;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit;cursor:pointer}
 .route-error{max-width:42rem;margin:48px auto;padding:0 16px;font-family:system-ui,sans-serif}
 .route-error small{color:#8a8f98;overflow-wrap:anywhere}
+.offline-status .offline-new{font-size:11px;font-weight:600;color:var(--theme-accent,#d99b41)}

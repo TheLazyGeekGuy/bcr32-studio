@@ -42,5 +42,11 @@ export function startOffline(base:URL,enabled:boolean){
   window.addEventListener('offline',()=>update({online:false}))
   window.addEventListener('online',()=>{update({online:true});void register()})
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updating){window.location.reload();return}void inspect()})
+  // An open tab learns about a deployment without a reload: check every 5 minutes while visible and when the tab
+  // comes back into view, at most once a minute. A new build found this way only waits; the user applies it.
+  let lastCheck=0
+  const check=()=>{if(!registration||!navigator.onLine||document.visibilityState!=='visible'||Date.now()-lastCheck<60000)return;lastCheck=Date.now();void registration.update().catch(()=>{/* the next check retries */})}
+  setInterval(check,300000)
+  document.addEventListener('visibilitychange',check)
   void register()
 }
