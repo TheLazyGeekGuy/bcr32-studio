@@ -23,6 +23,7 @@ import { version as studioVersion } from '../../../../package.json'
 import { createProfile, parseProfile, buttonValues, displayControlId, valueLimit, parameterLimit, is14Bit, isRelative, modesFor, typesFor, mmcCommands, defaultSettings, type Bcr32Profile, type ControllerSettings, type Encoder, type EncoderMode, type EncoderType } from './profile'
 import { FrontPanel, type Selection, type LiveValues } from './FrontPanel'
 import { encoderMessages, createCcSender, isBcrOutput } from './cc-transport'
+import { createClockMaster, isClockMessage, tempoRange } from './sequencer-clock'
 import { asHex, describeMessage, isSystemRealtime, parseFirmwareReply, productQuery, supportsWebMidi, type MidiAccess, type MidiPort } from './web-midi'
 import { associateDefaultEncoder, automaticMidiAccess, automaticPorts, isControllerPort } from './auto-midi'
 import { parseTheme, themes, themeStorageKey } from './themes'
@@ -792,6 +793,18 @@ function loadWorkspace() {
     return true
   }
   // Disarm when the input port changes or disconnects (and on unmount), and when leaving the Control tab.
+  // Sequencer start/stop: the editor is the MIDI clock master (Start, Clock, Stop only) when the BCR32's clock source is USB.
+  const [clockRunning, setClockRunning] = useState(false)
+  const [sequencerBpm, setSequencerBpm] = useState(() => { try { const v = Number(storage.getItem('bcr32-studio.sequencer-bpm')); return v >= tempoRange.min && v <= tempoRange.max ? v : 120 } catch { return 120 } })
+  const clockMaster = useMemo(() => isBcrOutput(output) ? createClockMaster((bytes, at) => {
+    if (!isBcrOutput(output) || !isClockMessage(bytes)) throw Error('BCR32 output disconnected')
+    output.send!(bytes, at)
+  }, setClockRunning) : null, [output, portVersion])
+  useEffect(() => { clockMaster?.tempo(sequencerBpm); try { storage.setItem('bcr32-studio.sequencer-bpm', String(sequencerBpm)) } catch { /* Optional preference. */ } }, [clockMaster, sequencerBpm])
+  useEffect(() => { if (!clockMaster) return; const stop = () => clockMaster.stop(); window.addEventListener('pagehide', stop); return () => { window.removeEventListener('pagehide', stop); stop() } }, [clockMaster])
+  useEffect(() => { if (editorMode !== 'sequencer' || locked) clockMaster?.stop() }, [editorMode, locked, clockMaster])
+  const sequencerTransport = { available: !!clockMaster && !locked, running: clockRunning, bpm: sequencerBpm, setBpm: setSequencerBpm,
+    toggle: () => { if (!clockMaster) return; try { if (clockMaster.running) clockMaster.stop(); else clockMaster.start(sequencerBpm) } catch (error) { setNotice(`Sequencer clock stopped: ${error instanceof Error ? error.message : String(error)}`) } } }
   useEffect(() => () => disarmLearn(), [inputId])
   useEffect(() => { if (tab !== 'control') disarmLearn() }, [tab])
 
@@ -1055,7 +1068,7 @@ function loadWorkspace() {
           </>}
           {editorMode === 'controller' && <button className="bcr32-tools-toggle" aria-label={toolsCollapsed?'Show editing tools':'Collapse editing tools'} aria-expanded={!toolsCollapsed} title={toolsCollapsed?'Show editing tools':'Collapse editing tools'} onClick={()=>setToolsCollapsed(on=>!on)}><span aria-hidden="true" data-i18n-skip>{toolsCollapsed?'◂':'▸'}</span></button>}
         </div>
-        {editorMode === 'sequencer' ? <SequencerView storage={storage} noteInput={noteInput} noteInputName={noteInputs.find(p => p.id === notePort)?.name ?? ''} openMidiSettings={() => setMidiSettingsOpen(true)} receive={sequencerReceive} download={download} locked={locked} /> : <FrontPanel onModeKey={modeKeyLink ? () => setEditorMode('sequencer') : undefined} move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
+        {editorMode === 'sequencer' ? <SequencerView storage={storage} noteInput={noteInput} noteInputName={noteInputs.find(p => p.id === notePort)?.name ?? ''} openMidiSettings={() => setMidiSettingsOpen(true)} receive={sequencerReceive} download={download} locked={locked} transport={sequencerTransport} /> : <FrontPanel onModeKey={modeKeyLink ? () => setEditorMode('sequencer') : undefined} move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">

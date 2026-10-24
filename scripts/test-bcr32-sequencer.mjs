@@ -76,8 +76,11 @@ assert.ok(played.every(x=>[0,3,5,7,10].includes((x.note-45)%12)&&x.note>=45&&x.n
 assert.deepEqual(r1.slice(0,256),empty.slice(0,256),'other tracks untouched')
 assert.throws(()=>m.randomPattern(empty,{tracks:[0],scale:'nope',root:45}),/scale/)
 
-// The view never sends: no output port use, receive only.
-const view=readFileSync('src/editors/bcontrol/bcr32/SequencerView.tsx','utf8')
+// The view never sends pattern data: no output port use; start/stop goes through the Workbench's clock master, which
+// only lets Start, Clock and Stop through (scripts/test-sequencer-clock.mjs).
+const view=readFileSync('src/editors/bcontrol/bcr32/SequencerView.tsx','utf8'),bench=readFileSync('src/editors/bcontrol/bcr32/Workbench.tsx','utf8')
 assert.ok(!/\.send\(|output|sendRead|requestBcl/.test(view),'the sequencer view has no sending path')
+assert.match(view,/' ': \(\) => \{ if \(transport\.available\) transport\.toggle\(\) \}/,'Space starts and stops through the transport')
+assert.match(bench,/createClockMaster\(\(bytes, at\) => \{\s*if \(!isBcrOutput\(output\) \|\| !isClockMessage\(bytes\)\) throw/,'the clock sender refuses anything but FA, F8, FC')
 assert.match(view,/<button disabled>\{t\('Send to a slot…'\)\}<\/button>/,'sending to the BCR32 stays disabled')
-console.log('PASS BCR32 sequencer: step entry from the keyboard, MIDI import with a chosen source track per slot (20-track file, grid, start bar, overflow reported), MIDI export round trip, no sending path')
+console.log('PASS BCR32 sequencer: step entry from the keyboard, MIDI import with a chosen source track per slot (20-track file, grid, start bar, overflow reported), MIDI export round trip, no pattern sending path, Space = start/stop via the clock master')

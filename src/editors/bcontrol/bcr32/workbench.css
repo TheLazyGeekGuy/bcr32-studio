@@ -867,6 +867,12 @@
 .bcr32-workbench .studio.compact .seq-bar>button{padding:4px 9px;font-size:12px;border:1px solid var(--mk-line);border-radius:4px;background:transparent;color:var(--mk-text)}
 .bcr32-workbench .seq-bar .mock-seg{margin:0}
 .bcr32-workbench .seq-spacer{flex:1}
+.bcr32-workbench .seq-transport{display:flex;align-items:center;gap:8px}
+.bcr32-workbench .studio.compact .seq-transport>button{padding:4px 12px;font-size:13px;font-weight:600;border:1px solid var(--mk-line);border-radius:4px;background:transparent;color:var(--mk-text)}
+.bcr32-workbench .studio.compact .seq-transport>button.primary{background:var(--mk-accent);border-color:var(--mk-accent);color:#111}
+.bcr32-workbench .studio.compact .seq-transport>button:disabled{opacity:.45}
+.bcr32-workbench .seq-transport label{display:flex;align-items:center;gap:6px;margin:0;font-size:11px}
+.bcr32-workbench .studio.compact .seq-transport input{width:64px;padding:4px 6px;font-size:13px}
 .bcr32-workbench .seq-offline{font-size:11px;color:#4caf72;border:1px solid #2f5a3d;border-radius:10px;padding:1px 8px}
 .bcr32-workbench .studio.compact :is(.seq-pattern,.seq-inline){display:inline-flex;flex-direction:row;align-items:center;gap:6px;margin:0;font-size:11px;color:var(--mk-muted)}
 .bcr32-workbench .studio.compact :is(.seq-pattern,.seq-inline) select{width:auto;padding:4px 6px;font-size:12px;border:1px solid var(--mk-line);border-radius:4px;background:var(--mk-surface2);color:var(--mk-text)}

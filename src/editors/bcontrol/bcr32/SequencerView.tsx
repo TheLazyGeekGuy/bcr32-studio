@@ -11,6 +11,7 @@ import { translate, useLanguage } from './i18n'
 // raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
 // stays in this browser: listening for a front-panel export sends nothing, and there is no path that sends a pattern.
 export { trackColors, noteName, keyboardNotes, stepGrids, noteDelayRange } from './sequencer-shared'
+import { tempoRange } from './sequencer-clock'
 import { trackColors, noteName, keyboardNotes, stepGrids, noteNames, noteLengths, noteDelayRange, stepDefaults, clockDividers, directions } from './sequencer-shared'
 type Entry = { pattern: ZaqPattern; data: number[]; label: string }
 // A local template: eight kind-0 blocks whose 128 steps play the BCR32's own defaults. The header is all zero (fields not
@@ -56,9 +57,11 @@ export function patternToMidi(data: readonly number[], ppq = 96) {
   return stepsToMidiFile({ ppq, stepTicks: ppq / 4, tracks })
 }
 
-export function SequencerView({ storage, noteInput, noteInputName, openMidiSettings, receive, download, locked }: {
+// Start/stop of the BCR32 sequencer, driven by the Workbench's MIDI clock master (Start, Clock, Stop only).
+export type SequencerTransport = { available: boolean; running: boolean; bpm: number; setBpm: (bpm: number) => void; toggle: () => void }
+export function SequencerView({ storage, noteInput, noteInputName, openMidiSettings, receive, download, locked, transport }: {
   storage: EditorStorage; noteInput: MutableRefObject<((note: number, velocity: number) => void) | null>; noteInputName: string; openMidiSettings: () => void; receive: MutableRefObject<(bytes: number[]) => void>
-  download: (data: BlobPart, name: string, type?: string) => void; locked: boolean
+  download: (data: BlobPart, name: string, type?: string) => void; locked: boolean; transport: SequencerTransport
 }) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
   const [entries, setEntries] = useState<Entry[]>(() => [{ pattern: emptyPattern(), data: emptyPattern().data, label: 'Empty template' }])
@@ -109,7 +112,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
     const moves: Record<string, () => void> = {
       arrowright: () => setStep(s => (s + 1) % 32), arrowleft: () => setStep(s => (s + 31) % 32), arrowup: () => setTrack(v => (v + 3) % 4), arrowdown: () => setTrack(v => (v + 1) % 4),
       z: () => setOctave(o => Math.max(-2, o - 1)), x: () => setOctave(o => Math.min(8, o + 1)), c: () => setVelocity(v => Math.max(1, v - 10)), v: () => setVelocity(v => Math.min(127, v + 10)),
-      ' ': () => { patch({ rest: !readStep(data, track, step).rest }); setStep(s => (s + 1) % 32) }, backspace: () => { patch({ rest: true }); setStep(s => (s + 31) % 32) }, delete: () => patch({ rest: true }),
+      ' ': () => { if (transport.available) transport.toggle() }, m: () => { patch({ rest: !readStep(data, track, step).rest }); setStep(s => (s + 1) % 32) }, backspace: () => { patch({ rest: true }); setStep(s => (s + 31) % 32) }, delete: () => patch({ rest: true }),
     }
     if (moves[key]) { event.preventDefault(); moves[key]() }
   }
@@ -155,7 +158,11 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         <button aria-expanded={templatesOpen} onClick={() => setTemplatesOpen(v => !v)}>{t('Templates')}<span aria-hidden="true" data-i18n-skip> ▾</span></button>
         <button onClick={() => { addPattern(emptyPattern(), `${t('New pattern')} ${entries.length + 1}`); setNotice('Nothing is sent to the BCR32.') }}>{t('New pattern')}</button>
         <span className="seq-spacer" />
-        <span className="seq-offline">{t('Offline · nothing is sent to the BCR32')}</span>
+        <div className="seq-transport" role="group" aria-label={t('BCR32 transport')}>
+          <button className={transport.running ? 'primary' : ''} aria-pressed={transport.running} disabled={!transport.available} title={t('Space: start / stop (BCR32 clock source on USB)')} onClick={transport.toggle}>{transport.running ? '■' : '▶'}<span data-i18n-skip> </span>{t(transport.running ? 'Stop' : 'Play')}</button>
+          <label>{t('BPM')}<input type="number" min={tempoRange.min} max={tempoRange.max} value={transport.bpm} onChange={e => { const v = Number(e.target.value); if (v >= tempoRange.min && v <= tempoRange.max) transport.setBpm(v) }} /></label>
+        </div>
+        <span className="seq-offline">{t('Patterns stay in this browser · only start/stop reaches the BCR32')}</span>
       </div>
       {templatesOpen && <section className="seq-templates mock-card">
         <div><b>{t('Built-in templates')}</b><div className="mock-actions">{templates.map(tp => <button key={tp.id} disabled={locked} onClick={() => { commit(applyTemplate(data, tp.id), t(tp.name)); setTemplatesOpen(false) }}>{t(tp.name)}</button>)}</div></div>
@@ -173,7 +180,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
       <p className="mock-warn seq-preview-note">{t('Preview: MIDI and .syx files, keyboard and MIDI keyboard entry work in the editor. Capture from the BCR32 and sending to it are not implemented yet.')}</p>
       <div className="seq-entry">
         <label className="mock-check"><input type="checkbox" checked={keyboardEntry} onChange={e => setKeyboardEntry(e.target.checked)} />{t('Computer keyboard entry')}</label>
-        <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {t('Space: rest')} · ⌫</span>
+        <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {t('Space: start / stop')} · M {t('rest')} · ⌫</span>
         <span className="mock-caption">{t('MIDI keyboard')}: <b data-i18n-skip>{noteInputName || t('None')}</b> · <button className="mock-link" onClick={openMidiSettings}>{t('MIDI connection…')}</button></span>
       </div>
       {view === 'grid' && <div className="seq-gridview">
