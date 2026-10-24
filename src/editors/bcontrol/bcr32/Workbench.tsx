@@ -36,6 +36,7 @@ import { modeText, controlForChanges } from './oled-model'
 import { applyChange, buttonValue, createMidiDecoder, decoderKey, transportIssue, type LiveValue } from './controller-midi'
 import { buttonNames } from './panel-layout'
 import { ControlSearch } from './ControlSearch'
+import { LibraryList } from './LibraryList'
 import { createBrightnessTransport } from './led-brightness'
 import { applySelectionChange, selectControls, selectedControls, selectionKey, sharedField, type SelectionGesture, type ControlChange } from './multi-selection'
 import { applyLearn, createLearnSession, describeApplied, type LearnResult } from './midi-learn'
@@ -1023,13 +1024,13 @@ function loadWorkspace() {
           }} download={download} />
           </div>
           <div className="browser-presets" hidden={presetLocation!=='browser'}>
-          <div className="preset-local-toolbar" hidden={localSaveOpen}>
-            <button className="primary" onClick={()=>setLocalSaveOpen(true)}><Icon name="save"/>Save</button>
-            <button disabled={!presets.length} onClick={()=>download(JSON.stringify(libraryFile(presets),null,2),'bcr32-browser-presets.json','application/json')}><Icon name="import"/>Export</button>
+          <div className="preset-local-toolbar mock-actions" hidden={localSaveOpen}>
+            <button className="primary" onClick={()=>setLocalSaveOpen(true)}>Save</button>
+            <button disabled={!presets.length} onClick={()=>download(JSON.stringify(libraryFile(presets),null,2),'bcr32-browser-presets.json','application/json')}>Export</button>
+            <label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}>Import<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label>
           </div>
           <div hidden={localSaveOpen}>
-          <label>Browser preset library<select aria-label="Load preset" value={presetId} onChange={event => recallPreset(event.target.value)}><option value="">Draft · choose a preset</option>{presets.map(p => <option data-i18n-skip key={p.id} value={p.id}>{p.name}</option>)}</select>
-          </label><p className="surface-help">These copies are stored in this browser, separately from the BCR32.</p>
+          <LibraryList presets={presets} activeId={presetId} recall={recallPreset} reorder={next => { try { storeLibrary(next); setNotice('Library order saved on this computer.') } catch (error) { setNotice(error instanceof Error ? error.message : String(error)) } }} disabled={locked} /><p className="surface-help">These copies are stored in this browser, separately from the BCR32.</p>
           </div>
           <div className="preset-save-sheet" hidden={!localSaveOpen}>
           <button className="preset-back" onClick={()=>setLocalSaveOpen(false)}><Icon name="close"/>Back to presets</button>

@@ -234,4 +234,7 @@ export const bcr32Rows=[
   "CC → BCR32 off|CC → BCR32 coupé|CC → BCR32 spento|CC → BCR32 aus|CC → BCR32 オフ|CC → BCR32 apagado|CC → BCR32 выкл.|CC → BCR32 关",
   "Action|Action|Azione|Aktion|アクション|Acción|Действие|动作",
   "Live assignments after a full read|Affectations en direct après lecture complète|Assegnazioni in diretta dopo una lettura completa|Zuweisungen live nach vollständigem Lesen|全読み取り後に即時送信|Asignaciones en directo tras una lectura completa|Назначения вживую после полного чтения|完整读取后实时分配",
+  "No preset on this computer yet.|Aucun preset sur cet ordinateur pour l’instant.|Ancora nessun preset su questo computer.|Noch kein Preset auf diesem Computer.|このコンピューターにはまだプリセットがありません。|Aún no hay presets en este ordenador.|На этом компьютере пока нет пресетов.|此电脑上暂无预设。",
+  "Drag to reorder|Glisser pour réordonner|Trascina per riordinare|Zum Umsortieren ziehen|ドラッグで並べ替え|Arrastrar para reordenar|Перетащите, чтобы изменить порядок|拖动以重新排序",
+  "Library order saved on this computer.|Ordre de la bibliothèque enregistré sur cet ordinateur.|Ordine della libreria salvato su questo computer.|Reihenfolge der Bibliothek auf diesem Computer gespeichert.|ライブラリの順序をこのコンピューターに保存しました。|Orden de la biblioteca guardado en este ordenador.|Порядок библиотеки сохранён на этом компьютере.|已在此电脑上保存库顺序。",
 ]

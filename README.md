@@ -2,7 +2,7 @@
 
 Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support and the shared MIDI Studio editor tools.
 
-Current version: **0.45.0-alpha.8** · [Changelog](CHANGELOG.md)
+Current version: **0.45.0-alpha.9** · [Changelog](CHANGELOG.md)
 
 **[Open the editor](https://thelazygeekguy.github.io/bcr32-studio/)** · [Integration and limits](docs/controllers/BCR32-STUDIO-INTEGRATION.md)
 

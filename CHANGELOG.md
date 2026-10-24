@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.45.0-alpha.9] — 2026-10-24
+
+- Presets › On this computer: the browser library is now a list instead of a drop-down. Drag a row, or use ↑ ↓, to reorder; the order is saved and kept by Export. Import sits next to Export: an imported file is appended as copies with new identifiers, never over an existing preset. Choosing a row only loads it into the editor; nothing is sent to the BCR32.
+
 ## [0.45.0-alpha.8] — 2026-10-24
 
 BCR32 editor brought in line with the approved mockup (the owner found alpha.7 too far from it).

@@ -844,3 +844,15 @@
 .bcr32-workbench .studio.compact .sidebar .control-search::before{content:"🔍";position:absolute;left:8px;top:6px;font-size:12px;pointer-events:none;z-index:1}
 .bcr32-workbench .studio.compact .sidebar .control-search input{padding-left:28px}
 .bcr32-workbench .studio.compact .sidebar .control-search label input[type=text]{padding-left:28px}
+/* Presets › On this computer: ordered list, drag to reorder. */
+.bcr32-workbench .library-list{list-style:none;margin:8px 0;padding:0;border:1px solid var(--mk-line,#34363b);border-radius:6px;overflow:hidden}
+.bcr32-workbench .library-list li{display:flex;align-items:center;gap:6px;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.06);background:var(--mk-surface2,rgba(255,255,255,.035))}
+.bcr32-workbench .library-list li:last-child{border-bottom:0}
+.bcr32-workbench .library-list li[data-over]{box-shadow:inset 0 2px 0 var(--mk-accent,#d99b41)}
+.bcr32-workbench .library-list li[data-active]{background:var(--mk-tint,rgba(217,155,65,.16))}
+.bcr32-workbench .library-grip{cursor:grab;color:var(--mk-muted,#9a978f);font-size:12px;letter-spacing:-2px;user-select:none}
+.bcr32-workbench .studio.compact .library-list .library-name{flex:1;display:flex;justify-content:space-between;gap:8px;min-width:0;margin:0;padding:3px 4px;border:0;background:transparent;color:var(--mk-text,#e6e3dc);font-size:12px;font-weight:400;text-align:left}
+.bcr32-workbench .library-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bcr32-workbench .library-name small{color:var(--mk-muted,#9a978f);font-size:10px;flex:none}
+.bcr32-workbench .library-move{display:flex;gap:2px}
+.bcr32-workbench .studio.compact .library-move button{margin:0;padding:1px 6px;font-size:11px;border:1px solid var(--mk-line,#34363b);border-radius:3px;background:transparent;color:var(--mk-text,#e6e3dc)}
