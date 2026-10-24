@@ -101,7 +101,7 @@ export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeT
         backup: contents => { const key = 'bcr32-studio.before-hardware-store.v1'; storage.setItem(key, contents); if (storage.getItem(key) !== contents) throw Error('Backup could not be verified; nothing sent') },
       })
       if (reader.current !== transport) return
-      setSaveOpen(false); setNotice('Preset stored and read back. Working contents restored.')
+      setSaveOpen(false); setNotice('Preset stored and read back. Working contents restored. If the BCR32 screen stays on the transfer, press EXIT on the BCR32.')
     } catch (error) { if (reader.current === transport) {
       // A failed verification makes the acknowledged destination uncertain; do not retain a false label.
       if(acknowledged){const slot=acknowledged.slot;setNames(current=>{const next={...current};delete next[slot];return next})}
