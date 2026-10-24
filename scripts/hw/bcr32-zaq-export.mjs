@@ -12,6 +12,8 @@ await build({stdin:{contents:`export {decodeZaqBlock,createZaqAssembler,readStep
 const require=createRequire(import.meta.url),m=require(bundle);rmSync(dir,{recursive:true})
 const command=parseInt(process.argv[2]??'07',16),seconds=Number(process.argv[3]??20)
 if(![6,7,8].includes(command))throw Error('Only the export requests 06, 07 and 08 are allowed')
+// 2026-10-24: 07 in CTRL mode sent block 0 of 8, then the unit froze until restarted (docs/BCR32-PROTOCOL-1.0.2.md).
+if(process.env.BCR32_EXPORT_FREEZE_RISK!=='accepted')throw Error('Refused: 07 froze the BCR32 after block 0; set BCR32_EXPORT_FREEZE_RISK=accepted only with the owner\'s go')
 const midi=require('@julusian/midi'),input=new midi.Input(),output=new midi.Output()
 const find=(p,n)=>{for(let i=0;i<p.getPortCount();i++)if(p.getPortName(i).includes(n))return i;return -1}
 input.ignoreTypes(false,true,true);input.openPort(find(input,'BCR-32'));output.openPort(find(output,'BCR-32'))
