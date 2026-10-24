@@ -1,44 +1,60 @@
-// BCR32 sidebar layout: a one-line connection summary above the tabs (details live in the MIDI window) and one fixed
-// status bar for feedback on every tab; on narrow screens the tabs and the status bar stay on screen while scrolling.
+// BCR32 editor layout, as in the approved mockup of 2026-10-24: the host header carries the connection status and the
+// MIDI icon; a toolbar above the front panel holds history, the CC and assignment switches, the floating display, the
+// Display menu and the panel toggle; the panel starts with text tabs and ends with a fixed status bar. Moved controls
+// keep the host lock, and opening a window or a menu sends nothing (checked in the browser separately).
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 const workbench=readFileSync('src/editors/bcontrol/bcr32/Workbench.tsx','utf8'),css=readFileSync('src/editors/bcontrol/bcr32/workbench.css','utf8')
-const top=workbench.slice(workbench.indexOf('<aside className="sidebar"'),workbench.indexOf('<nav className="tool-tabs"'))
-assert.ok(top.length>0,'sidebar top found')
-assert.match(top,/<button className="connection-summary" aria-haspopup="dialog"[^>]*onClick=\{\(\)=>setMidiSettingsOpen\(true\)\}>/,'connection summary opens the MIDI window')
-for(const moved of ['<FirmwareIdentity','studio-version','routing-status'])assert.ok(!top.includes(moved),`sidebar top no longer holds ${moved}`)
-const dialog=workbench.slice(workbench.indexOf('<dialog ref={midiSettingsDialog}'),workbench.indexOf('</dialog>'))
+const slice=(from,to)=>{const i=workbench.indexOf(from);assert.ok(i>=0,from);const j=workbench.indexOf(to,i);assert.ok(j>i,to);return workbench.slice(i,j)}
+
+// Host header: the MIDI settings icon is a DIN connector.
+assert.match(readFileSync('src/editor-host/MidiSettingsButton.tsx','utf8'),/<Icon name="din" \/>/,'MIDI settings icon is a DIN connector')
+assert.match(readFileSync('src/Icon.tsx','utf8'),/ din: \['M12 21a9 9 0 1 0 0-18/,'DIN icon drawn')
+
+// Panel: tabs first (no connection line, no icons), a SysEx warning only when SysEx is missing, status bar last.
+const top=slice('<aside className="sidebar"','<div className="sidebar-content">')
+assert.ok(!top.includes('connection-summary')&&!top.includes('<FirmwareIdentity')&&!top.includes('studio-version')&&!top.includes('routing-status'),'no connection line above the tabs')
+assert.match(top,/<nav className="tool-tabs"[^]*\{\['Control', 'Presets', 'Device', 'Files', 'Log'\]\[i\]\}<\/button>\)\}<\/nav>/,'five text tabs')
+assert.ok(!/<nav className="tool-tabs"[^]*?<Icon /.test(top.split('</nav>')[0]),'tabs carry no icon')
+assert.match(top,/\{!access\?\.sysexEnabled && <p className="mock-warn sidebar-midi-warning">/,'warning only without SysEx')
+for(const moved of ['cc-toggle','editor-history-tools','floating-toggle','theme-swatches'])assert.ok(!top.includes(moved),`panel top no longer holds ${moved}`)
+const dialog=slice('<dialog ref={midiSettingsDialog}','</dialog>')
 for(const kept of ['<FirmwareIdentity','className="routing-status"',"indicators.routeSource === 'bcl'"])assert.ok(dialog.includes(kept),`MIDI window holds ${kept}`)
-assert.match(workbench,/\{helpOpen&&<section className="help-view"><button className="help-back" onClick=\{\(\)=>setHelpOpen\(false\)\}>← Back<\/button><Bcr32Help\/><p className="muted studio-version" data-i18n-skip>Studio v\{studioVersion\}<\/p><\/section>\}/,'Documentation opens the help with a Back button and the Studio version')
+assert.ok(!dialog.includes('cc-toggle')&&dialog.includes('className="midi-settings-cc" role="status"'),'MIDI window shows the CC state only')
+assert.match(dialog,/<fieldset className="midi-settings-at-connection" disabled=\{locked\}>[^]*checked=\{autoReadController\}[^]*checked=\{autoLoadDevice\}/,'connection-time reads in the MIDI window, locked with the host')
 assert.equal(workbench.match(/className="sidebar-notice"/g)?.length,1,'one notice')
-assert.match(workbench,/<\/fieldset><\/div>\s*<footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-notice" role="status" title=\{notice\}>\{notice\}<\/p><\/footer>\s*<\/aside>/,'notice is a status bar after the scrolling content, on every tab')
+assert.match(workbench,/<\/fieldset><\/div>\s*<footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-summary"[^]*?'CC → BCR32 on' : 'CC → BCR32 off'[^]*?<\/p><p className="sidebar-notice" role="status" title=\{notice\} hidden=\{notice === initialNotice\}>\{notice\}<\/p><\/footer>\s*<\/aside>/,'status bar after the scrolling content: summary, then the latest action')
+
+// Toolbar above the front panel.
+const toolbar=slice('<div className="editor-toolbar" role="toolbar"','<FrontPanel ')
+for(const part of ["moveHistory('undo')","moveHistory('redo')",'className={`cc-toggle tb-switch ','CC → BCR32</button>','assignment-toggle','Assignments → BCR32</button>','{floatingSupported() && <button className="floating-toggle"','className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen}','<span className="tb-spacer" />','className="bcr32-tools-toggle"'])assert.ok(toolbar.includes(part),`toolbar holds ${part}`)
+assert.match(toolbar,/disabled=\{locked\|\|!historyCounts\.undo\}[^]*disabled=\{locked\|\|!historyCounts\.redo\}/,'undo and redo stay locked with the host')
+assert.match(toolbar,/aria-pressed=\{assignmentLive\} disabled=\{locked\}/,'assignment switch locked with the host')
+assert.match(toolbar,/<div className="display-menu" role="dialog"[^>]*>.*?<fieldset className="host-lock-fields" disabled=\{locked\}>/s,'Display menu keeps the host lock')
+assert.match(toolbar,/<label className="mock-field">Display style<select/,'display style as a list')
+assert.match(toolbar,/checked=\{inheritsPresentation\}[^]*?presentationStore\.reset\(\)/,'inherit the global presentation as a checkbox')
+assert.match(toolbar,/<PresentationTools preferences=\{presentation\} screens=\{sharedScreens\} inline zoom=\{false\} floating=\{!floatingSupported\(\)\}\/>/,'host presentation tools without a second zoom; host floating window only as a fallback')
+assert.equal(workbench.match(/>Zoom while adjusting</g)?.length,1,'one zoom option')
+assert.match(workbench,/if\(displayOpen\)\{setDisplayOpen\(false\);event\.preventDefault\(\)\}/,'Escape closes the Display menu first')
+
+// Control tab, in the mockup order: search, kind, name, Rotation/Push, selection, MIDI message, Display, Test, Advanced.
+const inspector=slice('<section className="inspector mock-inspector"','<section className="lower">')
+const order=['<ControlSearch ','className="mock-caption mock-kind"','className="mock-title"','className="mock-seg"','className="selection-tools mock-selection"','>MIDI message</h3>','>Display</h3>','>Test</h3>','<details className="adv"><summary>Advanced</summary>']
+order.reduce((at,part)=>{const i=inspector.indexOf(part);assert.ok(i>at,`inspector order: ${part}`);return i},-1)
+assert.ok(inspector.slice(inspector.indexOf('<summary>Advanced</summary>')).includes('<ControllerReadValues '),'raw controller read under Advanced')
+
+// Files and help.
+const files=slice('<h2 className="sr-only">Files</h2>','<section className="inspector')
+assert.deepEqual([...files.matchAll(/<section className="mock-card"[^>]*><b>([^<]+)<\/b>/g)].map(x=>x[1]),['Export','Import'],'Export and Import cards')
+assert.ok(files.includes('<ExportImport '),'front-panel export card')
+assert.equal(files.match(/<details/g)?.length,1,'one disclosure in Files')
+assert.match(files,/<details className="files-advanced adv"><summary>Advanced<\/summary>[^]*<FirmwareTools [^]*download=\{download\} flat \/>[^]*<ParameterTable [^>]*flat \/>[^]*Legacy profile format[^]*<\/details>/,'firmware tools, parameter names and legacy format flat under Advanced')
+assert.match(workbench,/\{helpOpen&&<section className="help-view"><button className="help-back" onClick=\{\(\)=>setHelpOpen\(false\)\}>← Back<\/button><Bcr32Help\/><p className="muted studio-version" data-i18n-skip>Studio v\{studioVersion\}<\/p><\/section>\}/,'Documentation opens the help with Back and the Studio version')
+assert.match(workbench,/onHelpReady\(\(\)=>setHelpOpen\(true\)\)/,'Documentation opens the help view')
+
+// Narrow screens.
 const narrow=[...css.matchAll(/@media\(max-width:760px\)\{([^]*?)\n\}/g)].map(m=>m[1]).join('\n')
 assert.match(narrow,/\.sidebar>\.tool-tabs\{position:sticky;top:0;/,'tabs stick to the top on narrow screens')
 assert.match(narrow,/\.sidebar>\.sidebar-statusbar\{position:sticky;bottom:0;/,'status bar sticks to the bottom on narrow screens')
-assert.match(narrow,/\.studio\.standalone-editor>\.bcr32-workbench\{[^}]*overflow:clip visible/,'standalone wrapper is not a scroll container on narrow screens (sticky would bind to it)')
-console.log('PASS BCR32 sidebar: one-line connection summary opening the MIDI window (firmware, version and routing moved out), notice in a status bar after the content, sticky tabs and status bar on narrow screens')
-
-// Editor toolbar (steps 3–4): history, CC sending, one floating display and the Display menu sit above the front panel.
-const surface=workbench.slice(workbench.indexOf('<section className="surface"'),workbench.indexOf('<FrontPanel '))
-for(const part of ['className="editor-toolbar" role="toolbar"',"moveHistory('undo')","moveHistory('redo')",'className={`cc-toggle ','{floatingSupported() && <button className="floating-toggle"','className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen}'])assert.ok(surface.includes(part),`toolbar holds ${part}`)
-const sidebarTop=workbench.slice(workbench.indexOf('<aside className="sidebar"'),workbench.indexOf('<div className="sidebar-content">'))
-for(const moved of ['cc-toggle','editor-history-tools','floating-toggle','theme-swatches'])assert.ok(!sidebarTop.includes(moved),`sidebar no longer holds ${moved}`)
-assert.match(surface,/<div className="display-menu" role="dialog"[^>]*>.*?<fieldset className="host-lock-fields" disabled=\{locked\}>/s,'Display menu keeps the host lock')
-assert.match(surface,/disabled=\{locked\|\|!historyCounts\.undo\}[^]*disabled=\{locked\|\|!historyCounts\.redo\}/,'undo and redo stay locked with the host')
-assert.equal(workbench.match(/>Zoom while adjusting</g)?.length,1,'one zoom option')
-assert.match(surface,/<PresentationTools preferences=\{presentation\} screens=\{sharedScreens\} inline zoom=\{false\} floating=\{!floatingSupported\(\)\}\/>/,'host presentation tools without a second zoom; host floating window only as a fallback')
-assert.ok(!dialog.includes('cc-toggle')&&dialog.includes('className="midi-settings-cc" role="status"'),'MIDI window shows the CC state only')
-assert.match(workbench,/if\(displayOpen\)\{setDisplayOpen\(false\);event\.preventDefault\(\)\}/,'Escape closes the Display menu first')
-console.log('PASS BCR32 editor toolbar: history, CC sending, floating display and Display menu above the panel; one zoom option; menu keeps the host lock; MIDI window shows the CC state')
-
-// Files (step 7) and help (step 8): three blocks and one flat Advanced disclosure; Documentation opens the help over the tab.
-const files=workbench.slice(workbench.indexOf('<h2>Files</h2>'),workbench.indexOf('<section className="inspector"'))
-assert.deepEqual([...files.matchAll(/<h3>([^<]+)<\/h3>/g)].map(x=>x[1]),['Export','Import'],'Export and Import blocks')
-assert.ok(files.includes('<ExportImport '),'front-panel export block')
-assert.equal(files.match(/<details/g)?.length,1,'one disclosure in Files')
-assert.match(files,/<details className="files-advanced"><summary>Advanced<\/summary>[^]*<FirmwareTools [^]*download=\{download\} flat \/>[^]*<ParameterTable [^>]*flat \/>[^]*Legacy profile format[^]*<\/details>/,'firmware tools, parameter names and legacy format flat under Advanced')
-for(const f of ['FirmwareTools','ParameterNames']){const src=readFileSync(`src/editors/bcontrol/bcr32/${f}.tsx`,'utf8');assert.match(src,/const Box = \(flat \? 'section' : 'details'\) as 'details', Title = \(flat \? 'h4' : 'summary'\) as 'summary'/,`${f} renders flat on request`)}
-assert.match(workbench,/onHelpReady\(\(\)=>setHelpOpen\(true\)\)/,'Documentation opens the help view')
-assert.match(workbench,/onClick=\{\(\) => \{setTab\(item\);setHelpOpen\(false\)\}\}/,'a tab closes the help view')
-assert.ok(!/setTab\('help'\)/.test(workbench),'no Help tab state left')
-console.log('PASS BCR32 Files and help: Export, Import, front-panel export and one flat Advanced disclosure; Documentation opens the help over the current tab, a tab closes it')
+assert.match(narrow,/\.studio\.standalone-editor>\.bcr32-workbench\{[^}]*overflow:clip visible/,'standalone wrapper is not a scroll container on narrow screens')
+console.log('PASS BCR32 layout as in the mockup: DIN icon in the header; text tabs, SysEx warning only when needed, status bar summary; toolbar with history, CC and assignment switches, floating display, Display menu and panel toggle, all host-locked where they were; Control tab in mockup order; Files cards with one Advanced; help over the tab; sticky tabs and status bar on narrow screens')

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.45.0-alpha.8] — 2026-10-24
+
+BCR32 editor brought in line with the approved mockup (the owner found alpha.7 too far from it).
+
+- Host header: the MIDI settings icon is a DIN connector.
+- Toolbar: ↶ ↷, switches "CC → BCR32" and "Assignments → BCR32", ▣ Floating display, Display ▾, and the panel toggle at the right end.
+- Display menu: round theme swatches, display style as a list, three options, "Use global presentation" as a checkbox; screen and floating window under one disclosure.
+- Panel: text tabs with no connection line above them (the status lives in the header); a warning appears only when SysEx is missing. The status bar sums up assignments, read progress and CC sending, with the latest action below.
+- Control tab in the mockup order: search, control kind and name, Rotation/Push, selection links, MIDI message, Display, Test, Advanced.
+- Presets as cards (Synchronize assignments, BCR32 presets, T1–T4 shortcuts); Device with a sticky Read bar, warning box, link anchors and right-aligned BCR32 values; Files as cards; compact MIDI window.
+
 ## [0.45.0-alpha.7] — 2026-10-24
 
 BCR32 sidebar reorganisation, steps 3 to 10 (study of 2026-10-24, approved by the owner).

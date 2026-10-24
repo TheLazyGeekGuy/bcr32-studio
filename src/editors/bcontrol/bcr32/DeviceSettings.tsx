@@ -60,35 +60,35 @@ export function DeviceSettings({ firmware = null, results, settings, change, upd
   const jump = (id: string) => document.getElementById(`device-group-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   return <div className="device-globals device-list" role="group" aria-label={t('Device settings')}>
     <div className="device-actions">
-      <button disabled={!canRead || busy} onClick={read}>{busy ? t('Reading…') : t('Read from the BCR32')}</button>
+      <button className="primary" disabled={!canRead || busy} onClick={read}>{busy ? t('Reading…') : t('Read from the BCR32')}</button>
       {!autoLoad && <button onClick={reset}>{t('Reset to editor defaults')}</button>}
       {globalWritesEnabled && canRead && safeChanges.length > 0 && <button className="primary" onClick={() => safeChanges.forEach(g => write(g.cmd))}>{t('Write all changes')}</button>}
-      <small role="status">{readAt ? <>{t(`Read from the BCR32 at ${readAt}.`)} <span data-i18n-skip>{differing.length} ≠</span></> : t('Not read yet')}</small>
+      <small role="status">{readAt ? <>{t(`Read at ${readAt}`)} · <span className={differing.length ? 'diff' : undefined} data-i18n-skip>{differing.length} ≠</span></> : t('Not read yet')}</small>
     </div>
-    {!globalWritesEnabled && <p className="hardware-note">{t('Writing to the BCR32 is disabled: it froze the controller.')} {t('Changes here stay in the editor.')}</p>}
+    {!globalWritesEnabled && <p className="mock-warn">⚠ {t('Writing to the BCR32 is disabled: it froze the controller.')} {t('Changes here stay in the editor.')}</p>}
     <div className="device-filter">
-      <input type="search" aria-label={t('Filter settings')} placeholder={t('Filter settings')} value={query} onChange={event => setQuery(event.target.value)} />
-      <div className="device-filter-scope" role="group" aria-label={t('Settings shown')}><button aria-pressed={!onlyDiffering} onClick={() => setOnlyDiffering(false)}>{t('All')}</button><button aria-pressed={onlyDiffering} onClick={() => setOnlyDiffering(true)}>≠ BCR32</button></div>
+      <input type="search" aria-label={t('Filter settings')} placeholder={`🔍 ${t('Filter settings')}…`} value={query} onChange={event => setQuery(event.target.value)} />
     </div>
-    <nav className="device-anchors" aria-label={t('Setting groups')}>{deviceGroups.map(g => <button key={g.id} onClick={() => jump(g.id)}>{t(g.name)}</button>)}<button onClick={() => jump('led')}>LED</button></nav>
-    <div className="device-columns" aria-hidden="true"><span /><span>{t('Editor')}</span><span>BCR32</span></div>
+    <div className="device-filter-scope mock-seg" role="group" aria-label={t('Settings shown')}><button aria-pressed={!onlyDiffering} onClick={() => setOnlyDiffering(false)}>{t('All')}</button><button aria-pressed={onlyDiffering} onClick={() => setOnlyDiffering(true)}>≠ BCR32</button></div>
+    <nav className="device-anchors mock-anchors" aria-label={t('Setting groups')}>{deviceGroups.map(g => <button key={g.id} onClick={() => jump(g.id)}>{t(g.name)}</button>)}<button onClick={() => jump('led')}>LED</button></nav>
+    <div className="device-columns" aria-hidden="true"><span>{t('Setting')}</span><span>{t('Editor · read on the BCR32')}</span></div>
     {deviceGroups.map(group => {
       const cmds = group.cmds.filter(shown)
       if (!cmds.length && (onlyDiffering || needle)) return null
       return <section key={group.id} id={`device-group-${group.id}`} className="device-group" aria-label={t(group.name)}>
         <h3>{t(group.name)}</h3>
         {cmds.map(row)}
-        {group.id === 'footswitches' && !onlyDiffering && !needle && <div className="device-group-actions">{([0, 1] as const).map(i => <button key={i} onClick={() => editFootswitch(i)}>{t(`Edit FOOTSW ${i + 1}`)}</button>)}</div>}
+        {group.id === 'footswitches' && !onlyDiffering && !needle && <div className="device-group-actions">{([0, 1] as const).map(i => <button key={i} className="mock-link" onClick={() => editFootswitch(i)}>{t(`Edit FOOTSW ${i + 1}`)}</button>)}</div>}
         {group.id === 'routing' && settings.operationMode !== 'mixed' && <p className="muted">{t('Full routing requires MIXED operation mode.')}</p>}
       </section>
     })}
     {!onlyDiffering && !needle && <>
       <section id="device-group-led" className="device-group" aria-label={t('LED brightness · hardware')}>
-        <h3>{t('LED brightness · hardware')}</h3>
-        <label>{t('LED brightness')} · {draft} <small>({t('Read-back:')} {brightness ?? 'N/A'} / 15)</small><input aria-label={t('LED brightness')} type="range" min="0" max="15" value={draft} disabled={!brightnessEnabled || brightness === null} onChange={e => setDraft(Number(e.target.value))} /></label>
+        <h3>LED <span className="mock-caption">{t('immediate effect, no STORE')}</span></h3>
+        <label className="mock-field">{t('Brightness')} · {draft} <small>({t('Read-back:')} {brightness ?? 'N/A'} / 15)</small><input aria-label={t('LED brightness')} type="range" min="0" max="15" value={draft} disabled={!brightnessEnabled || brightness === null} onChange={e => setDraft(Number(e.target.value))} /></label>
         <p className="muted" role="status">{t(brightnessStatus || 'SysEx permission required · immediate effect only, no STORE.')}</p>
       </section>
-      <details className="device-advanced"><summary>{t('Advanced')}</summary>
+      <details className="device-advanced adv"><summary>{t('Advanced')}</summary>
         <label>{t('Device ID')}<input type="number" min="1" max="255" value={settings.deviceId} onChange={e => update({ deviceId: Math.max(1, Math.min(255, Math.round(Number(e.target.value) || 1))) })} /></label>
         <p className="device-row"><span className="device-name">{t(deviceGlobals.find(g => g.cmd === 0x74)!.name)}</span><span data-i18n-skip>{label(0x74, reported(0x74)?.value ?? null)}</span></p>
       </details>

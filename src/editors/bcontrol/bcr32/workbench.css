@@ -734,3 +734,113 @@
  .bcr32-workbench .studio.compact[data-tools-collapsed=true]>.workspace>.sidebar{visibility:visible;pointer-events:auto;overflow:visible}
  .bcr32-workbench .editor-toolbar{padding-right:0}
 }
+
+/* ===== Mockup design layer (study of 2026-10-24, approved): flat surfaces, text tabs, cards, uppercase section
+   captions, compact form fields. Colours come from the theme so every theme keeps working. ===== */
+.bcr32-workbench .studio.compact{--mk-surface:var(--theme-surface,#1c1d20);--mk-surface2:rgba(255,255,255,.035);--mk-line:var(--theme-line,#34363b);--mk-text:var(--theme-text,#e6e3dc);--mk-muted:var(--theme-muted,#9a978f);--mk-accent:var(--theme-accent,#d99b41);--mk-tint:color-mix(in srgb,var(--theme-accent,#d99b41) 16%,transparent);--mk-warn:#e0a03a;padding:0;font-size:13px}
+.bcr32-workbench .studio.compact>.workspace{gap:0}
+.bcr32-workbench .studio.compact>.workspace>.surface{grid-template-rows:auto minmax(0,1fr);gap:0;border-right:1px solid var(--mk-line)}
+.bcr32-workbench .studio.compact .panel-scroll{padding:10px}
+/* Toolbar */
+.bcr32-workbench .studio.compact .editor-toolbar{gap:6px;padding:6px 10px;border-bottom:1px solid var(--mk-line);background:var(--mk-surface)}
+.bcr32-workbench .studio.compact .editor-toolbar :is(.editor-toolbar>button,.editor-history-tools>button,.display-menu-toggle,.bcr32-tools-toggle){display:inline-flex;align-items:center;gap:6px;margin:0;padding:4px 9px;font-size:12px;font-weight:400;line-height:16px;border:1px solid var(--mk-line);border-radius:4px;background:transparent;color:var(--mk-text);box-shadow:none}
+.bcr32-workbench .studio.compact .editor-toolbar :is(button[aria-pressed=true],.cc-toggle.enabled){border-color:var(--mk-accent);color:var(--mk-accent);background:var(--mk-tint)}
+.bcr32-workbench .studio.compact .editor-toolbar .editor-history-tools{gap:6px}
+.bcr32-workbench .tb-sep{width:1px;height:20px;margin:0 4px;background:var(--mk-line)}
+.bcr32-workbench .tb-spacer{flex:1}
+.bcr32-workbench .switch{display:inline-block;width:26px;height:14px;border-radius:8px;background:#444;position:relative;flex:none}
+.bcr32-workbench .switch::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#bbb;transition:left .15s}
+.bcr32-workbench [aria-pressed=true]>.switch{background:var(--mk-accent)}.bcr32-workbench [aria-pressed=true]>.switch::after{left:14px;background:#fff}
+.bcr32-workbench .studio.compact .bcr32-tools-toggle{position:static;width:auto;height:auto;z-index:auto}
+/* Display menu */
+.bcr32-workbench .studio.compact .display-menu{top:calc(100% + 6px);width:300px;padding:12px;border-radius:6px;background:var(--mk-surface);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.bcr32-workbench .studio.compact .display-menu-head{margin:0 0 8px;padding:0;border:0}
+.bcr32-workbench .studio.compact .display-menu-head .midi-settings-close{width:22px;height:22px}
+.bcr32-workbench .studio.compact .display-menu .theme-swatches{display:flex;gap:6px;margin:6px 0 10px}
+.bcr32-workbench .studio.compact .display-menu .theme-swatch{width:20px;height:20px;border-radius:50%;border:2px solid transparent;outline:0}
+.bcr32-workbench .studio.compact .display-menu .theme-swatch[aria-pressed=true]{border-color:#fff;outline:0}
+/* Panel: text tabs, padded content, status bar */
+.bcr32-workbench .studio.compact>.workspace>.sidebar{background:var(--mk-surface);border:0}
+.bcr32-workbench .studio.compact .sidebar>.tool-tabs{margin:0;padding:0;gap:0;border-bottom:1px solid var(--mk-line);background:var(--mk-surface)}
+.bcr32-workbench .studio.compact .sidebar>.tool-tabs button{flex:1;flex-direction:row;padding:9px 2px 8px;font-size:12px;font-weight:400;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .sidebar>.tool-tabs button[aria-pressed=true]{color:var(--mk-text);border-bottom-color:var(--mk-accent);background:transparent}
+.bcr32-workbench .studio.compact .sidebar-content{padding:12px}
+.bcr32-workbench .studio.compact .sidebar-content :is(.inspector,.profile-actions,.lower>section,.help-view){padding:0;margin:0}
+.bcr32-workbench .studio.compact .sidebar>.sidebar-statusbar{padding:6px 12px;font-size:12px;color:var(--mk-muted);background:var(--mk-surface2);border-top:1px solid var(--mk-line)}
+.bcr32-workbench .studio.compact .sidebar-statusbar p{margin:0;font-size:12px;line-height:17px;color:var(--mk-muted);overflow-wrap:anywhere}
+.bcr32-workbench .studio.compact .sidebar-statusbar .sidebar-notice{font-size:11px;max-height:34px;overflow:auto}
+.bcr32-workbench .sidebar-midi-warning{margin:8px 12px 0}
+/* Typography and fields */
+.bcr32-workbench .studio.compact .sidebar :is(h3,.mock-h3){display:flex;justify-content:space-between;gap:8px;margin:14px 0 6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .sidebar h3 .mock-caption{text-transform:none;letter-spacing:0;font-weight:400}
+.bcr32-workbench .studio.compact .sidebar label{display:flex;flex-direction:column;gap:3px;margin:0 0 8px;font-size:11px;letter-spacing:0;text-transform:none;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact :is(.sidebar,.display-menu,.midi-settings-dialog) :is(input:not([type=checkbox]):not([type=range]):not([type=file]),select){width:100%;padding:5px 6px;font-size:12px;border:1px solid var(--mk-line);border-radius:4px;background:var(--mk-surface2);color:var(--mk-text)}
+.bcr32-workbench .studio.compact :is(.sidebar,.display-menu,.midi-settings-dialog) :is(.zoom-option,.mock-check){display:flex;flex-direction:row;align-items:center;gap:6px;margin:4px 0;font-size:12px;letter-spacing:0;text-transform:none;color:var(--mk-text)}
+.bcr32-workbench .studio.compact :is(.sidebar,.display-menu,.midi-settings-dialog) :is(.zoom-option,.mock-check) input[type=checkbox]{width:auto;flex:none;margin:0}
+.bcr32-workbench .studio.compact .sidebar .fields.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
+.bcr32-workbench .mock-caption{margin:0;font-size:11px;color:var(--mk-muted)}
+.bcr32-workbench .mock-kind{text-transform:uppercase}
+.bcr32-workbench .studio.compact .sidebar .mock-title{margin:4px 0 6px;font-size:17px;font-weight:600;color:var(--mk-text)}
+.bcr32-workbench .mock-seg{display:inline-flex;border:1px solid var(--mk-line);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.bcr32-workbench .studio.compact .mock-seg button{border:0;border-radius:0;margin:0;padding:4px 10px;font-size:12px;font-weight:400;background:transparent;color:var(--mk-text)}
+.bcr32-workbench .studio.compact .mock-seg button[aria-pressed=true]{background:var(--mk-tint);color:var(--mk-accent)}
+.bcr32-workbench .studio.compact .mock-link{display:inline;margin:0;padding:0;border:0;background:none;color:var(--mk-accent);font-size:inherit;font-weight:400;cursor:pointer}
+.bcr32-workbench .studio.compact .mock-link[aria-pressed=true]{text-decoration:underline;background:none}
+.bcr32-workbench .studio.compact .mock-selection{margin:0 0 8px;font-size:11px;color:var(--mk-muted)}
+.bcr32-workbench .mock-display-row{align-items:end}
+.bcr32-workbench .studio.compact .sidebar .control-search label{font-size:0;gap:0}
+.bcr32-workbench .studio.compact .sidebar .control-search input{font-size:13px;padding:6px 8px;margin-bottom:10px}
+/* Cards, actions, warnings, disclosures */
+.bcr32-workbench .mock-card{margin:0 0 10px;padding:10px;border:1px solid var(--mk-line);border-radius:6px;background:var(--mk-surface2)}
+.bcr32-workbench .mock-card>b,.bcr32-workbench .mock-card .preset-picker-heading b{font-size:13px;color:var(--mk-text)}
+.bcr32-workbench .mock-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.bcr32-workbench .studio.compact :is(.mock-actions,.device-actions,.midi-settings-dialog)>:is(button,.file){display:inline-flex;align-items:center;gap:6px;width:auto;flex:none;margin:0;padding:5px 10px;font-size:12px;font-weight:400;border:1px solid var(--mk-line);border-radius:4px;background:transparent;color:var(--mk-text)}
+.bcr32-workbench .studio.compact :is(.mock-actions,.device-actions,.midi-settings-dialog)>button.primary{background:var(--mk-accent);border-color:var(--mk-accent);color:#1b1408;font-weight:600}
+.bcr32-workbench .mock-warn{margin:0 0 10px;padding:6px 8px;font-size:12px;border-left:3px solid var(--mk-warn);background:#2a2418;color:var(--mk-text)}
+.bcr32-workbench .studio.compact details.adv{margin-top:10px;padding-top:8px;border-top:1px solid var(--mk-line);border-radius:0;background:transparent}
+.bcr32-workbench .studio.compact details.adv>summary{cursor:pointer;color:var(--mk-muted);font-size:13px}
+.bcr32-workbench .preset-picker-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.bcr32-workbench .studio.compact .preset-picker-heading button{padding:2px 6px;border:0;background:transparent;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .controller-read-panel{margin-top:0;padding:10px;border-top:1px solid var(--mk-line)}
+.bcr32-workbench .studio.compact .preset-location-tabs{display:inline-flex;gap:0;margin-bottom:10px;border:1px solid var(--mk-line);border-radius:4px;overflow:hidden}
+.bcr32-workbench .studio.compact .preset-location-tabs button{flex:none;margin:0;padding:4px 10px;font-size:12px;font-weight:400;border:0;border-radius:0;background:transparent;color:var(--mk-text)}
+.bcr32-workbench .studio.compact .preset-location-tabs button[aria-pressed=true]{background:var(--mk-tint);color:var(--mk-accent)}
+.bcr32-workbench .studio.compact .preset-location-tabs svg{display:none}
+/* Device tab */
+.bcr32-workbench .studio.compact .device-actions{position:sticky;top:-12px;z-index:1;margin:-12px -12px 10px;padding:10px 12px;gap:8px;background:var(--mk-surface);border-bottom:1px solid var(--mk-line)}
+.bcr32-workbench .studio.compact .device-actions small{font-size:11px;color:var(--mk-muted)}
+.bcr32-workbench .diff,.bcr32-workbench .device-row-differs .device-reported{color:var(--mk-warn);font-weight:600}
+.bcr32-workbench .studio.compact .device-filter input{margin:0 0 10px}
+.bcr32-workbench .mock-anchors{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.bcr32-workbench .studio.compact .mock-anchors button{margin:0;padding:0;border:0;background:none;color:var(--mk-accent);font-size:11px;font-weight:400}
+.bcr32-workbench .device-columns{display:flex;justify-content:space-between;font-size:10px;text-transform:uppercase;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .device-group{padding:0;border:0}
+.bcr32-workbench .studio.compact .device-row{grid-template-columns:minmax(0,1fr) 40% 24%;gap:4px;padding:4px 2px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:var(--mk-text)}
+.bcr32-workbench .studio.compact .device-row select{padding:3px;border-radius:3px}
+.bcr32-workbench .device-reported{text-align:right;color:var(--mk-muted)}
+.bcr32-workbench .device-group-actions{gap:12px;font-size:11px}
+/* MIDI window */
+.bcr32-workbench .studio.compact .midi-settings-dialog,.midi-settings-dialog{background:var(--theme-surface,#1c1d20)}
+.midi-settings-dialog>*{margin:0 16px 10px}
+.midi-settings-dialog .midi-settings-status{font-size:11px;color:var(--theme-muted,#9a978f);gap:6px}
+.midi-settings-dialog .firmware-identity{display:inline-flex;align-items:center;gap:6px;font-size:11px}
+.midi-settings-dialog .firmware-identity strong{font-weight:400}
+.midi-settings-dialog .firmware-identity button{padding:0;border:0;background:none;color:var(--theme-accent,#d99b41);font-size:11px;cursor:pointer}
+.midi-settings-dialog .ports-fields label{display:flex;flex-direction:column;gap:3px;font-size:11px;text-transform:uppercase;color:var(--theme-muted,#9a978f)}
+.midi-settings-at-connection{border:0;padding:0;display:block}
+.midi-settings-at-connection legend{padding:0;margin-bottom:4px;font-size:11px;color:var(--theme-muted,#9a978f)}
+.midi-settings-dialog .midi-settings-cc,.midi-settings-dialog>p.muted{font-size:11px;color:var(--theme-muted,#9a978f)}
+.midi-settings-dialog .routing-status{padding:0;margin:0;font-size:11px;color:inherit}
+/* Display menu fields read like the mockup: plain captions, no uppercase. */
+.bcr32-workbench .studio.compact .display-menu :is(.mock-field,.sp-options label){display:flex;flex-direction:column;gap:3px;margin:0 0 8px;font-size:11px;letter-spacing:0;text-transform:none;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .display-menu .mock-caption{margin-top:2px}
+.bcr32-workbench .studio.compact .files-front-panel :is(h3,.export-import>h3){margin:0 0 2px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--mk-text)}
+.bcr32-workbench .studio.compact .files-front-panel .export-import{padding:0;border:0;background:transparent}
+.bcr32-workbench .studio.compact .files-front-panel :is(p,li){font-size:11px;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .sidebar-statusbar .sidebar-notice{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.midi-settings-dialog .midi-settings-at-connection .mock-check{display:flex;flex-direction:row;align-items:center;gap:6px;margin:4px 0;font-size:12px;text-transform:none;color:var(--theme-text,#e6e3dc)}
+.midi-settings-dialog .midi-settings-at-connection input[type=checkbox]{width:auto;margin:0}
+.bcr32-workbench .studio.compact .sidebar .control-search{position:relative}
+.bcr32-workbench .studio.compact .sidebar .control-search::before{content:"🔍";position:absolute;left:8px;top:6px;font-size:12px;pointer-events:none;z-index:1}
+.bcr32-workbench .studio.compact .sidebar .control-search input{padding-left:28px}
+.bcr32-workbench .studio.compact .sidebar .control-search label input[type=text]{padding-left:28px}

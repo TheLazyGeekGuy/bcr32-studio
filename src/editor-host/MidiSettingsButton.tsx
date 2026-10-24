@@ -6,5 +6,5 @@ export function MidiSettingsButton({open}:{open?:()=>void}){
   const language=useLanguage()
   if(!open)return null
   const label=translate('MIDI settings',language)
-  return <button type="button" className="ew-icon midi-settings-button" title={label} aria-label={label} onClick={open}><Icon name="midi" /></button>
+  return <button type="button" className="ew-icon midi-settings-button" title={label} aria-label={label} onClick={open}><Icon name="din" /></button>
 }
