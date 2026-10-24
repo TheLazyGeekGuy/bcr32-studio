@@ -2,7 +2,7 @@
 // createPresetReader, createBclSender and applyControllerTracks. Read-only unless --apply is given.
 //   node scripts/hw/bcr32-tracks-test.mjs                 # read: firmware, device, preset names, current T1–T4
 //   node scripts/hw/bcr32-tracks-test.mjs --apply --t4 N  # set T4 → slot N, read back, then restore the original T1–T4
-// Guards: every outgoing frame must be a known read (00, 40, 41, 42) or a BCL line (20); STORE (72) and bootloader (77)
+// Guards: every outgoing frame must be a known read (00, 0C page switch, 40, 41, 42) or a BCL line (20); STORE (72) and bootloader (77)
 // are refused, as is any "$store" line. Slot 1 is never a target, and the test stops if T4 is the selected track (that
 // would reload another preset into the working memory). Foreign SysEx on the port during a 3 s quiet check aborts.
 // Backups (globals, working preset, names) are written to output/hw/ before any write.
@@ -22,7 +22,8 @@ const inPort=find(input,'BCR-32'),outPort=find(output,'BCR-32')
 if(inPort<0||outPort<0)throw Error('BCR-32 MIDI ports not found')
 input.ignoreTypes(false,true,true);input.openPort(inPort);output.openPort(outPort)
 const sleep=ms=>new Promise(r=>setTimeout(r,ms))
-const allowed=new Set([0x00,0x20,0x40,0x41,0x42]),sent=[]
+// 0C switches to the controller page before a preset read, as the editor does.
+const allowed=new Set([0x00,0x0c,0x20,0x40,0x41,0x42]),sent=[]
 const send=bytes=>{
   const b=Array.from(bytes)
   if(b[0]!==0xf0||b[1]!==0||b[2]!==0x20||b[3]!==0x32||b[5]!==0x64||!allowed.has(b[6])||b.at(-1)!==0xf7)throw Error('Guard: frame refused '+b.slice(0,8).map(x=>x.toString(16)).join(' '))
