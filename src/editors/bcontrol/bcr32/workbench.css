@@ -129,7 +129,7 @@
 .bcr32-workbench .editor-brand strong { font-weight:700; }
 .bcr32-workbench .editor-brand span { font-weight:350; color:#dca44f; }
 /* Logo height matched to the panel's cap height. */
-.bcr32-workbench .editor-brand img { display:block; width:100%; height:100%; object-fit:contain; transform:none; }
+.bcr32-workbench .editor-brand img { display:block; width:100%; height:100%; object-fit:contain; transform:scale(1.855); transform-origin:center; }
 .bcr32-workbench .studio[data-theme=silver] .editor-brand img { filter:brightness(.5); }
 
 /* Appearance only: never filter the interactive panel, OLED or activity LEDs. */
