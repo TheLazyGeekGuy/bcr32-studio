@@ -46,8 +46,8 @@ export function createWorkbenchBridge(context:EditorViewContext){
  })
  return {monitor,access:midi.access,setHelp(open:(()=>void)|undefined){help=open},openHelp(){help?.()},
   setLocked(value:boolean){locked=value;if(value)revokePrepared()},
-  async request(){const result=await context.request();if(disposed)throw Error('BCR32 view disposed');midi.refresh();const pair=automaticPorts(midi.access);if(pair.input&&pair.output)midi.bind(pair.input.id,pair.output.id);return {access:midi.access,sysexError:result.sysexError}},
-  bind(input:string,output:string){midi.bind(input,output)},
+  async request(){const result=await context.request();if(disposed)throw Error('BCR32 view disposed');midi.refresh();const pair=automaticPorts(midi.access);if(!context.recovered&&pair.input&&pair.output)midi.bind(pair.input.id,pair.output.id);return {access:midi.access,sysexError:result.sysexError}},
+  bind(input:string,output:string){if(context.recovered&&(!input||!output))return;midi.bind(input,output)},
   refresh:midi.refresh,
   authorizeTransfer(frames:number[][]){
    if(disposed||locked||prepared||identity?.firmware!=='1.0.2')throw Error('BCR32 transfer unavailable')
@@ -64,7 +64,7 @@ function MountedWorkbench({context,bridge,storage,initial,...props}:EditorViewPr
  bridge.setLocked(props.locked)
  return <div className="bcr32-workbench" data-bcr32-instance={context.id} data-theme={props.appearance.theme}>
   <Workbench storage={storage} initialState={initial} instanceId={context.id} locked={props.locked} active={props.active}
-   requestAccess={bridge.request} bindPair={bridge.bind} onSnapshot={props.checkpoint}
+   requestAccess={bridge.request} bindPair={bridge.bind} recovered={context.recovered} restoredBinding={()=>context.lease.getState().binding} onSnapshot={props.checkpoint}
    themeOverride={props.appearance.theme} displayOverride={props.appearance.displayStyle} onAppearance={props.onAppearance}
    autoZoomOverride={inherited.settings.activeZoom} onAutoZoom={value=>props.presentation?.set({activeZoom:value})}
    parameters={context.parameters} presetsExchange={context.presets} signal={context.lifecycle?.signal} presentation={props.presentation} onHelpReady={bridge.setHelp} monitor={bridge.monitor} authorizeTransfer={bridge.authorizeTransfer}/>

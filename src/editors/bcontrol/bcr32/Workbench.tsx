@@ -72,6 +72,7 @@ function download(data: BlobPart, name: string, type = 'application/json') {
 const fileStem = (name: string) => name.normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 70) || 'preset'
 
 export interface WorkbenchProps {
+ recovered?:boolean; restoredBinding?:()=>{inputId:string;outputId:string}|null
  storage: EditorStorage; initialState?: ControllerState; requestAccess: typeof automaticMidiAccess
  bindPair: (input:string,output:string)=>void; onSnapshot: (state:ControllerState)=>void
  themeOverride:Theme; displayOverride:DisplayStyle; onAppearance:(change:{theme?:Theme;displayStyle?:DisplayStyle})=>void
@@ -80,7 +81,7 @@ export interface WorkbenchProps {
  parameters?:import('../../../translator/parameters').ParameterBus; presentation?:PresentationInstance; onHelpReady:(open:(()=>void)|undefined)=>void
  authorizeTransfer:(frames:number[][])=>(()=>void)
 }
-function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,presentation,onHelpReady,parameters}:WorkbenchProps) {
+function App({recovered,restoredBinding,storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,presentation,onHelpReady,parameters}:WorkbenchProps) {
   const lockedRef=useRef(locked);lockedRef.current=locked
 function loadProfile(): Bcr32Profile {
   try {
@@ -431,7 +432,8 @@ function loadWorkspace() {
   useEffect(() => {
     if (!access) return
     access.onstatechange = () => {
-      const pair = automaticPorts(access, inputId, outputId)
+      const binding=recovered?restoredBinding?.():null
+      const pair = recovered?{input:access.inputs.get(binding?.inputId??inputId),output:access.outputs.get(binding?.outputId??outputId),ambiguous:false}:automaticPorts(access,inputId,outputId)
       if (!pair.input || !pair.output) probedPair.current = null
       setInputId(pair.input?.id ?? '')
       setOutputId(pair.output?.id ?? '')
@@ -440,7 +442,7 @@ function loadWorkspace() {
         sender.current?.close(); sender.current = null; setSendCC(false)
         if (!isBcrOutput(pair.output)) setNotice('BCR32 output unavailable: CC sending stopped, no pending values.')
       }
-      if (pair.input && pair.output && !associatedOnce.current) {
+      if (!recovered && pair.input && pair.output && !associatedOnce.current) {
         associatedOnce.current = true
         setProfile(current => associateDefaultEncoder(current, hasPresetRef.current))
       }
@@ -618,10 +620,11 @@ function loadWorkspace() {
     try {
       const { access: midi, sysexError } = await requestAccess()
       setAccess(midi)
-      const pair = automaticPorts(midi)
+      const binding=recovered?restoredBinding?.():null
+      const pair = recovered?{input:midi.inputs.get(binding?.inputId??''),output:midi.outputs.get(binding?.outputId??''),ambiguous:false}:automaticPorts(midi)
       setInputId(pair.input?.id ?? '')
       setOutputId(pair.output?.id ?? '')
-      if (pair.input && pair.output && !associatedOnce.current) {
+      if (!recovered && pair.input && pair.output && !associatedOnce.current) {
         associatedOnce.current = true
         setProfile(current => associateDefaultEncoder(current, hasPresetRef.current))
       }
@@ -754,7 +757,7 @@ function loadWorkspace() {
     if (!brightnessEnabled || !output?.send || !liveFirmware || liveDeviceId === null) { globalsReader.current = null; return }
     const port = output, reader = createGlobalsReader(bytes => port.send?.(bytes), 400, undefined, liveFirmware, liveDeviceId)
     globalsReader.current = reader
-    if (autoLoadRef.current) void loadDeviceSettings(reader)
+    if (autoLoadRef.current&&!recovered) void loadDeviceSettings(reader)
     return () => { reader.close(); if (globalsReader.current === reader) globalsReader.current = null }
   }, [access, inputId, output, brightnessEnabled, portVersion, liveFirmware, liveDeviceId])
   // Read the controller's settings and put them into the Config fields (the values stay editable; nothing is written).
@@ -812,7 +815,7 @@ function loadWorkspace() {
     setDeviceSnapshot(current => ({ at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), settings: { ...current?.settings, ...settings } }))
     setDeviceSettings(current => current?.map(row => row.cmd === 0x30 ? { ...row, indexedValue: row.indexedValue ?? row.value, source: 'bcl', value: controllerRoutes.indexOf(settings.outputRouting!), label: settings.outputRouting!, status: 'value' } : row) ?? null)
   }
-  useEffect(() => { if (autoLoadDevice && globalsReader.current && !deviceSnapshot) void loadDeviceSettings() }, [autoLoadDevice])
+  useEffect(() => { if (autoLoadDevice && !recovered && globalsReader.current && !deviceSnapshot) void loadDeviceSettings() }, [autoLoadDevice])
 
   // Independent read session. Changing ports/firmware or disabling auto-read cancels pending work.
   useEffect(() => { presetCache.current.clear(); cacheInitialized.current = false; setFromPresetCache(false); setControllerRead(emptyControllerRead()) }, [access, inputId, output, portVersion, liveFirmware, liveDeviceId])
@@ -825,7 +828,7 @@ function loadWorkspace() {
       port.send!(bytes)
     }, state => { if (controllerReader.current === reader) setControllerRead(state) },1200,15,liveDeviceId)
     controllerReader.current = reader
-    if (autoReadControllerRef.current) void readControllerAssignments(reader)
+    if (autoReadControllerRef.current&&!recovered) void readControllerAssignments(reader)
     return () => { controllerReader.current?.close(); controllerReader.current = null; reader.close() }
   }, [access, inputId, output, brightnessEnabled, portVersion, liveFirmware, liveDeviceId, autoReadController])
 
