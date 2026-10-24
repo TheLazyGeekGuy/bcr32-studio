@@ -132,12 +132,14 @@ function loadWorkspace() {
   useEffect(() => { try { storage.setItem('bcr32-studio.show-numbers', String(showNumbers)) } catch { /* Optional preference. */ } }, [showNumbers])
   const [presetLocation,setPresetLocation]=useState<'hardware'|'browser'>('hardware')
   const [localSaveOpen,setLocalSaveOpen]=useState(false)
-  const [tab, setTab] = useState<'control' | 'device' | 'log' | 'presets' | 'files' | 'help'>('control')
+  const [tab, setTab] = useState<'control' | 'device' | 'log' | 'presets' | 'files'>('control')
   const [toolsCollapsed,setToolsCollapsed]=useState(false)
   // Display menu of the editor toolbar: closes on Escape or a pointer press outside it.
   const [displayOpen,setDisplayOpen]=useState(false),displayMenu=useRef<HTMLDivElement>(null)
   useEffect(()=>{if(!displayOpen)return;const close=(event:PointerEvent)=>{if(!displayMenu.current?.contains(event.target as Node))setDisplayOpen(false)};document.addEventListener('pointerdown',close);return()=>document.removeEventListener('pointerdown',close)},[displayOpen])
-  useEffect(()=>{onHelpReady(()=>setTab('help'));return()=>onHelpReady(undefined)},[onHelpReady])
+  // Documentation (host header) opens the help over the current tab; the tab itself, and what it arms, is unchanged.
+  const [helpOpen,setHelpOpen]=useState(false),view=helpOpen?'help':tab
+  useEffect(()=>{onHelpReady(()=>setHelpOpen(true));return()=>onHelpReady(undefined)},[onHelpReady])
   // Host MIDI icon beside the connection status: the MIDI connection window (permission, ports, CC sending).
   const [midiSettingsOpen,setMidiSettingsOpen]=useState(false)
   const midiSettingsDialog=useRef<HTMLDialogElement>(null)
@@ -992,11 +994,11 @@ function loadWorkspace() {
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
-        <div className="connection"><button className="connection-summary" aria-haspopup="dialog" title="MIDI connection…" onClick={()=>setMidiSettingsOpen(true)}><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span>{liveFirmware && <span className="firmware-status" data-i18n-skip>FW {liveFirmware}</span>}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button></div>
+        <div className="connection"><button className="connection-summary" aria-haspopup="dialog" title="MIDI connection…" onClick={()=>setMidiSettingsOpen(true)}><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span>{liveFirmware ? <span className="firmware-status" data-i18n-skip>FW {liveFirmware}</span> : access && <span className="firmware-status">BCR32 not detected</span>}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button></div>
         {pipWindow && createPortal(<FloatingDisplay theme={theme} displayStyle={displayStyle} control={screenControl} config={profile[screenControl.kind].find(e => e.id === screenControl.id)!} label={controlLabel(screenControl.kind, screenControl.id, customLabels)} value={screenValue.value} source={screenValue.source} inspect={() => selectUi(screenControl, {}, true)} setValue={setScreenValue} />, pipWindow.document.body)}
-        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'device', 'files', 'log','help'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Device', 'Files', 'Log','Help'][i]} onClick={() => setTab(item)}><Icon name={(['sliders', 'folder', 'gear', 'import', 'log','help'] as const)[i]} />{['Control', 'Presets', 'Device', 'Files', 'Log','Help'][i]}</button>)}</nav>
+        <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'device', 'files', 'log'] as const).map((item, i) => <button key={item} aria-pressed={view === item} title={['Control', 'Presets', 'Device', 'Files', 'Log'][i]} onClick={() => {setTab(item);setHelpOpen(false)}}><Icon name={(['sliders', 'folder', 'gear', 'import', 'log'] as const)[i]} />{['Control', 'Presets', 'Device', 'Files', 'Log'][i]}</button>)}</nav>
         <div className="sidebar-content"><fieldset className="host-lock-fields" disabled={locked}>
-        <section className="profile-actions preset-panel" hidden={tab !== 'presets'} aria-label="Preset management">
+        <section className="profile-actions preset-panel" hidden={view !== 'presets'} aria-label="Preset management">
           <h2>Presets{dirty ? ' *' : ''}</h2>
           <div className="preset-location-tabs" role="group" aria-label="Preset location">
             <button aria-pressed={presetLocation==='hardware'} onClick={()=>setPresetLocation('hardware')}><Icon name="midi"/>BCR32</button>
@@ -1028,24 +1030,31 @@ function loadWorkspace() {
           <div className="preset-actions"><button className="primary" onClick={() => {savePreset();setLocalSaveOpen(false)}} disabled={!presetName.trim()}><Icon name="save" />{activePreset ? 'Save / rename' : 'Create preset'}</button><button onClick={() => {savePreset(true);setLocalSaveOpen(false)}} disabled={!presetName.trim()}><Icon name="copy" />Save as new</button></div>
           </div></div>
         </section>
-        <section className="profile-actions device-panel" hidden={tab !== 'device'} aria-label="Device">
+        <section className="profile-actions device-panel" hidden={view !== 'device'} aria-label="Device">
           <h2>Device</h2>
           <DeviceSettings firmware={liveFirmware} results={deviceSettings} settings={profile.settings ?? defaultSettings()} change={(cmd, value) => setProfile(current => ({ ...current, settings: withValue(cmd, value, current.settings ?? defaultSettings(), liveFirmware) }))} update={change=>setProfile(current=>({...current,settings:{...(current.settings??defaultSettings()),...change}}))} autoLoad={autoLoadDevice} canRead={brightnessEnabled} busy={deviceSettingsBusy} write={cmd => { void writeDeviceSetting(cmd) }} writeStatus={writeStatus} read={() => { void loadDeviceSettings() }} reset={() => { setDeviceSnapshot(null); setProfile(current => ({ ...current, settings: defaultSettings() })) }} readAt={deviceSnapshot?.at ?? null} brightness={brightness} draft={brightnessDraft} setDraft={n=>brightnessTransport.current?.set(n)} brightnessEnabled={brightnessEnabled && !firmwareOne(liveFirmware)} brightnessStatus={brightnessStatus} editFootswitch={i=>{selectUi({kind:'buttons',id:profile.buttons[buttonNames.indexOf(`FOOTSW ${i+1}`)].id},{},true);setTab('control')}} />
         </section>
-        <section className="profile-actions preset-panel" hidden={tab !== 'files'} aria-label="Imports and exports">
+        <section className="profile-actions preset-panel" hidden={view !== 'files'} aria-label="Imports and exports">
           <h2>Files</h2>
+          <section className="files-block" aria-label="Export"><h3>Export</h3>
+          <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
+          <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
+          <div className="cubase-export"><h4>Cubase · MIDI Remote</h4><p className="surface-help">Surface script for Cubase 12 and later: encoders, pushes and buttons with their exact MIDI messages. No function is assigned: map them in Cubase with the Mapping Assistant.</p><p className="surface-help" data-i18n-skip><code>MIDI Remote/{cubaseFolder}/</code></p><button onClick={exportCubase}><Icon name="export" />Export Cubase script</button></div>
+          </section>
+          <section className="files-block" aria-label="Import"><h3>Import</h3><div className="preset-actions"><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label></div></section>
+          <section className="files-block">
           <ExportImport dumps={dumps} apply={applyExportRecord} save={dump => download(new Uint8Array(dump.raw), `bcr32-export-block${dump.block}.syx`, 'application/octet-stream')} saveAll={list => download(new Uint8Array([...list].reverse().flatMap(d => d.raw)), `bcr32-exports-${list.length}.syx`, 'application/octet-stream')} />
+          </section>
+          <details className="files-advanced"><summary>Advanced</summary>
           <FirmwareTools firmware={liveFirmware} replyDevice={liveDeviceId ?? 127} connectionKey={`${inputId}:${outputId}:${portVersion}:${!!access}:${liveFirmware}`} canRead={!presetBusy && brightnessEnabled && !!output?.send && firmwareOne(liveFirmware) && controllerRead.status !== 'reading' && !['pending','writing'].includes(assignmentWrite.status)} receive={firmwareReceive} sendRead={bytes => {
             if (!brightnessEnabled || !output?.send || !firmwareOne(liveFirmware) || !isFirmwareRead(bytes)) throw Error('Firmware read unavailable')
             output.send(bytes)
-          }} download={download} />
-          <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} />
-          <div className="preset-actions"><button onClick={exportPreset} disabled={!presetName.trim()}><Icon name="export" />Export draft JSON</button><label className="file" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}><Icon name="import" />Import preset / bank<input type="file" accept="application/json,.json" onChange={event => { void importPresets(event.target.files?.[0]); event.target.value = '' }} /></label><button onClick={() => download(JSON.stringify(libraryFile(presets), null, 2), 'bcr32-presets.json')} disabled={!presets.length}><Icon name="folder" />Export library</button></div>
-          <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
-          <div className="cubase-export"><h3>Cubase · MIDI Remote</h3><p className="surface-help">Surface script for Cubase 12 and later: encoders, pushes and buttons with their exact MIDI messages. No function is assigned: map them in Cubase with the Mapping Assistant.</p><p className="surface-help" data-i18n-skip><code>MIDI Remote/{cubaseFolder}/</code></p><button onClick={exportCubase}><Icon name="export" />Export Cubase script</button></div>
-          <details><summary>Legacy profile format</summary><div className="preset-actions"><button onClick={exportProfile}><Icon name="export" />Export profile v2</button><label className="file">Import profile v1/v2<input type="file" accept="application/json" onChange={event => { void importProfile(event.target.files?.[0]); event.target.value = '' }} /></label></div></details>
+          }} download={download} flat />
+          <ParameterTable entries={parameterNames} save={saveParameterNames} download={download} flat />
+          <section className="legacy-profile"><h4>Legacy profile format</h4><div className="preset-actions"><button onClick={exportProfile}><Icon name="export" />Export profile v2</button><label className="file">Import profile v1/v2<input type="file" accept="application/json" onChange={event => { void importProfile(event.target.files?.[0]); event.target.value = '' }} /></label></div></section>
+          </details>
         </section>
-      <section className="inspector" hidden={tab !== 'control'} aria-label={`Edit ${selection.kind} ${displayControlId(selection.kind, selected.id)}`}>
+      <section className="inspector" hidden={view !== 'control'} aria-label={`Edit ${selection.kind} ${displayControlId(selection.kind, selected.id)}`}>
         <p className="controller-read-status" role="status">{fromPresetCache ? 'Preset restored from UI cache' : controllerRead.status === 'reading' ? 'Reading controller assignments' : controllerRead.status === 'complete' ? 'Controller read complete' : controllerRead.status === 'no reply' ? 'Controller read incomplete · missing replies' : 'Controller synchronization'}{!fromPresetCache && controllerRead.total > 0 && <span data-i18n-skip> · {controllerRead.received}/{controllerRead.total}</span>}</p>
         {unsupportedRead && <p role="alert">Controller assignment cannot be represented. The fields below remain the local draft; inspect the raw replies.</p>}
         <ControllerReadValues snapshot={selectedRead} />
@@ -1102,8 +1111,8 @@ function loadWorkspace() {
       </section>
 
     <section className="lower">
-      {tab==='help'&&<><Bcr32Help/><p className="muted studio-version" data-i18n-skip>Studio v{studioVersion}</p></>}
-      <section className="log" hidden={tab !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
+      {helpOpen&&<section className="help-view"><button className="help-back" onClick={()=>setHelpOpen(false)}>← Back</button><Bcr32Help/><p className="muted studio-version" data-i18n-skip>Studio v{studioVersion}</p></section>}
+      <section className="log" hidden={view !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
     </section>
         </fieldset></div>
         <footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-notice" role="status" title={notice}>{notice}</p></footer>

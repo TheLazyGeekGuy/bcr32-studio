@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.45.0-alpha.7] — 2026-10-24
+
+BCR32 sidebar reorganisation, steps 3 to 10 (study of 2026-10-24, approved by the owner).
+
+- **Editor toolbar** above the front panel: Undo/Redo, Send CC to BCR32, Assignments → BCR32, the floating display and a **Display** menu (theme of this editor, display style, one "Zoom while adjusting" instead of two, control numbers, label screen, screen and scale). The host floating window is offered only where the BCR32 one is unavailable.
+- **Device** tab replaces Config: every BCR32 global setting once, in open groups (footswitches, MIDI routing, mode, clock, sequencer, LED), with the editor value, the value read on the BCR32 and a ≠ marker, a filter and a "≠ BCR32" view; Device ID and bootloader status under Advanced. Global writes stay disabled. The tab is about half as long as Config was.
+- **Presets › BCR32** gains "Synchronize assignments" (read now, status, Read options). Reading assignments and loading the device settings at connection are chosen in the MIDI connection window.
+- **Files**: Export, Import and front-panel export blocks, then one Advanced disclosure holding the firmware tools, parameter names and the legacy profile format.
+- **Help** is no longer a tab: Documentation opens it over the current tab, with Back.
+- Narrow screens: the toolbar scrolls, the Display menu and the MIDI window open as bottom sheets, and the panel can no longer stay hidden by a collapsed state saved on a wide screen.
+- Fixes: "On this computer" presets were squeezed into a narrow column; the help texts are translated; the connection line says when the BCR32 is not detected; the T1–T4 shortcuts are marked as writing the BCR32.
+
 ## [0.45.0-alpha.6] — 2026-10-24
 
 - BCR32 sidebar, first steps of the reorganisation: the area above the tabs is now one line, the MIDI status (and the firmware once read) that opens the MIDI connection window, so the scrolling content gains 53 px at 1440×900 (590 → 643 px) even with the new status bar. Firmware read, controller output routing and the Studio version left that area: the first two are in the MIDI window, the version under the help.

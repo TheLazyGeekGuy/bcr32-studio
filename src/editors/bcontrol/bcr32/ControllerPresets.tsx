@@ -139,7 +139,7 @@ export function ControllerPresets({ storage, authorizeTransfer, onStored, trackS
       <label className="preset-source-label">{t('Preset to read')}<select aria-label={t('Preset to read')} value={source} disabled={busy||storeBusy} onChange={e=>setSource(e.target.value)}><option value="working">{t('Current working preset')}</option>{Array.from({length:64},(_,i)=><option key={i} value={i}>{label(i)}</option>)}</select></label>
       <p className="preset-read-context">{t('Last read content')}: <span data-i18n-skip>{snapshotLabel}</span></p>
       {snapshot&&<details open={rawOpen} onToggle={e=>setRawOpen(e.currentTarget.open)}><summary>{t('Raw hardware preset')}</summary><pre data-i18n-skip>{snapshot.text}</pre></details>}
-    <details className="track-shortcuts"><summary>{t('T1–T4 preset shortcuts')}</summary>
+    <details className="track-shortcuts"><summary>{t('T1–T4 preset shortcuts')} <span className="writes-hardware" title={t('Writes the BCR32')}>⬆ BCR32</span></summary>
       <p className="surface-help">{t('Each shortcut recalls a BCR32 preset. Selecting it reloads the preset; the working contents are backed up first.')}</p>
       <div className="track-shortcut-grid">{Array.from({length:4},(_,i)=><label key={i}>T{i+1}<select aria-label={`T${i+1} preset`} disabled={!tracks||busy||storeBusy} value={trackDraft[i]} onChange={e=>setTrackDraft(p=>p.map((v,j)=>j===i?Number(e.target.value):v) as ControllerTracks['presets'])}>{Array.from({length:64},(_,slot)=><option key={slot} value={slot+1}>{label(slot)}</option>)}</select></label>)}</div>
       <button disabled={!tracks||!available||busy||storeBusy||tracks.presets.every((v,i)=>v===trackDraft[i])} onClick={()=>{void changeTracks()}}>{t('Assign shortcut presets')}</button>

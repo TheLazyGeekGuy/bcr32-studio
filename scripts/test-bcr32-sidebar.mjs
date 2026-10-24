@@ -9,7 +9,7 @@ assert.match(top,/<button className="connection-summary" aria-haspopup="dialog"[
 for(const moved of ['<FirmwareIdentity','studio-version','routing-status'])assert.ok(!top.includes(moved),`sidebar top no longer holds ${moved}`)
 const dialog=workbench.slice(workbench.indexOf('<dialog ref={midiSettingsDialog}'),workbench.indexOf('</dialog>'))
 for(const kept of ['<FirmwareIdentity','className="routing-status"',"indicators.routeSource === 'bcl'"])assert.ok(dialog.includes(kept),`MIDI window holds ${kept}`)
-assert.match(workbench,/\{tab==='help'&&<><Bcr32Help\/><p className="muted studio-version" data-i18n-skip>Studio v\{studioVersion\}<\/p><\/>\}/,'Studio version shown under the help')
+assert.match(workbench,/\{helpOpen&&<section className="help-view"><button className="help-back" onClick=\{\(\)=>setHelpOpen\(false\)\}>← Back<\/button><Bcr32Help\/><p className="muted studio-version" data-i18n-skip>Studio v\{studioVersion\}<\/p><\/section>\}/,'Documentation opens the help with a Back button and the Studio version')
 assert.equal(workbench.match(/className="sidebar-notice"/g)?.length,1,'one notice')
 assert.match(workbench,/<\/fieldset><\/div>\s*<footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-notice" role="status" title=\{notice\}>\{notice\}<\/p><\/footer>\s*<\/aside>/,'notice is a status bar after the scrolling content, on every tab')
 const narrow=[...css.matchAll(/@media\(max-width:760px\)\{([^]*?)\n\}/g)].map(m=>m[1]).join('\n')
@@ -30,3 +30,15 @@ assert.match(surface,/<PresentationTools preferences=\{presentation\} screens=\{
 assert.ok(!dialog.includes('cc-toggle')&&dialog.includes('className="midi-settings-cc" role="status"'),'MIDI window shows the CC state only')
 assert.match(workbench,/if\(displayOpen\)\{setDisplayOpen\(false\);event\.preventDefault\(\)\}/,'Escape closes the Display menu first')
 console.log('PASS BCR32 editor toolbar: history, CC sending, floating display and Display menu above the panel; one zoom option; menu keeps the host lock; MIDI window shows the CC state')
+
+// Files (step 7) and help (step 8): three blocks and one flat Advanced disclosure; Documentation opens the help over the tab.
+const files=workbench.slice(workbench.indexOf('<h2>Files</h2>'),workbench.indexOf('<section className="inspector"'))
+assert.deepEqual([...files.matchAll(/<h3>([^<]+)<\/h3>/g)].map(x=>x[1]),['Export','Import'],'Export and Import blocks')
+assert.ok(files.includes('<ExportImport '),'front-panel export block')
+assert.equal(files.match(/<details/g)?.length,1,'one disclosure in Files')
+assert.match(files,/<details className="files-advanced"><summary>Advanced<\/summary>[^]*<FirmwareTools [^]*download=\{download\} flat \/>[^]*<ParameterTable [^>]*flat \/>[^]*Legacy profile format[^]*<\/details>/,'firmware tools, parameter names and legacy format flat under Advanced')
+for(const f of ['FirmwareTools','ParameterNames']){const src=readFileSync(`src/editors/bcontrol/bcr32/${f}.tsx`,'utf8');assert.match(src,/const Box = \(flat \? 'section' : 'details'\) as 'details', Title = \(flat \? 'h4' : 'summary'\) as 'summary'/,`${f} renders flat on request`)}
+assert.match(workbench,/onHelpReady\(\(\)=>setHelpOpen\(true\)\)/,'Documentation opens the help view')
+assert.match(workbench,/onClick=\{\(\) => \{setTab\(item\);setHelpOpen\(false\)\}\}/,'a tab closes the help view')
+assert.ok(!/setTab\('help'\)/.test(workbench),'no Help tab state left')
+console.log('PASS BCR32 Files and help: Export, Import, front-panel export and one flat Advanced disclosure; Documentation opens the help over the current tab, a tab closes it')

@@ -29,7 +29,7 @@ assert.match(html,/aria-label="LED brightness" type="range"/,'live LED brightnes
 assert.ok(!render({}).includes('Load the settings from the BCR32 at connection'),'connection-time load chosen in the MIDI window')
 
 const workbench=readFileSync('src/editors/bcontrol/bcr32/Workbench.tsx','utf8')
-assert.match(workbench,/\(\['control', 'presets', 'device', 'files', 'log','help'\] as const\)/,'Device tab replaces Config')
+assert.match(workbench,/\(\['control', 'presets', 'device', 'files', 'log'\] as const\)/,'five tabs: Device replaces Config, no Help tab')
 assert.ok(!/'config'/.test(workbench)&&!workbench.includes('<StudioConfig'),'no Config tab nor duplicated StudioConfig sections left')
 assert.match(workbench,/if\(tab==='device'&&brightness===null\)brightnessTransport\.current\?\.read\(\)/,'opening Device still reads the LED brightness')
 const hardware=workbench.slice(workbench.indexOf("<div className=\"hardware-presets\" hidden={presetLocation!=='hardware'}>"),workbench.indexOf('<div className="browser-presets"'))
