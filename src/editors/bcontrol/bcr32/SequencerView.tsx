@@ -153,14 +153,14 @@ export function SequencerView({ access, controllerInputId, receive, download, lo
         <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {t('Space: rest')} · ⌫</span>
         <label className="seq-inline">{t('MIDI keyboard')}<select value={keyboardPort} onChange={e => setKeyboardPort(e.target.value)}><option value="">{t('None')}</option>{keyboardInputs.map(p => <option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select></label>
       </div>
-      {view === 'grid' && <>
+      {view === 'grid' && <div className="seq-gridview">
         <h3>{t('Tracks T1–T4 · 32 steps')} <span className="mock-caption">{t('click: select · Shift+click: mute · Alt+click: skip')}</span></h3>
         <div className="seq-grid" role="grid" aria-label={t('Pattern grid')}>
           <span />{Array.from({ length: 32 }, (_, i) => <span key={i} className={i % 4 ? 'seq-num' : 'seq-num beat'} data-i18n-skip>{i + 1}</span>)}
           {[0, 1, 2, 3].map(tr => <div key={tr} className="seq-row" role="row" style={{ display: 'contents' }}>
             <button className="seq-track" aria-pressed={tr === track} onClick={() => setTrack(tr)}><i style={{ background: trackColors[tr] }} />T{tr + 1}</button>
             {Array.from({ length: 32 }, (_, i) => { const x = readStep(data, tr, i); return <button key={i} role="gridcell" className={`seq-cell${plays(x) ? ' on' : ''}${x.mask ? ' skip' : x.rest ? ' rest' : ''}${tr === track && i === step ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[tr] }} aria-label={`T${tr + 1} · ${t('Step')} ${i + 1} · ${plays(x) ? noteName(x.note) : t(x.mask ? 'Skipped' : 'Muted')}`} title={`T${tr + 1} · ${i + 1} · ${noteName(x.note)} · ${x.velocity}`}
-              onClick={e => { setTrack(tr); setStep(i); if (e.shiftKey) patch({ rest: !x.rest }, i, tr); else if (e.altKey) patch({ mask: !x.mask }, i, tr) }}>{plays(x) && <span className="seq-vel" style={{ height: `${100 - x.velocity / 127 * 100}%` }} />}</button> })}
+              onClick={e => { setTrack(tr); setStep(i); if (e.shiftKey) patch({ rest: !x.rest }, i, tr); else if (e.altKey) patch({ mask: !x.mask }, i, tr) }}>{plays(x) && <><span className="seq-vel" style={{ height: `${100 - x.velocity / 127 * 100}%` }} /><span className="seq-note" data-i18n-skip>{noteName(x.note)}</span></>}</button> })}
           </div>)}
         </div>
         <h3>{t('Track')} {track + 1} · {t('lanes')}</h3>
@@ -169,13 +169,13 @@ export function SequencerView({ access, controllerInputId, receive, download, lo
           return <button key={i} className={`seq-bar${plays(x) ? '' : ' off'}${i === step ? ' sel' : ''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1} · ${value}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.min < 0 ? (value < 0 ? 'start' : 'end') : undefined }}
             onClick={e => { setStep(i); const r = e.currentTarget.parentElement!.getBoundingClientRect(); const f = (r.bottom - e.clientY) / r.height; const v = lane.min < 0 ? Math.round((f - .5) * 2 * lane.max) : Math.round(lane.min + f * (lane.max - lane.min)); patch({ [lane.key]: Math.max(lane.key === 'velocity' ? 1 : lane.min, Math.min(lane.max, v)) } as Partial<ZaqStep>, i) }} />
         })}</div></div>)}</div>
-      </>}
-      {view === 'roll' && <>
+      </div>}
+      {view === 'roll' && <div className="seq-rollview">
         <h3>{t('Track')} {track + 1} · {t('piano roll')}</h3>
         <div className="seq-roll" style={{ ['--rows' as string]: String(high - low + 1) }}>
           {Array.from({ length: high - low + 1 }, (_, r) => { const n = high - r; return <div key={n} className={`seq-roll-row${names[n % 12].includes('#') ? ' black' : ''}`}><span className="seq-roll-key" data-i18n-skip>{noteName(n)}</span>{Array.from({ length: 32 }, (_, i) => { const x = steps[i], on = plays(x) && x.note === n; return <button key={i} className={`seq-roll-cell${on ? ' on' : ''}${i % 4 ? '' : ' beat'}${i === step && n === s.note ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[track] }} aria-label={`${noteName(n)} · ${t('Step')} ${i + 1}`} onClick={() => { setStep(i); patch(on ? { rest: true } : { note: n, mask: false, rest: false, velocity: x.velocity || velocity }, i) }} /> })}</div> })}
         </div>
-      </>}
+      </div>}
       {view === 'table' && <div className="seq-table-wrap"><table className="seq-table"><thead><tr>{['Step', 'Note', 'Velocity', 'Start offset', 'Note length (0–15)', 'CC 1 (raw)', 'CC 2 (raw)', 'Polyphony (raw)', 'Muted', 'Skipped'].map(h => <th key={h}>{t(h)}</th>)}</tr></thead>
         <tbody>{steps.map((x, i) => <tr key={i} aria-selected={i === step} onClick={() => setStep(i)}><th data-i18n-skip>{i + 1}</th>{(['note', 'velocity', 'delay', 'gate', 'alpha', 'beta', 'voices'] as const).map(k => <td key={k}><input type="number" aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x[k]} onChange={e => { const v = Number(e.target.value); if (Number.isFinite(v)) try { patch({ [k]: v } as Partial<ZaqStep>, i) } catch (error) { setNotice(String(error)) } }} /></td>)}
           {(['rest', 'mask'] as const).map(k => <td key={k}><input type="checkbox" aria-label={`${t('Step')} ${i + 1} · ${t(k === 'rest' ? 'Muted' : 'Skipped')}`} checked={x[k]} onChange={e => patch({ [k]: e.target.checked }, i)} /></td>)}</tr>)}</tbody></table></div>}

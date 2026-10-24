@@ -129,7 +129,7 @@
 .bcr32-workbench .editor-brand strong { font-weight:700; }
 .bcr32-workbench .editor-brand span { font-weight:350; color:#dca44f; }
 /* Logo height matched to the panel's cap height. */
-.bcr32-workbench .editor-brand img { display:block; width:100%; height:100%; object-fit:contain; transform:scale(1.4266); transform-origin:center; }
+.bcr32-workbench .editor-brand img { display:block; width:100%; height:100%; object-fit:contain; transform:none; }
 .bcr32-workbench .studio[data-theme=silver] .editor-brand img { filter:brightness(.5); }
 
 /* Appearance only: never filter the interactive panel, OLED or activity LEDs. */
@@ -923,3 +923,23 @@
 .bcr32-workbench .seq-header th{font-weight:400;text-align:left;color:var(--mk-muted);padding:3px 0}
 .bcr32-workbench .seq-header td{text-align:right;padding:3px 0}
 .bcr32-workbench .seq-preview-note{margin:0 0 10px}
+/* Sequencer at full height, large and readable: the four track rows and the piano roll share the page height. */
+.bcr32-workbench .seq-main{display:flex;flex-direction:column;min-height:0}
+.bcr32-workbench :is(.seq-gridview,.seq-rollview){flex:1;display:flex;flex-direction:column;min-height:0}
+.bcr32-workbench .seq-gridview .seq-grid{flex:3 1 0;grid-template-rows:auto repeat(4,minmax(52px,1fr));min-height:300px}
+.bcr32-workbench .studio.compact .seq-gridview .seq-cell{height:100%;min-height:44px}
+.bcr32-workbench .seq-gridview .seq-lanes{flex:2 1 0;display:flex;flex-direction:column;min-height:240px}
+.bcr32-workbench .seq-gridview .seq-lane{flex:1;min-height:70px}
+.bcr32-workbench .seq-gridview .seq-bars{height:100%}
+.bcr32-workbench .seq-num{font-size:12px}
+.bcr32-workbench .studio.compact .seq-track{font-size:15px;font-weight:600}
+.bcr32-workbench .seq-track i{width:11px;height:11px}
+.bcr32-workbench .seq-note{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:12px;font-weight:600;color:#111;pointer-events:none}
+.bcr32-workbench .seq-lane-label{font-size:12px}
+.bcr32-workbench .seq-rollview .seq-roll{flex:1;max-height:none;display:grid;grid-template-rows:repeat(var(--rows),minmax(20px,1fr))}
+.bcr32-workbench .studio.compact .seq-rollview .seq-roll-cell{height:100%;min-height:18px}
+.bcr32-workbench .seq-roll-key{font-size:12px;line-height:1.4}
+.bcr32-workbench .seq-table{font-size:14px}
+.bcr32-workbench .studio.compact .seq-table input[type=number]{width:60px;font-size:14px;padding:4px}
+.bcr32-workbench .sequencer-view h3{font-size:12px}
+.bcr32-workbench .seq-lane{grid-template-columns:96px 1fr}
