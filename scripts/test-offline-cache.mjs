@@ -41,6 +41,11 @@ try{
  handlers.message(event({type:'STATUS'}));await Promise.allSettled(waitUntil);assert.equal(calls.skip,0,'status probes never activate a waiting build')
  handlers.message(event({type:'SKIP_WAITING'}));await Promise.allSettled(waitUntil);assert.equal(calls.skip,1,'explicit update activates the waiting build')
  assert.match(readFileSync('build/offline-worker.js','utf8'),/No skipWaiting: a new build must not take over/,'install keeps the session-safe policy')
+ const offline=readFileSync('src/offline.ts','utf8')
+ assert.match(offline,/setInterval\(check,300000\)/,'open tabs check for a new build every 5 minutes')
+ assert.match(offline,/document\.addEventListener\('visibilitychange',check\)/,'and when the tab comes back into view')
+ assert.match(offline,/Date\.now\(\)-lastCheck<60000\)return/,'at most once a minute')
+ assert.ok(!/check=\(\)=>\{[^}]*(skipWaiting|SKIP_WAITING|reload)/.test(offline),'a check never activates nor reloads by itself')
  assert.ok(!/addEventListener\('install'[^]*?skipWaiting\(\)[^]*?\}\)\n/.test(sw.split("self.addEventListener('activate'")[0]),'install handler does not call skipWaiting')
 }finally{rmSync(dir,{recursive:true,force:true})}
 console.log('PASS offline cache: every JS/CSS file of a build is precached (lazy chunks and workers included, media cached on use); a waiting build activates only on an explicit SKIP_WAITING message')

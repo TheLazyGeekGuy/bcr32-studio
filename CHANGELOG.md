@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.45.0-alpha.10] — 2026-10-24
+
+- An open tab now finds a new deployment without being reloaded: it checks every 5 minutes while visible and when it comes back into view (at most once a minute), then shows "New version available" with "Update and reload". It never reloads by itself, so a MIDI session is never cut.
+
 ## [0.45.0-alpha.9] — 2026-10-24
 
 - Presets › On this computer: the browser library is now a list instead of a drop-down. Drag a row, or use ↑ ↓, to reorder; the order is saved and kept by Export. Import sits next to Export: an imported file is appended as copies with new identifiers, never over an existing preset. Choosing a row only loads it into the editor; nothing is sent to the BCR32.
