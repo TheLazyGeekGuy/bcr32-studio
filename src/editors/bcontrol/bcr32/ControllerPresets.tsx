@@ -90,7 +90,7 @@ export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeT
     setStoreBusy(true); setStoreError(''); setNotice('Saving complete controller preset…'); setCount(0)
     let acknowledged: HardwarePresetStorePlan | undefined
     try {
-      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name,
+      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name, templateSlot: 0,
         onAcknowledged: saved => {
           if(reader.current!==transport)return
           acknowledged=saved
