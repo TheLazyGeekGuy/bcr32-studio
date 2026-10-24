@@ -1,5 +1,7 @@
 # BCR32 firmware 1.0.2 support
 
+Full protocol reference: [BCR32-PROTOCOL-1.0.2.md](BCR32-PROTOCOL-1.0.2.md).
+
 This release uses the controller/CTRL endpoint. ZAQ/Zaquencer ports are excluded from controller operations. The observed unit exposes one CoreMIDI pair. A live product reply supplies firmware and addressed device ID; imported metadata is only a last-known observation.
 
 ## Assignment synchronization
