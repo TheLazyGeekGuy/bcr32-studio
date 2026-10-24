@@ -981,3 +981,8 @@
 .midi-import-dialog footer{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--theme-line,#34363b)}
 .midi-import-dialog footer .primary{background:var(--theme-accent,#d99b41);border-color:var(--theme-accent,#d99b41);color:#1b1408;font-weight:600}
 @media(max-width:900px){.mid-slots{grid-template-columns:1fr 1fr}}
+/* Current BCR32 preset in the toolbar: double-click to rename, Store… opens the checked save sheet. */
+.bcr32-workbench .preset-chip{display:inline-flex;align-items:baseline;gap:4px;max-width:260px;padding:3px 9px;border:1px dashed var(--mk-line);border-radius:4px;font-size:13px;cursor:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcr32-workbench .preset-chip strong{font-weight:600;color:var(--mk-text)}
+.bcr32-workbench .preset-chip small{font-size:11px;color:var(--mk-muted)}
+.bcr32-workbench .studio.compact .preset-chip-input{width:200px;padding:4px 8px;font-size:13px;border:1px solid var(--mk-accent);border-radius:4px;background:var(--mk-surface2);color:var(--mk-text)}
