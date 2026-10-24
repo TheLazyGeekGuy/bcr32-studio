@@ -12,5 +12,7 @@ export const noteLengths = ['96', 't32', '32', 't16', '16', 't8', '8', 't4', '4'
 // Note delay in MIDI clock ticks (24 per quarter, BCR2000 Zaquencer manual 1.04 §6.4); the BCR32 panel offers −5…+5,
 // one tick short of a 1/16 step (6 ticks), so a note never crosses its neighbour.
 export const noteDelayRange = 5
+// A step as the BCR32 leaves it before programming (manual Rev1): pitch C3, velocity 100, note length 32 (code 2).
+export const stepDefaults = { note: 60, velocity: 100, gate: 2 } as const
 export const clockDividers = [1, 2, 4, 8, 16, 32, 24, 12, 6, 3]
 export const directions = ['Forward', 'Backward', 'Pip 0', 'Random', 'Pendulum']

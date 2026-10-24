@@ -13,6 +13,7 @@ const fixture=name=>new Uint8Array(readFileSync(`scripts/fixtures/sequencer/${na
 
 // Step entry: note and velocity on the selected step, step switched on, cursor advanced, nothing else changed.
 const empty=m.emptyPattern().data
+assert.ok([0,1,2,3].every(tr=>Array.from({length:32},(_,s)=>m.readStep(empty,tr,s)).every(x=>x.note===60&&x.velocity===100&&x.gate===2&&m.plays(x))),'a new pattern plays the BCR32 defaults on every step: C3, velocity 100, length 32 (code 2)')
 const {data:one,next}=m.enterNote(empty,1,31,60,90)
 assert.equal(next,0,'the cursor wraps after step 32')
 assert.deepEqual([m.readStep(one,1,31).note,m.readStep(one,1,31).velocity,m.plays(m.readStep(one,1,31))],[60,90,true],'the entered step plays (not muted, not skipped)')

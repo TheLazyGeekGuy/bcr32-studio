@@ -11,12 +11,15 @@ import { translate, useLanguage } from './i18n'
 // raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
 // stays in this browser: listening for a front-panel export sends nothing, and there is no path that sends a pattern.
 export { trackColors, noteName, keyboardNotes, stepGrids, noteDelayRange } from './sequencer-shared'
-import { trackColors, noteName, keyboardNotes, stepGrids, noteNames, noteLengths, noteDelayRange, clockDividers, directions } from './sequencer-shared'
+import { trackColors, noteName, keyboardNotes, stepGrids, noteNames, noteLengths, noteDelayRange, stepDefaults, clockDividers, directions } from './sequencer-shared'
 type Entry = { pattern: ZaqPattern; data: number[]; label: string }
-// A local template: eight empty kind-0 blocks. Its header is all zero (fields not located yet), so it is for files only.
+// A local template: eight kind-0 blocks whose 128 steps play the BCR32's own defaults. The header is all zero (fields not
+// located yet), so it is for files only.
 export function emptyPattern(): ZaqPattern {
-  const blocks = Array.from({ length: 8 }, (_, block) => ({ device: 0, kind: 0, bank: 0, page: 0, block, data: Array<number>(128).fill(0) }))
-  return { identity: 'template', blocks, data: blocks.flatMap(b => b.data) }
+  let data = Array<number>(1024).fill(0)
+  for (let track = 0; track < 4; track++) for (let step = 0; step < 32; step++) data = patchStep(data, track, step, stepDefaults)
+  const blocks = Array.from({ length: 8 }, (_, block) => ({ device: 0, kind: 0, bank: 0, page: 0, block, data: data.slice(block * 128, (block + 1) * 128) }))
+  return { identity: 'template', blocks, data }
 }
 // Field meanings follow the preset map published by the Zaquencer author (zaqaudio.com, 2026-05-22): bytes 0–3 of a
 // track are the skipStep flags (the codec's `mask`), 252–255 the noteMute flags (`rest`), 112–123 plus the velocity high

@@ -842,8 +842,8 @@
 .midi-settings-dialog .midi-settings-at-connection input[type=checkbox]{width:auto;margin:0}
 .bcr32-workbench .studio.compact .sidebar .control-search{position:relative}
 .bcr32-workbench .studio.compact .sidebar .control-search::before{content:"🔍";position:absolute;left:8px;top:6px;font-size:12px;pointer-events:none;z-index:1}
-.bcr32-workbench .studio.compact .sidebar .control-search input{padding-left:28px}
-.bcr32-workbench .studio.compact .sidebar .control-search label input[type=text]{padding-left:28px}
+/* Same :is() as the generic sidebar input rule, plus .control-search, so the left padding clears the magnifier. */
+.bcr32-workbench .studio.compact .sidebar .control-search :is(input:not([type=checkbox]):not([type=range]):not([type=file])){padding:6px 8px 6px 28px;font-size:13px}
 /* Presets › On this computer: ordered list, drag to reorder. */
 .bcr32-workbench .library-list{list-style:none;margin:8px 0;padding:0;border:1px solid var(--mk-line,#34363b);border-radius:6px;overflow:hidden}
 .bcr32-workbench .library-list li{display:flex;align-items:center;gap:6px;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.06);background:var(--mk-surface2,rgba(255,255,255,.035))}

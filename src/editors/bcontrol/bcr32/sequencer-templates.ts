@@ -1,4 +1,5 @@
 import { patchStep, type ZaqStep } from './zaquencer'
+import { stepDefaults } from './sequencer-shared'
 
 // Built-in pattern templates and a random pattern generator for the sequencer view. They only fill notes, velocities,
 // mute and skip flags of a pattern the editor already holds; the track header and every other byte stay untouched.
@@ -17,7 +18,7 @@ export const templates: { id: string; name: string; tracks: (Lane | undefined)[]
 export function applyTemplate(data: readonly number[], id: string) {
   const template = templates.find(t => t.id === id); if (!template) throw Error('Unknown template')
   let next = [...data]
-  template.tracks.forEach((lane, track) => { if (!lane) return; lane.forEach((step, s) => { next = patchStep(next, track, s, step ? { ...step, mask: false, rest: false } : { rest: true, mask: false }) }) })
+  template.tracks.forEach((lane, track) => { if (!lane) return; lane.forEach((step, s) => { next = patchStep(next, track, s, step ? { gate: stepDefaults.gate, ...step, mask: false, rest: false } : { rest: true, mask: false }) }) })
   return next
 }
 // Random pattern: notes from a scale (root and octave span), density = share of playing steps, velocities in a range.
@@ -29,7 +30,7 @@ export function randomPattern(data: readonly number[], { tracks, scale, root, oc
   for (const track of tracks) for (let s = 0; s < 32; s++) {
     if (random() >= density) { next = patchStep(next, track, s, { rest: true, mask: false }); continue }
     const degree = Math.floor(random() * degrees.length * octaves), note = Math.min(127, root + 12 * Math.floor(degree / degrees.length) + degrees[degree % degrees.length])
-    next = patchStep(next, track, s, { note, velocity: Math.round(velocity[0] + random() * (velocity[1] - velocity[0])), rest: false, mask: false })
+    next = patchStep(next, track, s, { note, velocity: Math.round(velocity[0] + random() * (velocity[1] - velocity[0])), gate: stepDefaults.gate, rest: false, mask: false })
   }
   return next
 }
