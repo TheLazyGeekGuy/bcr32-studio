@@ -12,7 +12,7 @@ const arg=k=>{const i=process.argv.indexOf(k);return i<0?null:process.argv[i+1]}
 const slot=Number(arg('--slot')),name=arg('--name')??''
 if(!Number.isInteger(slot)||slot<2||slot>64)throw Error('--slot 2–64 (slot 1 is never a target)')
 const dir=mkdtempSync(join(tmpdir(),'bcr32-store-')),bundle=join(dir,'b.cjs')
-await build({stdin:{contents:`export {createPresetReader} from './src/editors/bcontrol/bcr32/controller-presets';export {createBclSender,storeHardwarePreset,presetStorePlan,isInitializedPreset} from './src/editors/bcontrol/bcr32/preset-store';export {parseFirmwareReply,productQuery} from './src/editors/bcontrol/bcr32/web-midi'`,resolveDir:process.cwd(),loader:'ts'},bundle:true,outfile:bundle,platform:'node',format:'cjs',logLevel:'error'})
+await build({stdin:{contents:`export {createPresetReader} from './src/editors/bcontrol/bcr32/controller-presets';export {createBclSender,storeHardwarePreset,presetStorePlan,isInitializedPreset} from './src/editors/bcontrol/bcr32/preset-store';export {defaultPresetBcl} from './src/editors/bcontrol/bcr32/default-preset';export {parseFirmwareReply,productQuery} from './src/editors/bcontrol/bcr32/web-midi'`,resolveDir:process.cwd(),loader:'ts'},bundle:true,outfile:bundle,platform:'node',format:'cjs',logLevel:'error'})
 const require=createRequire(import.meta.url),m=require(bundle);rmSync(dir,{recursive:true})
 const midi=require('@julusian/midi'),input=new midi.Input(),output=new midi.Output()
 const find=(p,n)=>{for(let i=0;i<p.getPortCount();i++)if(p.getPortName(i).includes(n))return i;return -1}
@@ -28,13 +28,13 @@ try{
   if(device===null||device===127)throw Error('No product reply')
   const reader=m.createPresetReader(send,device,4000),sender=m.createBclSender(send,device,1500,15)
   listener=x=>{reader.receive(x);sender.receive(x)}
-  const working=(await reader.read({kind:'working'})).text,base=m.isInitializedPreset(working)?(await reader.read({kind:'slot',slot:0})).text:working,plan=m.presetStorePlan(base,slot-1,name)
+  const working=(await reader.read({kind:'working'})).text,base=m.isInitializedPreset(working)?m.defaultPresetBcl:working,plan=m.presetStorePlan(base,slot-1,name)
   console.log('Working preset lines:',working.split('\n').length,'· plan lines:',plan.lines.length,'· last lines:',JSON.stringify(plan.lines.slice(-2)))
   if(!apply){console.log('Read-only run: nothing written.')}else{
     const out=join(process.cwd(),'output','hw');mkdirSync(out,{recursive:true});const stamp=new Date().toISOString().replace(/[:.]/g,'-')
     let backupText=''
     try{
-      await m.storeHardwarePreset({read:r=>reader.read(r),transfer:lines=>sender.transfer(lines),source:'working',slot:slot-1,name,templateSlot:0,backup:c=>{backupText=c;writeFileSync(join(out,`${stamp}-store-backup.json`),c)},onAcknowledged:p=>console.log('STORE acknowledged:',p.slot+1,JSON.stringify(p.name))})
+      await m.storeHardwarePreset({read:r=>reader.read(r),transfer:lines=>sender.transfer(lines),source:'working',slot:slot-1,name,template:m.defaultPresetBcl,backup:c=>{backupText=c;writeFileSync(join(out,`${stamp}-store-backup.json`),c)},onAcknowledged:p=>console.log('STORE acknowledged:',p.slot+1,JSON.stringify(p.name))})
       console.log('Store complete: read back identical, working preset restored and identical.')
     }catch(e){console.log('Store stopped:',String(e))}
     const after=(await reader.read({kind:'slot',slot:slot-1})).text,names=(await reader.read({kind:'names'})).names

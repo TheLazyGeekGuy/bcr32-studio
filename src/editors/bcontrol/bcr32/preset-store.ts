@@ -69,16 +69,16 @@ export function createBclSender(send: (bytes: number[]) => void, device: number,
 }
 
 export type HardwarePresetStorePlan = ReturnType<typeof presetStorePlan>
-// An initialized preset ('.init', no name) has no content of its own: storing it uses a template preset instead.
+// An initialized preset ('.init', no name) has no content of its own: storing it uses the default template instead.
 export const isInitializedPreset = (text: string) => { const l = text.split('\n'); return l[1] === '$preset' && !l.some(x => /^\s*\.name /.test(x)) && l.some(x => x.trim() === '.init') }
-export async function storeHardwarePreset({ read, transfer, backup, source, slot, name, onAcknowledged, templateSlot }: {
+export async function storeHardwarePreset({ read, transfer, backup, source, slot, name, onAcknowledged, template }: {
   read: (request: PresetRead) => Promise<PresetReadResult>
   transfer: (lines: readonly string[]) => Promise<void>
   backup: (contents: string) => void
   source: 'working' | number; slot: number; name: string
   onAcknowledged?: (plan: HardwarePresetStorePlan) => void
-  /** When the source is an initialized working preset, store this slot's contents (0-based; preset 1 = 0) under the new name. */
-  templateSlot?: number
+  /** BCL text stored (under the new name) instead of an initialized working preset; see default-preset.ts. */
+  template?: string
 }) {
   async function complete(request: PresetRead) {
     const result = await read(request)
@@ -87,8 +87,8 @@ export async function storeHardwarePreset({ read, transfer, backup, source, slot
   }
   const working = await complete({ kind: 'working' })
   presetStorePlan(working, slot, name) // Validate the restoration source before any mutation as well.
-  const fromTemplate = source === 'working' && templateSlot !== undefined && isInitializedPreset(working)
-  const contents = fromTemplate ? await complete({ kind: 'slot', slot: templateSlot }) : source === 'working' ? working : await complete({ kind: 'slot', slot: source })
+  const fromTemplate = source === 'working' && template !== undefined && isInitializedPreset(working)
+  const contents = fromTemplate ? template! : source === 'working' ? working : await complete({ kind: 'slot', slot: source })
   const plan = presetStorePlan(contents, slot, name)
   const destination = await complete({ kind: 'slot', slot })
   // Storage must be durable and checked by the caller before the first import line.

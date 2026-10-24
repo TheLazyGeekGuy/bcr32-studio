@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, type MutableRefObject } from 'react
 import { createPresetReader, type PresetRead, type PresetReadResult } from './controller-presets'
 import { translate, useLanguage } from './i18n'
 import { bclFile } from './bcl'
+import { defaultPresetBcl } from './default-preset'
 import { createBclSender, presetStorageValidated, storeHardwarePreset, type HardwarePresetStorePlan } from './preset-store'
 
 type Props = { onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string; auto?: boolean }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
@@ -90,7 +91,7 @@ export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeT
     setStoreBusy(true); setStoreError(''); setNotice('Saving complete controller preset…'); setCount(0)
     let acknowledged: HardwarePresetStorePlan | undefined
     try {
-      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name, templateSlot: 0,
+      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name, template: defaultPresetBcl,
         onAcknowledged: saved => {
           if(reader.current!==transport)return
           acknowledged=saved

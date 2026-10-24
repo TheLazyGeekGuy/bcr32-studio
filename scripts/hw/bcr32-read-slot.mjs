@@ -20,9 +20,10 @@ listener=msg=>{if(m.parseFirmwareReply(msg))device=msg[4]};send(m.productQuery);
 if(device===null||device===127)throw Error('No product reply')
 const reader=m.createPresetReader(send,device,4000);listener=msg=>reader.receive(msg)
 const wellFormed=(text,kind)=>{if(text==='$rev BCR32\n$end')return true;const l=text.split('\n');return l[0]==='$rev BCR32'&&l[1]===kind&&l.at(-1)==='$end'&&l.filter(x=>x.trim()===kind).length===1}
-async function stable(request){let last=null;for(let i=0;i<8;i++){const r=await reader.read(request);console.error('read',request.kind,r.status,JSON.stringify(r.text.split('\n').length<12?r.text.split('\n'):r.text.split('\n').slice(0,3)));if(r.status==='complete'&&wellFormed(r.text,'$preset')){if(r.text===last)return r.text;last=r.text}await sleep(300)}throw Error(`No two identical well-formed reads of ${JSON.stringify(request)}`)}
+async function stable(request){let last=null;for(let i=0;i<8;i++){const r=await reader.read(request);if(process.env.DEBUG)console.error('read',request.kind,r.status,JSON.stringify(r.text.split('\n').length<12?r.text.split('\n'):r.text.split('\n').slice(0,3)));if(r.status==='complete'&&wellFormed(r.text,'$preset')){if(r.text===last)return r.text;last=r.text}await sleep(300)}throw Error(`No two identical well-formed reads of ${JSON.stringify(request)}`)}
 try{
   const stored=await stable({kind:'slot',slot:slot-1}),working=await stable({kind:'working'})
   const name=t=>(t.match(/^\s*\.name '(.*)'$/m)??[])[1]
+  if (process.argv[3] === '--save') { const {writeFileSync,mkdirSync} = await import('node:fs'); mkdirSync('output/hw', {recursive: true}); writeFileSync(`output/hw/slot-${slot}.bcl`, stored); console.log('saved', `output/hw/slot-${slot}.bcl`) }
   console.log(JSON.stringify({slot,storedName:name(stored),storedLines:stored.split('\n').length,workingName:name(working),workingLines:working.split('\n').length,storedEqualsWorking:stored===working}))
 }finally{reader.close();input.closePort();output.closePort()}

@@ -21,17 +21,23 @@ const init="$rev BCR32\n$preset\n  .snapshot off\n  .request off\n  .init\n$end"
 assert.equal(initPlan.expected,"$rev BCR32\n$preset\n  .name 'test Fred'\n  .snapshot off\n  .request off\n  .init\n$end",'name inserted after $preset')
 assert.deepEqual(initPlan.lines.slice(-2),['$store 13','$end'],'stored into slot 13')
 assert.throws(()=>presetStorePlan("$rev BCR32\n$preset\n  .name 'a'\n  .name 'b'\n$end",12,'x'),/complete single/,'two names refused')
-// An initialized working preset is stored from the template slot (preset 1) under the new name; the working preset is
+// An initialized working preset is stored from the default template under the new name; the working preset is
 // still restored as it was. A named working preset ignores the template.
 {
   const {isInitializedPreset}=mod.exports,preset1="$rev BCR32\n$preset\n  .name 'all controls'\n  .egroups 4\n$end"
   assert.ok(isInitializedPreset(init)&&!isInitializedPreset(working),'initialized preset detected')
   const reads=[],transfers=[];let slot13="$rev BCR32\n$end"
-  const plan=await storeHardwarePreset({source:'working',slot:12,name:'test Fred',templateSlot:0,backup(){},
-    read:async r=>{reads.push(r);const text=r.kind==='working'?init:r.slot===0?preset1:slot13;return {status:'complete',request:r,names:{},frames:[],text}},
+  const plan=await storeHardwarePreset({source:'working',slot:12,name:'test Fred',template:preset1,backup(){},
+    read:async r=>{reads.push(r);const text=r.kind==='working'?init:slot13;return {status:'complete',request:r,names:{},frames:[],text}},
     transfer:async lines=>{transfers.push(lines);if(lines.some(l=>l.startsWith('$store ')))slot13=lines.filter(l=>!l.startsWith('$store ')).join('\n')}})
   assert.equal(plan.expected,"$rev BCR32\n$preset\n  .name 'test Fred'\n  .egroups 4\n$end",'preset 1 contents stored under the new name')
-  assert.ok(reads.some(r=>r.kind==='slot'&&r.slot===0),'template slot read')
+  assert.ok(!reads.some(r=>r.kind==='slot'&&r.slot===0),'preset 1 on the device is not read: the stored template is used')
   assert.deepEqual(transfers.at(-1),init.split('\n'),'initialized working preset restored as it was')
+}
+{
+  const b2=await build({stdin:{contents:`export * from './src/editors/bcontrol/bcr32/default-preset'`,resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node'})
+  const d={exports:{}};new Function('module','exports',b2.outputFiles[0].text)(d,d.exports)
+  const p=presetStorePlan(d.exports.defaultPresetBcl,12,'test Fred')
+  assert.ok(p.expected.includes("  .name 'test Fred'")&&p.lines.at(-2)==='$store 13','the stored default template is a valid single preset')
 }
 console.log('PASS BCR32 preset store: slot62 Test cache event immediately after ACK, before independent verification/restoration; no names query, trimmed name, no event on failed transfer, failed readback still rejects after acknowledgement')
