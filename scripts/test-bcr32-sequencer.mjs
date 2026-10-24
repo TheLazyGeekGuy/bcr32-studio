@@ -7,7 +7,7 @@ import {createRequire} from 'node:module'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
 const dir=mkdtempSync(join(tmpdir(),'bcr32-sequencer-')),file=join(dir,'b.cjs')
-await build({stdin:{contents:`export {emptyPattern,enterNote,applyMidiTracks,patternToMidi,keyboardNotes,noteName,plays,trackHeader,ccValue,ccRaw} from './src/editors/bcontrol/bcr32/SequencerView';export {readStep,patchStep} from './src/editors/bcontrol/bcr32/zaquencer';export {parseMidiFile,suggestStepTicks,trackToSteps} from './src/editors/bcontrol/bcr32/midi-file'`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,outfile:file,platform:'node',format:'cjs',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},logLevel:'error'})
+await build({stdin:{contents:`export {emptyPattern,enterNote,applyMidiTracks,patternToMidi,keyboardNotes,noteName,plays,trackHeader,ccValue,ccRaw} from './src/editors/bcontrol/bcr32/SequencerView';export {readStep,patchStep} from './src/editors/bcontrol/bcr32/zaquencer';export {parseMidiFile,suggestStepTicks,trackToSteps} from './src/editors/bcontrol/bcr32/midi-file';export {firstNoteBar} from './src/editors/bcontrol/bcr32/MidiImportDialog'`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,outfile:file,platform:'node',format:'cjs',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},logLevel:'error'})
 const m=createRequire(import.meta.url)(file);rmSync(dir,{recursive:true})
 const fixture=name=>new Uint8Array(readFileSync(`scripts/fixtures/sequencer/${name}`))
 
@@ -49,6 +49,15 @@ for(let tr=0;tr<4;tr++)for(let s=0;s<32;s++){const a=m.readStep(imported,tr,s),b
 const h=m.trackHeader(m.patchStep(m.patchStep(empty,0,3,{mask:true}),0,7,{mask:true}),0)
 assert.equal(h.skipped,2,'skip flags counted from bytes 0–3')
 assert.deepEqual([m.ccValue(255),m.ccValue(64),m.ccRaw(-1),m.ccRaw(64)],[-1,64,255,64],'CC value −1 = off stored as 255')
+
+// Import preview: each slot takes its own source track and its own start (a song that starts at bar 19, sections per slot).
+const late=[{tick:18*384,duration:24,note:60,velocity:100},{tick:18*384+96,duration:24,note:62,velocity:90}]
+assert.equal(m.firstNoteBar({index:0,name:'',channels:[0],notes:late},384),18,'first note in bar 19 (index 18)')
+assert.equal(m.firstNoteBar(undefined,384),0)
+const sections=m.applyMidiTracks(empty,[{notes:late,startTick:18*384},{notes:late,startTick:0},null,null],24)
+assert.ok(m.plays(m.readStep(sections.data,0,0))&&m.readStep(sections.data,0,0).note===60&&m.readStep(sections.data,0,4).note===62,'T1 from bar 19: notes on steps 1 and 5')
+assert.ok(Array.from({length:32},(_,s)=>m.readStep(sections.data,1,s)).every(x=>!m.plays(x)),'T2 from bar 1 of the same track: nothing in its 32 steps')
+assert.equal(sections.report.beyond,2,'notes outside a slot window are reported')
 
 // The view never sends: no output port use, receive only.
 const view=readFileSync('src/editors/bcontrol/bcr32/SequencerView.tsx','utf8')

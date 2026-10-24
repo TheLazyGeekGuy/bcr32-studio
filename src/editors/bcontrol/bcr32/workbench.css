@@ -943,3 +943,41 @@
 .bcr32-workbench .studio.compact .seq-table input[type=number]{width:60px;font-size:14px;padding:4px}
 .bcr32-workbench .sequencer-view h3{font-size:12px}
 .bcr32-workbench .seq-lane{grid-template-columns:96px 1fr}
+/* Bar starts (steps 1, 5, 9 … 29) stand out in every sequencer view. */
+.bcr32-workbench .seq-num.beat{background:var(--mk-accent);color:#1b1408;font-weight:700;border-radius:3px;font-size:13px}
+.bcr32-workbench .studio.compact .seq-cell:nth-child(4n+2){box-shadow:inset 3px 0 0 rgba(255,255,255,.28)}
+.bcr32-workbench .seq-bars{cursor:ns-resize;touch-action:none;user-select:none}
+.bcr32-workbench .seq-table tbody tr:nth-child(4n+1) th{background:var(--mk-accent);color:#1b1408;font-weight:700}
+/* MIDI import preview dialog */
+.midi-import-dialog{width:min(1280px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--theme-line,#34363b);border-radius:8px;background:var(--theme-surface,#1c1d20);color:var(--theme-text,#e6e3dc);display:flex;flex-direction:column}
+.midi-import-dialog:not([open]){display:none}
+.midi-import-dialog::backdrop{background:rgba(0,0,0,.55)}
+.midi-import-dialog>header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--theme-line,#34363b)}
+.midi-import-dialog h2{margin:0;font-size:17px}
+.midi-import-dialog .mock-caption{margin:2px 0 0;font-size:12px;color:var(--theme-muted,#9a978f)}
+.mid-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 14px}
+.mid-slot{border:1px solid var(--theme-line,#34363b);border-top:4px solid var(--c);border-radius:6px;padding:8px;background:rgba(255,255,255,.03);cursor:pointer}
+.mid-slot[data-active]{outline:2px solid var(--c);outline-offset:1px}
+.mid-slot>b{font-size:16px;color:var(--c)}
+.mid-slot label,.mid-toolbar label{display:flex;flex-direction:column;gap:3px;margin:6px 0;font-size:12px;color:var(--theme-muted,#9a978f)}
+.mid-slot select,.mid-toolbar select,.mid-start input{padding:5px 6px;font-size:13px;border:1px solid var(--theme-line,#34363b);border-radius:4px;background:rgba(255,255,255,.04);color:var(--theme-text,#e6e3dc)}
+.mid-start{display:flex;gap:4px;align-items:center}.mid-start input{width:64px;text-align:center}
+.mid-start button,.midi-import-dialog footer button{padding:4px 9px;font-size:13px;border:1px solid var(--theme-line,#34363b);border-radius:4px;background:transparent;color:var(--theme-text,#e6e3dc);cursor:pointer}
+.mid-preview{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;margin-top:6px}
+.mid-preview span{height:22px;font-size:9px;line-height:22px;text-align:center;border-radius:2px;background:rgba(255,255,255,.05);overflow:hidden}
+.mid-preview span.beat{box-shadow:inset 2px 0 0 var(--theme-accent,#d99b41)}
+.mid-preview span.on{background:var(--c);color:#111;font-weight:600}
+.mid-toolbar{display:flex;align-items:end;gap:16px;padding:0 14px}
+.mid-timeline{display:grid;grid-template-columns:180px minmax(0,1fr);margin:8px 14px;border:1px solid var(--theme-line,#34363b);border-radius:6px;min-height:0;flex:1;overflow:auto}
+.mid-names{display:flex;flex-direction:column;border-right:1px solid var(--theme-line,#34363b);font-size:12px}
+.mid-names span{display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid rgba(255,255,255,.05)}
+.mid-scroll{overflow-x:auto}
+.mid-scroll svg{display:block;cursor:crosshair}
+.mid-scroll text{font-size:10px;fill:var(--theme-muted,#9a978f)}.mid-scroll text.mid-time{fill:#6f6c66}
+.mid-bar{stroke:rgba(255,255,255,.05)}.mid-bar.strong{stroke:rgba(255,255,255,.16)}
+.mid-note{fill:#cfcac0}
+.mid-window{fill-opacity:.18;stroke-width:2}
+.mid-scroll text.mid-window-label{font-size:11px;font-weight:700;fill:#fff}
+.midi-import-dialog footer{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--theme-line,#34363b)}
+.midi-import-dialog footer .primary{background:var(--theme-accent,#d99b41);border-color:var(--theme-accent,#d99b41);color:#1b1408;font-weight:600}
+@media(max-width:900px){.mid-slots{grid-template-columns:1fr 1fr}}
