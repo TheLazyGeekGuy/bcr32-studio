@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.45.0-alpha.6] — 2026-10-24
+
+- BCR32 sidebar, first steps of the reorganisation: the area above the tabs is now one line, the MIDI status (and the firmware once read) that opens the MIDI connection window, so the scrolling content gains 53 px at 1440×900 (590 → 643 px) even with the new status bar. Firmware read, controller output routing and the Studio version left that area: the first two are in the MIDI window, the version under the help.
+- Action feedback is a status bar fixed at the bottom of the sidebar on every tab, instead of moving between the top, middle and bottom of the content.
+- Narrow screens: the tabs and the status bar stay visible while scrolling a long tab.
+
 ## [0.45.0-alpha.5] — 2026-10-24
 
 - MIDI settings icon beside the connection status (standalone and workspace hosts), as in the FireworX and M3000 editors. For the BCR32 it opens a MIDI connection window: MIDI/SysEx permission and retry, firmware read, input and output ports, CC sending and controller output routing. Opening it sends nothing; the Config tab links to it instead of holding the port selectors.

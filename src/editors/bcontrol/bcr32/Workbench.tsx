@@ -971,10 +971,9 @@ function loadWorkspace() {
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">
-        <div className="connection"><div className="connection-state"><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span><span className="firmware-status studio-version" data-i18n-skip>Studio v{studioVersion}</span><FirmwareIdentity firmware={liveFirmware} previous={profile.device.firmwareObserved} canProbe={brightnessEnabled} probe={() => setProbeRevision(n => n + 1)} /></div><button className="floating-toggle" aria-pressed={!!pipWindow} disabled={!floatingSupported()} title={floatingSupported() ? 'Small always-on-top window with the screen, movable and resizable' : 'Needs Chrome or Edge 116 or later'} onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close floating display' : 'Floating display'}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button></div>
+        <div className="connection"><button className="connection-summary" aria-haspopup="dialog" title="MIDI connection…" onClick={()=>setMidiSettingsOpen(true)}><span className={access ? 'status live' : 'status'}>{access ? 'MIDI ready' : 'automatic connection'}</span>{liveFirmware && <span className="firmware-status" data-i18n-skip>FW {liveFirmware}</span>}</button><button className="floating-toggle" aria-pressed={!!pipWindow} disabled={!floatingSupported()} title={floatingSupported() ? 'Small always-on-top window with the screen, movable and resizable' : 'Needs Chrome or Edge 116 or later'} onClick={() => { void toggleFloatingDisplay() }}>{pipWindow ? 'Close floating display' : 'Floating display'}</button><button className="primary" hidden={!!access?.sysexEnabled} onClick={() => connect()} disabled={!supportsWebMidi()}><Icon name="midi" />Retry MIDI + SysEx</button></div>
         {pipWindow && createPortal(<FloatingDisplay theme={theme} displayStyle={displayStyle} control={screenControl} config={profile[screenControl.kind].find(e => e.id === screenControl.id)!} label={controlLabel(screenControl.kind, screenControl.id, customLabels)} value={screenValue.value} source={screenValue.source} inspect={() => selectUi(screenControl, {}, true)} setValue={setScreenValue} />, pipWindow.document.body)}
         <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
-        <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span>{indicators.routeSource === 'bcl' && indicators.outputRouting && <small> · BCR32 global export</small>}</p>
         <div className="editor-history-tools" role="group" aria-label="History"><button disabled={locked||!historyCounts.undo} onClick={()=>moveHistory('undo')}>Undo</button><button disabled={locked||!historyCounts.redo} onClick={()=>moveHistory('redo')}>Redo</button></div>
         <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'files', 'config', 'log','help'] as const).map((item, i) => <button key={item} aria-pressed={tab === item} title={['Control', 'Presets', 'Files', 'Config', 'Log','Help'][i]} onClick={() => setTab(item)}><Icon name={(['sliders', 'folder', 'import', 'sliders', 'log','help'] as const)[i]} />{['Control', 'Presets', 'Files', 'Config', 'Log','Help'][i]}</button>)}</nav>
         <div className="sidebar-content"><fieldset className="host-lock-fields" disabled={locked}>
@@ -1032,9 +1031,6 @@ function loadWorkspace() {
           <button className="primary" onClick={exportPdf} disabled={pdfBusy || !presetName.trim()}><Icon name="print" />{pdfBusy ? 'Preparing PDF…' : 'Download A4 PDF sheet'}</button>
           <div className="cubase-export"><h3>Cubase · MIDI Remote</h3><p className="surface-help">Surface script for Cubase 12 and later: encoders, pushes and buttons with their exact MIDI messages. No function is assigned: map them in Cubase with the Mapping Assistant.</p><p className="surface-help" data-i18n-skip><code>MIDI Remote/{cubaseFolder}/</code></p><button onClick={exportCubase}><Icon name="export" />Export Cubase script</button></div>
           <details><summary>Legacy profile format</summary><div className="preset-actions"><button onClick={exportProfile}><Icon name="export" />Export profile v2</button><label className="file">Import profile v1/v2<input type="file" accept="application/json" onChange={event => { void importProfile(event.target.files?.[0]); event.target.value = '' }} /></label></div></details>
-        </section>
-        <section className="sidebar-meta">
-          <p className="sidebar-notice" role="status">{notice}</p>
         </section>
       <section className="inspector" hidden={tab !== 'control'} aria-label={`Edit ${selection.kind} ${displayControlId(selection.kind, selected.id)}`}>
         <p className="controller-read-status" role="status">{fromPresetCache ? 'Preset restored from UI cache' : controllerRead.status === 'reading' ? 'Reading controller assignments' : controllerRead.status === 'complete' ? 'Controller read complete' : controllerRead.status === 'no reply' ? 'Controller read incomplete · missing replies' : 'Controller synchronization'}{!fromPresetCache && controllerRead.total > 0 && <span data-i18n-skip> · {controllerRead.received}/{controllerRead.total}</span>}</p>
@@ -1098,10 +1094,11 @@ function loadWorkspace() {
         <div className="section-heading"><div><p className="eyebrow">WEB MIDI TRANSPORT</p><h2>Connection and probe</h2></div><span>{access?.sysexEnabled ? 'SysEx allowed' : 'SysEx not granted'}</span></div>
         <button className="midi-settings-open" aria-haspopup="dialog" onClick={()=>setMidiSettingsOpen(true)}><Icon name="midi" />MIDI connection…</button>
       </section>
-      {tab==='help'&&<Bcr32Help/>}
+      {tab==='help'&&<><Bcr32Help/><p className="muted studio-version" data-i18n-skip>Studio v{studioVersion}</p></>}
       <section className="log" hidden={tab !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
     </section>
         </fieldset></div>
+        <footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-notice" role="status" title={notice}>{notice}</p></footer>
       </aside>
     </section>
     <dialog ref={midiSettingsDialog} className="midi-settings-dialog" aria-labelledby={`${instanceId}-midi-settings-title`} onClose={()=>setMidiSettingsOpen(false)} onClick={event=>{if(event.target===event.currentTarget)setMidiSettingsOpen(false)}}>
@@ -1113,7 +1110,7 @@ function loadWorkspace() {
         <label>Output<select value={outputId} onChange={(event) => changeOutput(event.target.value)}><option value="">Choose…</option>{outputs.map((port) => <option key={port.id} value={port.id}>{port.name ?? port.id}</option>)}</select></label>
       </div>
       <button className={`cc-toggle ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} onClick={toggleSend} disabled={!isBcrOutput(output)}><Icon name={sendCC ? 'power' : 'send'} />{sendCC ? 'CC sending on · disable' : 'Send CC to BCR32'}</button>
-      <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span></p>
+      <p className="routing-status" role="status">Controller outputs: <span data-i18n-skip>{indicators.outputRouting ?? '—'}</span>{indicators.routeSource === 'bcl' && indicators.outputRouting && <small> · BCR32 global export</small>}</p>
       <p className="muted">Opening this window sends nothing to the BCR32; choosing ports never writes the controller.</p>
     </dialog>
   </main>, language)

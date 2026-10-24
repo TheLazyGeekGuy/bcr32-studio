@@ -623,7 +623,7 @@
 .bcr32-workbench .studio.compact .panel-viewport{width:min(100%,calc(100cqh * 1717 / 1350));min-width:0}
 @media(max-width:760px){
  .studio.standalone-editor:has(>.bcr32-workbench){height:auto;overflow:visible}
- .studio.standalone-editor>.bcr32-workbench{height:auto;flex:auto}
+ .studio.standalone-editor>.bcr32-workbench{height:auto;flex:auto;overflow:clip visible}
  .bcr32-workbench .studio.compact{height:auto;min-height:100dvh}
  .bcr32-workbench .studio.compact>.workspace{display:flex;flex-direction:column;height:auto;overflow:visible}
  .bcr32-workbench .studio.compact>.workspace>.surface{display:block;min-height:0}
@@ -655,3 +655,13 @@
 .midi-settings-dialog>.muted:last-child{margin-bottom:16px}
 .midi-settings-open{display:inline-flex;align-items:center;gap:6px}
 .midi-settings-dialog>p.routing-status,.midi-settings-dialog>p.muted{margin:0 16px 12px;padding:0}
+/* Sidebar top: one connection line that opens the MIDI window. Feedback sits in a status bar fixed under the tabs' content. */
+.bcr32-workbench .studio.compact .sidebar>.connection{min-height:0;align-items:center;gap:6px;padding-right:34px}
+.bcr32-workbench .studio .sidebar .connection .connection-summary{justify-content:flex-start;gap:8px;min-width:0;margin-right:auto}
+.bcr32-workbench .studio.compact .sidebar>.sidebar-statusbar{flex:none;margin:0;padding:4px 10px;border-top:1px solid var(--theme-line);background:var(--theme-surface)}
+.bcr32-workbench .studio.compact .sidebar-statusbar .sidebar-notice{margin:0;max-height:42px;overflow:auto}
+.bcr32-workbench .studio-version{padding:0 12px 12px;font-size:11px}
+@media(max-width:760px){
+ .bcr32-workbench .studio.compact .sidebar>.tool-tabs{position:sticky;top:0;z-index:6;margin:0;padding:4px 8px;background:var(--theme-surface)}
+ .bcr32-workbench .studio.compact .sidebar>.sidebar-statusbar{position:sticky;bottom:0;z-index:6}
+}
