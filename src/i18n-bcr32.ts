@@ -369,4 +369,6 @@ export const bcr32Rows=[
   "BPM|BPM|BPM|BPM|BPM|BPM|BPM|BPM",
   "Space: start / stop|Espace : lecture / arrêt|Spazio: avvio / stop|Leertaste: Start / Stopp|スペース：再生／停止|Espacio: inicio / parada|Пробел: старт / стоп|空格：开始／停止",
   "rest|silence|pausa|Pause|休符|silencio|пауза|休止",
+  "Not available: the BCR32 1.0.2 does not follow a clock sent over USB|Indisponible : le BCR32 1.0.2 ne suit pas une horloge envoyée par USB|Non disponibile: il BCR32 1.0.2 non segue un clock inviato via USB|Nicht verfügbar: Der BCR32 1.0.2 folgt keiner über USB gesendeten Clock|利用不可：BCR32 1.0.2 は USB 経由のクロックに従いません|No disponible: el BCR32 1.0.2 no sigue un reloj enviado por USB|Недоступно: BCR32 1.0.2 не следует клоку, переданному по USB|不可用：BCR32 1.0.2 不跟随通过 USB 发送的时钟",
+  "Offline · nothing is sent to the BCR32|Hors ligne · rien n’est envoyé au BCR32|Offline · nulla viene inviato al BCR32|Offline · nichts wird an den BCR32 gesendet|オフライン · BCR32 には何も送信されません|Sin conexión · no se envía nada al BCR32|Офлайн · на BCR32 ничего не отправляется|离线 · 不向 BCR32 发送任何内容",
 ]

@@ -3,6 +3,9 @@
 // 1.04 §7.3). Only these three one-byte messages can leave this module; ticks are scheduled ahead with timestamps.
 export const clockMessages = { start: 0xfa, clock: 0xf8, stop: 0xfc } as const
 export const isClockMessage = (bytes: readonly number[]) => bytes.length === 1 && (bytes[0] === 0xfa || bytes[0] === 0xf8 || bytes[0] === 0xfc)
+// 2026-10-24, firmware 1.0.2, clock source USB (set on the panel and read back as 3): Start, Continue and 24 ppq clock
+// sent over USB never started the sequencer, and after PLAY it did not follow that clock. Off until a firmware does.
+export const usbClockFollowed = false
 export const tempoRange = { min: 30, max: 300 } // the BCR32's own BPM range (manual Rev1, ZAQ global 25)
 
 export type ClockTimers = { now(): number; every(fn: () => void, ms: number): unknown; cancel(handle: unknown): void }

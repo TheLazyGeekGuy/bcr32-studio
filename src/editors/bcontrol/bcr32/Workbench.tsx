@@ -23,7 +23,7 @@ import { version as studioVersion } from '../../../../package.json'
 import { createProfile, parseProfile, buttonValues, displayControlId, valueLimit, parameterLimit, is14Bit, isRelative, modesFor, typesFor, mmcCommands, defaultSettings, type Bcr32Profile, type ControllerSettings, type Encoder, type EncoderMode, type EncoderType } from './profile'
 import { FrontPanel, type Selection, type LiveValues } from './FrontPanel'
 import { encoderMessages, createCcSender, isBcrOutput } from './cc-transport'
-import { createClockMaster, isClockMessage, tempoRange } from './sequencer-clock'
+import { createClockMaster, isClockMessage, tempoRange, usbClockFollowed } from './sequencer-clock'
 import { asHex, describeMessage, isSystemRealtime, parseFirmwareReply, productQuery, supportsWebMidi, type MidiAccess, type MidiPort } from './web-midi'
 import { associateDefaultEncoder, automaticMidiAccess, automaticPorts, isControllerPort } from './auto-midi'
 import { parseTheme, themes, themeStorageKey } from './themes'
@@ -803,7 +803,7 @@ function loadWorkspace() {
   useEffect(() => { clockMaster?.tempo(sequencerBpm); try { storage.setItem('bcr32-studio.sequencer-bpm', String(sequencerBpm)) } catch { /* Optional preference. */ } }, [clockMaster, sequencerBpm])
   useEffect(() => { if (!clockMaster) return; const stop = () => clockMaster.stop(); window.addEventListener('pagehide', stop); return () => { window.removeEventListener('pagehide', stop); stop() } }, [clockMaster])
   useEffect(() => { if (editorMode !== 'sequencer' || locked) clockMaster?.stop() }, [editorMode, locked, clockMaster])
-  const sequencerTransport = { available: !!clockMaster && !locked, running: clockRunning, bpm: sequencerBpm, setBpm: setSequencerBpm,
+  const sequencerTransport = { supported: usbClockFollowed, available: usbClockFollowed && !!clockMaster && !locked, running: clockRunning, bpm: sequencerBpm, setBpm: setSequencerBpm,
     toggle: () => { if (!clockMaster) return; try { if (clockMaster.running) clockMaster.stop(); else clockMaster.start(sequencerBpm) } catch (error) { setNotice(`Sequencer clock stopped: ${error instanceof Error ? error.message : String(error)}`) } } }
   useEffect(() => () => disarmLearn(), [inputId])
   useEffect(() => { if (tab !== 'control') disarmLearn() }, [tab])

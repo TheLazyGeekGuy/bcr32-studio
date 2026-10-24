@@ -58,7 +58,7 @@ export function patternToMidi(data: readonly number[], ppq = 96) {
 }
 
 // Start/stop of the BCR32 sequencer, driven by the Workbench's MIDI clock master (Start, Clock, Stop only).
-export type SequencerTransport = { available: boolean; running: boolean; bpm: number; setBpm: (bpm: number) => void; toggle: () => void }
+export type SequencerTransport = { supported: boolean; available: boolean; running: boolean; bpm: number; setBpm: (bpm: number) => void; toggle: () => void }
 export function SequencerView({ storage, noteInput, noteInputName, openMidiSettings, receive, download, locked, transport }: {
   storage: EditorStorage; noteInput: MutableRefObject<((note: number, velocity: number) => void) | null>; noteInputName: string; openMidiSettings: () => void; receive: MutableRefObject<(bytes: number[]) => void>
   download: (data: BlobPart, name: string, type?: string) => void; locked: boolean; transport: SequencerTransport
@@ -159,10 +159,10 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         <button onClick={() => { addPattern(emptyPattern(), `${t('New pattern')} ${entries.length + 1}`); setNotice('Nothing is sent to the BCR32.') }}>{t('New pattern')}</button>
         <span className="seq-spacer" />
         <div className="seq-transport" role="group" aria-label={t('BCR32 transport')}>
-          <button className={transport.running ? 'primary' : ''} aria-pressed={transport.running} disabled={!transport.available} title={t('Space: start / stop (BCR32 clock source on USB)')} onClick={transport.toggle}>{transport.running ? '■' : '▶'}<span data-i18n-skip> </span>{t(transport.running ? 'Stop' : 'Play')}</button>
+          <button className={transport.running ? 'primary' : ''} aria-pressed={transport.running} disabled={!transport.available} title={t(transport.supported ? 'Space: start / stop (BCR32 clock source on USB)' : 'Not available: the BCR32 1.0.2 does not follow a clock sent over USB')} onClick={transport.toggle}>{transport.running ? '■' : '▶'}<span data-i18n-skip> </span>{t(transport.running ? 'Stop' : 'Play')}</button>
           <label>{t('BPM')}<input type="number" min={tempoRange.min} max={tempoRange.max} value={transport.bpm} onChange={e => { const v = Number(e.target.value); if (v >= tempoRange.min && v <= tempoRange.max) transport.setBpm(v) }} /></label>
         </div>
-        <span className="seq-offline">{t('Patterns stay in this browser · only start/stop reaches the BCR32')}</span>
+        <span className="seq-offline">{t(transport.supported ? 'Patterns stay in this browser · only start/stop reaches the BCR32' : 'Offline · nothing is sent to the BCR32')}</span>
       </div>
       {templatesOpen && <section className="seq-templates mock-card">
         <div><b>{t('Built-in templates')}</b><div className="mock-actions">{templates.map(tp => <button key={tp.id} disabled={locked} onClick={() => { commit(applyTemplate(data, tp.id), t(tp.name)); setTemplatesOpen(false) }}>{t(tp.name)}</button>)}</div></div>
@@ -180,7 +180,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
       <p className="mock-warn seq-preview-note">{t('Preview: MIDI and .syx files, keyboard and MIDI keyboard entry work in the editor. Capture from the BCR32 and sending to it are not implemented yet.')}</p>
       <div className="seq-entry">
         <label className="mock-check"><input type="checkbox" checked={keyboardEntry} onChange={e => setKeyboardEntry(e.target.checked)} />{t('Computer keyboard entry')}</label>
-        <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {t('Space: start / stop')} · M {t('rest')} · ⌫</span>
+        <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {transport.supported ? <>{t('Space: start / stop')} · </> : null}M {t('rest')} · ⌫</span>
         <span className="mock-caption">{t('MIDI keyboard')}: <b data-i18n-skip>{noteInputName || t('None')}</b> · <button className="mock-link" onClick={openMidiSettings}>{t('MIDI connection…')}</button></span>
       </div>
       {view === 'grid' && <div className="seq-gridview">
