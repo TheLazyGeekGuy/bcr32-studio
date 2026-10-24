@@ -11,7 +11,7 @@ import { translate, useLanguage } from './i18n'
 // raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
 // stays in this browser: listening for a front-panel export sends nothing, and there is no path that sends a pattern.
 export { trackColors, noteName, keyboardNotes, stepGrids } from './sequencer-shared'
-import { trackColors, noteName, keyboardNotes, stepGrids, noteNames } from './sequencer-shared'
+import { trackColors, noteName, keyboardNotes, stepGrids, noteNames, noteLengths, clockDividers, directions } from './sequencer-shared'
 type Entry = { pattern: ZaqPattern; data: number[]; label: string }
 // A local template: eight empty kind-0 blocks. Its header is all zero (fields not located yet), so it is for files only.
 export function emptyPattern(): ZaqPattern {
@@ -210,7 +210,8 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
             <label>{t('Velocity')}<input type="number" min="1" max="127" value={s.velocity} onChange={e => patch({ velocity: Math.max(0, Math.min(127, Number(e.target.value) || 0)) })} /></label></div>
           <h3>{t('Timing')} <span className="mock-caption">{t('units to confirm')}</span></h3>
           <div className="fields two"><label>{t('Start offset')}<input type="number" min="-127" max="127" value={s.delay} onChange={e => patch({ delay: Math.max(-127, Math.min(127, Number(e.target.value) || 0)) })} /></label>
-            <label>{t('Note length (0–15)')}<input type="number" min="0" max="15" value={s.gate} onChange={e => patch({ gate: Math.max(0, Math.min(15, Number(e.target.value) || 0)) })} /></label></div>
+            <label>{t('Note length (0–15)')}<select value={s.gate} onChange={e => patch({ gate: Number(e.target.value) })}>{noteLengths.map((l, i) => <option key={i} value={i} data-i18n-skip>{i} · {l}</option>)}</select></label></div>
+          <p className="mock-caption">{t('Length names from the manual; their order in the codes is deduced (same list as quantization).')}</p>
           <h3>{t('Track CC values')} <span className="mock-caption">{t('−1 = off')}</span></h3>
           <div className="fields two"><label>CC 1 (α)<input type="number" min="-1" max="127" value={ccValue(s.alpha)} onChange={e => patch({ alpha: ccRaw(Math.max(-1, Math.min(127, Math.round(Number(e.target.value) || 0)))) })} /></label>
             <label>CC 2 (β)<input type="number" min="-1" max="127" value={ccValue(s.beta)} onChange={e => patch({ beta: ccRaw(Math.max(-1, Math.min(127, Math.round(Number(e.target.value) || 0)))) })} /></label></div>
@@ -218,7 +219,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         {panel === 'track' && <>
           <p className="mock-caption mock-kind">{t('Track')} {track + 1}</p>
           {(() => { const h = trackHeader(data, track); return <table className="seq-header"><tbody>
-            {([['Muted track', h.mute ? t('yes') : t('no')], ['Direction (code)', h.direction], ['Sequence start', h.start], ['Sequence length', h.length], ['Sequence offset', h.offset], ['Clock divider (code)', h.clockDivider], ['Shuffle even / odd ticks', `${h.shuffleEven} / ${h.shuffleOdd}`], ['Skipped steps', h.skipped], ['Muted drum voices', h.drumMutes]] as [string, string | number][]).map(([k, v]) => <tr key={k}><th>{t(k)}</th><td data-i18n-skip>{v}</td></tr>)}
+            {([['Muted track', h.mute ? t('yes') : t('no')], ['Direction (code)', `${h.direction} · ${directions[h.direction] ?? '?'}`], ['Sequence start', h.start], ['Sequence length', h.length], ['Sequence offset', h.offset], ['Clock divider (code)', `${h.clockDivider} · ${clockDividers[h.clockDivider] ?? '?'}`], ['Shuffle even / odd ticks', `${h.shuffleEven} / ${h.shuffleOdd}`], ['Skipped steps', h.skipped], ['Muted drum voices', h.drumMutes]] as [string, string | number][]).map(([k, v]) => <tr key={k}><th>{t(k)}</th><td data-i18n-skip>{v}</td></tr>)}
           </tbody></table> })()}
           <p className="mock-caption">{t('Read only. Field names from the Zaquencer preset map published by its author; not yet observed on a BCR32 export. The header is kept byte for byte.')}</p>
           <p className="mock-caption" data-i18n-skip>{data.slice(track * 256, track * 256 + 16).map(b => b.toString(16).padStart(2, '0')).join(' ')}</p>

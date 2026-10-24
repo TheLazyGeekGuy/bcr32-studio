@@ -227,6 +227,7 @@ Read `F0 00 20 32 7F 64 <cmd> <track 0–3> F7`. Reply `… <cmd> <track> <value
 | `2B` | Track channel | 1 byte, raw | Implemented, not yet verified on hardware | as above |
 | `2C` | Ctrl Alpha selector | signed byte, pack7 | Implemented, not yet verified on hardware | as above |
 | `2D` | Ctrl Beta selector | signed byte, pack7 | Implemented, not yet verified on hardware | as above |
+| Read on hardware | 2026-10-24 20:30, firmware 1.0.2: all 20 reads (4 tracks × mode, port, channel, alpha, beta) answered, identical on a second read: mode 0, port 4, channels 0–3, alpha −4, beta −4. Meanings not established. | Hardware-verified | `scripts/hw/bcr32-track-read.mjs` |
 
 ### Pattern blocks (`04 0B`)
 

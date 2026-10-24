@@ -78,6 +78,27 @@ global clock, scale, transpose, trigger and quantization fields of the preset's 
 neither skipped nor muted and its velocity is above 0. Earlier versions of this page called 00–03 a "step mask"; which
 reading is right on a BCR32 will be settled by the first real export (validation plan, step 1).
 
+## Option lists from the BCR32 manual (Rev1)
+
+The manual names the values the front panel offers; the order of the codes in the pattern is deduced, not observed.
+
+| Field | Values (manual) | Code order used by the editor |
+| --- | --- | --- |
+| Note length (`gate`, 4 bits) | 96, t32, 32 (default), t16, 16, t8, 8, t4, 4, t2, 2, t1b, 1b, t2b, 2b, 4b | as listed (same list as the global quantization setting) |
+| Note delay | −5 … 5 in the display; stored as a signed byte | raw value shown |
+| MIDI CTRL α / β per step | Off, 1–127 | −1 (FF) = Off |
+| Clock divider | 1, 2, 4, 8, 16 (default), 32, 24, 12, 6, 3 | as listed |
+| Direction | Forward (default), Backward, Pip 0, Random, Pendulum | as listed (5 values in a 2-bit field: to confirm) |
+| Shuffle | even steps E 0/16/33/50/66/83, odd steps O 0/16/33/60/66/83 | raw ticks shown |
+| Track mode (global, 37–40) | Chord or Drum | — |
+| Track output / channel / CC α, β numbers (global, 41–56) | outputs, MIDI 1–16, CC numbers | read with commands 29–2D |
+
+## Track parameters read from a BCR32 (2026-10-24)
+
+Commands 29–2D (mode, port, channel, alpha, beta) answered on firmware 1.0.2, two identical reads each
+(`scripts/hw/bcr32-track-read.mjs`, 20:30 CEST): mode 0, port 4, channel 0/1/2/3 for T1–T4 (MIDI channels 1–4), alpha −4,
+beta −4 for every track. The meaning of mode 0, port 4 and −4 is not established yet.
+
 ## What stays unknown
 
 - **Gate**: the codes are raw 0–15 values. Their musical meaning (lengths, ties, special codes) is not established.
