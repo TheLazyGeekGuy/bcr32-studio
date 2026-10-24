@@ -24,18 +24,25 @@ export function MidiImportDialog({ name, file, initialGrid, onApply, onCancel }:
   const [slots, setSlots] = useState<ImportSlot[]>(() => [0, 1, 2, 3].map(i => { const tr = tracks[i]; return { source: tr?.index ?? null, startTick: firstNoteBar(tr, barTicks) * barTicks } }))
   const end = Math.max(barTicks, ...tracks.flatMap(tr => tr.notes.map(n => n.tick + n.duration))), bars = Math.ceil(end / barTicks)
   const bpm = file.tempoBpm ?? 120, seconds = (tick: number) => tick / file.ppq * 60 / bpm
-  const set = (i: number, patch: Partial<ImportSlot>) => setSlots(list => list.map((s, j) => j === i ? { ...s, ...patch } : s))
+  const set = (i: number, patch: Partial<ImportSlot>) => { setSlots(list => list.map((s, j) => j === i ? { ...s, ...patch } : s)); setActive(i); setFocus({ slot: i, seq: Date.now() }) }
+  // Selecting or moving a slot brings its window into view in the timeline (both scroll directions).
+  const timeline = useRef<HTMLDivElement>(null), [focus, setFocus] = useState<{ slot: number; seq: number } | null>(null)
+  useEffect(() => {
+    if (!focus || !timeline.current) return
+    const s = slots[focus.slot], row = tracks.findIndex(tr => tr.index === s.source); if (row < 0) return
+    timeline.current.scrollTo({ left: Math.max(0, s.startTick / barTicks * barPx - 120), top: Math.max(0, row * rowPx - 2 * rowPx), behavior: 'smooth' })
+  }, [focus])
   const sourceOf = (s: ImportSlot) => tracks.find(tr => tr.index === s.source)
   const previews = slots.map(s => { const tr = sourceOf(s); return tr ? trackToSteps(tr.notes, { stepTicks, startTick: s.startTick, steps: 32 }) : null })
   const pickOnTimeline = (event: React.MouseEvent<SVGSVGElement>) => {
-    const box = event.currentTarget.getBoundingClientRect(), row = Math.floor((event.clientY - box.top - 22) / rowPx), bar = Math.floor((event.clientX - box.left) / barPx)
+    const box = event.currentTarget.getBoundingClientRect(), row = Math.floor((event.clientY - box.top) / rowPx), bar = Math.floor((event.clientX - box.left) / barPx)
     const tr = tracks[row]; if (!tr || bar < 0 || bar >= bars) return
     set(active, { source: tr.index, startTick: bar * barTicks })
   }
   return <dialog ref={dialog} className="midi-import-dialog" aria-labelledby="midi-import-title" onClose={onCancel} onCancel={onCancel}>
     <header><div><h2 id="midi-import-title">{t('Import a MIDI file')}</h2><p className="mock-caption"><span data-i18n-skip>{name}</span> · {tracks.length} {t('MIDI tracks')} · <span data-i18n-skip>{clock(seconds(end))} · {Math.round(bpm)} BPM · {bars}</span> {t('bars')}</p></div>
       <button className="midi-settings-close" aria-label={t('Close')} title={t('Close')} onClick={onCancel}>✕</button></header>
-    <div className="mid-slots">{slots.map((s, i) => { const p = previews[i], from = s.startTick / barTicks + 1, to = (s.startTick + windowTicks) / barTicks; return <section key={i} className="mid-slot" data-active={active === i || undefined} style={{ ['--c' as string]: trackColors[i] }} onClick={() => setActive(i)}>
+    <div className="mid-slots">{slots.map((s, i) => { const p = previews[i], from = s.startTick / barTicks + 1, to = (s.startTick + windowTicks) / barTicks; return <section key={i} className="mid-slot" data-active={active === i || undefined} style={{ ['--c' as string]: trackColors[i] }} onClick={() => { setActive(i); setFocus({ slot: i, seq: Date.now() }) }}>
       <b>T{i + 1}</b>
       <label>{t('Source track')}<select value={s.source ?? ''} onChange={e => { const v = e.target.value === '' ? null : Number(e.target.value); set(i, { source: v, startTick: firstNoteBar(tracks.find(tr => tr.index === v), barTicks) * barTicks }) }}><option value="">{t('Leave unchanged')}</option>{tracks.map(tr => <option key={tr.index} value={tr.index} data-i18n-skip>{tr.index + 1} · {tr.name || '—'} · {tr.notes.length}</option>)}</select></label>
       <label>{t('Start bar')}<span className="mid-start"><button aria-label={t('Previous bar')} onClick={() => set(i, { startTick: Math.max(0, s.startTick - barTicks) })}>◀</button><input type="number" min="1" max={bars} value={Math.round(from * 100) / 100} onChange={e => set(i, { startTick: Math.max(0, (Math.round(Number(e.target.value) || 1) - 1) * barTicks) })} /><button aria-label={t('Next bar')} onClick={() => set(i, { startTick: Math.min((bars - 1) * barTicks, s.startTick + barTicks) })}>▶</button><button onClick={() => set(i, { startTick: firstNoteBar(sourceOf(s), barTicks) * barTicks })}>{t('First note')}</button></span></label>
@@ -44,13 +51,15 @@ export function MidiImportDialog({ name, file, initialGrid, onApply, onCancel }:
     </section> })}</div>
     <div className="mid-toolbar"><label>{t('Step size')}<select value={grid} onChange={e => setGrid(Number(e.target.value))}>{stepGrids.map(g => <option key={g.divisor} value={g.divisor} data-i18n-skip>{g.label}</option>)}</select></label>
       <span className="mock-caption">{t('Click a track on the timeline to place the selected slot there.')} <b data-i18n-skip>T{active + 1}</b></span></div>
-    <div className="mid-timeline">
-      <div className="mid-names" style={{ paddingTop: 22 }}>{tracks.map(tr => <span key={tr.index} style={{ height: rowPx }} data-i18n-skip>{tr.index + 1} · {tr.name || '—'}</span>)}</div>
-      <div className="mid-scroll"><svg width={bars * barPx} height={22 + tracks.length * rowPx} onClick={pickOnTimeline} role="img" aria-label={t('MIDI file timeline')}>
-        {Array.from({ length: bars }, (_, b) => <g key={b}><line x1={b * barPx} x2={b * barPx} y1={0} y2={22 + tracks.length * rowPx} className={b % 4 ? 'mid-bar' : 'mid-bar strong'} />{b % 4 === 0 && <text x={b * barPx + 3} y={10}>{b + 1}</text>}{b % 8 === 0 && <text x={b * barPx + 3} y={20} className="mid-time">{clock(seconds(b * barTicks))}</text>}</g>)}
-        {tracks.map((tr, r) => { const lo = Math.min(...tr.notes.map(n => n.note)), hi = Math.max(lo + 1, ...tr.notes.map(n => n.note)); return <g key={tr.index}>{tr.notes.map((n, k) => <rect key={k} className="mid-note" x={n.tick / barTicks * barPx} width={Math.max(1.5, n.duration / barTicks * barPx)} y={22 + r * rowPx + 3 + (hi - n.note) / (hi - lo) * (rowPx - 8)} height={2.5} />)}</g> })}
-        {slots.map((s, i) => { const r = tracks.findIndex(tr => tr.index === s.source); return r < 0 ? null : <g key={i}><rect className="mid-window" x={s.startTick / barTicks * barPx} width={windowTicks / barTicks * barPx} y={22 + r * rowPx + 1} height={rowPx - 2} style={{ stroke: trackColors[i], fill: trackColors[i] }} /><text x={s.startTick / barTicks * barPx + 3} y={22 + r * rowPx + 12} className="mid-window-label">T{i + 1}</text></g> })}
-      </svg></div>
+    <div className="mid-timeline" ref={timeline}>
+      <span className="mid-corner" />
+      <svg className="mid-ruler" width={bars * barPx} height={22} aria-hidden="true">{Array.from({ length: bars }, (_, b) => <g key={b}>{b % 4 === 0 && <text x={b * barPx + 3} y={10}>{b + 1}</text>}{b % 8 === 0 && <text x={b * barPx + 3} y={20} className="mid-time">{clock(seconds(b * barTicks))}</text>}</g>)}</svg>
+      <div className="mid-names">{tracks.map(tr => <span key={tr.index} style={{ height: rowPx }} data-i18n-skip>{tr.index + 1} · {tr.name || '—'}</span>)}</div>
+      <svg className="mid-rows" width={bars * barPx} height={tracks.length * rowPx} onClick={pickOnTimeline} role="img" aria-label={t('MIDI file timeline')}>
+        {Array.from({ length: bars }, (_, b) => <line key={b} x1={b * barPx} x2={b * barPx} y1={0} y2={tracks.length * rowPx} className={b % 4 ? 'mid-bar' : 'mid-bar strong'} />)}
+        {tracks.map((tr, r) => { const lo = Math.min(...tr.notes.map(n => n.note)), hi = Math.max(lo + 1, ...tr.notes.map(n => n.note)); return <g key={tr.index}>{tr.notes.map((n, k) => <rect key={k} className="mid-note" x={n.tick / barTicks * barPx} width={Math.max(1.5, n.duration / barTicks * barPx)} y={r * rowPx + 3 + (hi - n.note) / (hi - lo) * (rowPx - 8)} height={2.5} />)}</g> })}
+        {slots.map((s, i) => { const r = tracks.findIndex(tr => tr.index === s.source); return r < 0 ? null : <g key={i}><rect className="mid-window" x={s.startTick / barTicks * barPx} width={windowTicks / barTicks * barPx} y={r * rowPx + 1} height={rowPx - 2} style={{ stroke: trackColors[i], fill: trackColors[i] }} /><text x={s.startTick / barTicks * barPx + 3} y={r * rowPx + 12} className="mid-window-label">T{i + 1}</text></g> })}
+      </svg>
     </div>
     <footer><button onClick={onCancel}>{t('Cancel')}</button><button className="primary" onClick={() => onApply(slots, stepTicks)}>{t('Import into T1–T4')}</button></footer>
   </dialog>
