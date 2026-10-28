@@ -1,5 +1,15 @@
 # Architecture
 
+## Current standalone routing and sequencer extension (0.45.0-alpha.12)
+
+The product site is `index.html` with isolated `site/` CSS/JavaScript and static artwork in `public/site/assets/`. The application entry is `editor/index.html` → `src/main.tsx`. The landing page does not import the editor or request Web MIDI. Vite builds both HTML entries; the same output supports a domain root or GitHub Pages project subpath. `deployment-base.ts` resolves public assets, documentation and the service worker from the project root, not the editor directory. The offline worker distinguishes the two HTML documents and never serves the landing page as an editor session.
+
+The BCR32 module lives under `src/editors/bcontrol/bcr32/`. Its sequencer host extension is split into pure protocol (`zaq-host.ts`), view-local lifecycle (`useSequencerHost.ts`) and existing presentation (`SequencerView.tsx`). MIDI ports, ownership and authorizations remain in the shared host. The protocol client has no browser, React, storage or device-discovery dependency. Existing file codecs do not gain a general-purpose raw SysEx sender.
+
+See [firmware 1.0.3 protocol, provenance and validation limits](BCR32-PROTOCOL-1.0.3.md). The source map below describes the inherited foundation; it is not evidence that historical paths or capabilities supersede the current module implementation.
+
+## Inherited foundation
+
 A static single-page application: React 19, TypeScript (strict), Vite, Web MIDI. No server, no backend, no runtime
 dependency beyond React and pdf-lib. State lives in React state and the browser's local storage.
 

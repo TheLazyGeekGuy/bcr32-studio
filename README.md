@@ -1,8 +1,12 @@
 # BCR32 Studio · MIDI Studio edition
 
-Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support and the shared MIDI Studio editor tools.
+Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support, **1.0.3 sequencer step editing**, and the shared MIDI Studio editor tools.
 
-Current version: **0.45.0-alpha.11** · [Changelog](CHANGELOG.md)
+Current version: **0.45.0-alpha.12** · [Changelog](CHANGELOG.md)
+
+The product presentation is at `/`; choose **Open editor** to enter `/editor/`. Existing local presets remain on the same origin. The presentation page never requests MIDI access.
+
+Firmware **1.0.3** adds automatic reading of 4 × 32 sequencer steps when entering Sequencer. Enable **Live step editing** after the read to send individual changes to the current edit buffer. No STORE is sent. Global/track settings, transport and slot transfers are not enabled by this integration. See [protocol and hardware evidence](docs/BCR32-PROTOCOL-1.0.3.md).
 
 **[Open the editor](https://thelazygeekguy.github.io/bcr32-studio/)** · [Integration and limits](docs/controllers/BCR32-STUDIO-INTEGRATION.md)
 

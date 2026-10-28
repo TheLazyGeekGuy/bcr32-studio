@@ -1,5 +1,7 @@
 # Zaquencer pattern layout (firmware 1.0.2)
 
+> Firmware 1.0.3 update: the new [host protocol](BCR32-PROTOCOL-1.0.3.md) can read step lanes and edit individual fields. This file-container study remains relevant for file exchange, but its historical absence of live host support no longer describes the whole editor. A host step projection is not a byte-complete preset backup.
+
 This page restores the pattern layout table first written for the firmware 1.0.2 workbench (commit `83c9006`) and adds
 the level of evidence behind each row. The codec is `src/editors/bcontrol/bcr32/zaquencer.ts`; its offline regression
 is `scripts/test-zaquencer.mjs`. **No BCR32 sequencer export has been captured yet**: every test pattern is synthetic.

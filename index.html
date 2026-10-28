@@ -1,13 +1,452 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#121315" />
-    <title>MIDI Studio</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="doc_title">BCR32 Studio &amp; Sequencer — MIDI Studio</title>
+  <meta name="description" content="BCR32 Studio: the modular Web MIDI controller editor, polyphonic step sequencer, OLED multiplexer, Cubase MIDI Remote script generator, and PDF overlay creator for the Behringer BCR-32." data-i18n-content="doc_desc">
+  <link rel="icon" type="image/svg+xml" href="./site/assets/mark.svg">
+  <link rel="stylesheet" href="./site/style.css">
+</head>
+<body id="top">
+<a class="skip-link" href="#main-content" data-i18n="skip_link">Skip to content</a>
+
+<canvas id="stars-canvas" aria-hidden="true"></canvas>
+
+<header class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="BCR32 Studio, home" data-i18n-aria="nav_brand_aria">
+      <img src="./site/assets/mark.svg" alt="" width="32" height="32">
+      <span>BCR32 <small>STUDIO</small></span>
+    </a>
+    <nav aria-label="Main navigation" data-i18n-aria="nav_main_aria">
+      <a href="#duo" data-i18n="nav_duo">The Duo</a>
+      <a href="#fonctions" data-i18n="nav_features">Features</a>
+      <a href="#fonctionnement" data-i18n="nav_workflow">Workflow</a>
+      <a href="#disponibilite" data-i18n="nav_roadmap">Roadmap</a>
+      <div class="lang-switch" role="group" aria-label="Language selection" data-i18n-aria="lang_switch_aria">
+        <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" class="lang-btn" data-lang="fr" aria-pressed="false">FR</button>
+      </div>
+      <button type="button" class="stars-toggle" id="stars-toggle" aria-label="Toggle starfield style" title="Toggle starfield mode">
+        <span aria-hidden="true">✦</span> <span class="stars-label" data-i18n="stars_label">Stars</span>
+      </button>
+    </nav>
+    <div class="nav-actions">
+      <button class="nav-cta" data-access data-i18n="nav_cta">Quick start</button>
+    </div>
+  </div>
+</header>
+
+<main id="main-content">
+<section class="hero section">
+  <div class="hero-heading">
+    <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> <span data-i18n="hero_eyebrow">MIDI Studio · active project v0.45.0-alpha.12</span></p>
+    <h1>BCR32<span>Studio <i>&amp;</i> Sequencer</span></h1>
+    <p class="hero-copy" data-i18n-html="hero_copy">Your 32 encoders. Your 4-track polyphonic sequencer. Your overlays.<br>A visual editor to inspect controls, sculpt grooves, and drive synths safely.</p>
+    <div class="hero-actions">
+      <a class="button primary" href="#duo" data-product="controller"><span data-i18n="hero_btn_editor">Explore the modes</span> <span aria-hidden="true">↓</span></a>
+      <a class="button secondary" href="./editor/"><span data-i18n="hero_btn_agent">Open editor</span> <span aria-hidden="true">↗</span></a>
+      <a class="button tertiary" href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener" title="Official Behringer BCR32 product page and firmware downloads"><span class="badge-hw" aria-hidden="true">FW 1.0.3</span> <span data-i18n="hero_btn_firmware">Official Behringer firmware &amp; docs</span> <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+  <figure class="hero-product">
+    <img src="./site/assets/bcr32-controller.png" width="1440" height="900" alt="BCR32 Studio Controller interface showing 32 illuminated rotary push-encoders, 15-LED rings, parameter inspector sidebar, live activity strip, and toolbar" data-i18n-alt="hero_img_alt" fetchpriority="high">
+    <figcaption data-i18n="hero_caption">BCR32 Studio · Controller View — 32 rotary encoders, 15-LED halo rings, MIDI inspector &amp; OLED multiplexing</figcaption>
+  </figure>
+  <div class="hero-tags reveal">
+    <span data-i18n="hero_tag_1">32 Push-Encoders &amp; LED Rings</span>
+    <span data-i18n="hero_tag_2">4-Track Polyphonic Step Sequencer</span>
+    <span data-i18n="hero_tag_3">Cubase MIDI Remote &amp; A4 PDF Overlays</span>
+  </div>
+</section>
+
+<section class="experience section" id="duo">
+  <div class="section-heading reveal">
+    <p class="eyebrow" data-i18n="duo_eyebrow">01 / Two complementary modes</p>
+    <h2 data-i18n-html="duo_title">Control &amp; Sequence.<br><span>One unified workspace.</span></h2>
+    <p data-i18n="duo_lead">BCR32 Studio brings together the two personalities of the BCR-32: a precision 32-encoder MIDI controller editor with OLED multiplexing, and a full-featured 4-track polyphonic step sequencer.</p>
+  </div>
+  <div class="product-switch reveal" role="tablist" aria-label="Discover the tools" data-i18n-aria="tab_switch_aria">
+    <button id="tab-controller" role="tab" aria-selected="true" aria-controls="panel-controller" tabindex="0">
+      <span class="tab-icon" aria-hidden="true">🎛</span> <span class="tab-title" data-i18n="tab_controller">Controller Mode</span> <span class="tab-meta" data-i18n="tab_controller_sub">32 Encoders &amp; OLED</span>
+    </button>
+    <button id="tab-sequencer" role="tab" aria-selected="false" aria-controls="panel-sequencer" tabindex="-1">
+      <span class="tab-icon" aria-hidden="true">☵</span> <span class="tab-title" data-i18n="tab_sequencer">Sequencer Mode</span> <span class="tab-meta" data-i18n="tab_sequencer_sub">4 Tracks × 32 Steps</span>
+    </button>
+  </div>
+
+  <!-- Panel 1: Controller Mode -->
+  <div class="product-panel" id="panel-controller" role="tabpanel" aria-labelledby="tab-controller">
+    <div class="product-media">
+      <div class="window-top">
+        <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span data-i18n="controller_window_title">BCR32 Studio — Controller View · 32 Encoders &amp; LED Rings</span>
+        <span class="window-note" data-i18n="controller_window_note">Live v0.45.0-alpha.12</span>
+      </div>
+      <img src="./site/assets/bcr32-controller.png" alt="Actual BCR32 Studio Controller interface showing 32 rotary push-encoders, parameter inspector sidebar, live MIDI activity strip, and tabs" data-i18n-alt="controller_img_alt" width="1440" height="900" loading="lazy">
+    </div>
+    <div class="product-description">
+      <span class="eyebrow" data-i18n="controller_eyebrow">Inspect, map, organize</span>
+      <h3 data-i18n-html="controller_title">Your 32 encoders,<br>down to the last byte.</h3>
+      <p data-i18n="controller_lead">Map CC, 14-bit high-resolution NRPN, Pitch Bend, and Notes directly on the visual front panel. Configure 15-LED halo ring feedback, custom printed names, and export Cubase 12+ MIDI Remote scripts.</p>
+      <ul class="plain-list">
+        <li data-i18n="controller_li_1">32 rotary push-encoders with dual independent targets: rotation &amp; central push button</li>
+        <li data-i18n="controller_li_2">15-LED halo ring feedback modes: Single dot, Bar graph, Boost/Cut Pan, Spread, and Off</li>
+        <li data-i18n="controller_li_3">CC, 14-bit high-resolution NRPN, Pitch Bend, Aftertouch, Note, MMC, and Program Change</li>
+        <li data-i18n="controller_li_4">Printable A4 PDF overlay generator: print custom paper masks tailored to your knob names</li>
+      </ul>
+      <div class="panel-links">
+        <a class="text-link" href="./editor/"><span data-i18n="controller_link">Open editor</span> <span aria-hidden="true">↗</span></a>
+        <a class="text-link secondary" href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener"><span data-i18n="controller_hw_link">Behringer 0715-AAW hardware page</span> <span aria-hidden="true">↗</span></a>
+      </div>
+      <small class="muted" data-i18n="controller_demo_note">Runs in Chrome, Edge, Brave, Opera via Web MIDI API.</small>
+    </div>
+  </div>
+
+  <!-- Panel 2: Sequencer Mode -->
+  <div class="product-panel" id="panel-sequencer" role="tabpanel" aria-labelledby="tab-sequencer" hidden>
+    <div class="product-media">
+      <div class="window-top">
+        <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span data-i18n="sequencer_window_title">BCR32 Studio — Sequencer View · T1–T4 Polyphonic Steps &amp; Lanes</span>
+        <span class="window-note" data-i18n="sequencer_window_note">Preview v0.45+</span>
+      </div>
+      <img src="./site/assets/bcr32-sequencer.png" alt="BCR32 Studio Sequencer interface showing 4 tracks T1-T4, 32 steps grid, velocity, note length, and timing offset lanes, step inspector and template library" data-i18n-alt="sequencer_img_alt" width="1440" height="900" loading="lazy">
+    </div>
+    <div class="product-description">
+      <span class="eyebrow" data-i18n="sequencer_eyebrow">Polyphonic groove &amp; micro-timing</span>
+      <h3 data-i18n-html="sequencer_title">Four 32-step tracks.<br>Tactile groove editing.</h3>
+      <p data-i18n="sequencer_lead">Shape pitch, velocity, gate length, and timing offsets across 4 independent tracks (128 steps total). Work in Grid, Piano Roll, or Behringer Table view, enter steps from your keyboard, and exchange MIDI and SysEx patterns.</p>
+      <ul class="plain-list">
+        <li data-i18n="sequencer_li_1">4 polyphonic tracks (T1–T4) with 32 steps, per-step mute, skip, and bar accents on steps 1, 5, 9 … 29</li>
+        <li data-i18n="sequencer_li_2">Dedicated visual lanes for Velocity (0–127), Gate/Length, and Micro-timing Delay (±5 ticks)</li>
+        <li data-i18n="sequencer_li_3">Step entry from computer keyboard (A W S E D … K) or external MIDI keyboard chosen in settings</li>
+        <li data-i18n="sequencer_li_4">MIDI and SysEx file import/export; verified 1.0.3 step reads and individual edit-buffer writes.</li>
+      </ul>
+      <div class="panel-links">
+        <a class="text-link" href="./editor/"><span data-i18n="sequencer_link">Explore Sequencer live</span> <span aria-hidden="true">↗</span></a>
+        <button class="text-link secondary" data-access><span data-i18n="sequencer_local_link">Run locally with Vite</span> <span aria-hidden="true">→</span></button>
+      </div>
+      <small class="muted" data-i18n="sequencer_demo_note">Firmware 1.0.3: read current step values, then explicitly enable live editing. No automatic STORE.</small>
+    </div>
+  </div>
+</section>
+
+<section class="features section" id="fonctions">
+  <div class="section-heading reveal">
+    <p class="eyebrow" data-i18n="features_eyebrow">02 / Under the hood</p>
+    <h2 data-i18n-html="features_title">Tactile depth,<br><span>down to the MIDI byte.</span></h2>
+    <p data-i18n="features_lead">From 15-LED halo ring behaviors to Cubase MIDI Remote scripts and 4-track polyphonic grooves, every parameter is transparent, editable, and non-destructive.</p>
+  </div>
+  <div class="feature-list">
+    <article class="feature reveal">
+      <span class="feature-number">01</span>
+      <div>
+        <h3 data-i18n="feat_1_title">Interactive 32-Encoder Panel.</h3>
+        <p data-i18n="feat_1_desc">Complete visual replica with 32 push-encoders arranged in 4 rows of 8, upper function keys 1–16, T1–T4 track selectors, and the large SELECT rotary wheel.</p>
+        <span class="feature-tag" data-i18n="feat_1_tag">32 Encoders &amp; 20 Function Keys</span>
+      </div>
+      <svg class="feature-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <circle cx="32" cy="32" r="24" stroke="currentColor" stroke-width="2.5"/>
+        <circle cx="32" cy="32" r="14" stroke="currentColor" stroke-width="2.5"/>
+        <line x1="32" y1="8" x2="32" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="32" y1="46" x2="32" y2="56" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="8" y1="32" x2="18" y2="32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="46" y1="32" x2="56" y2="32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </article>
+    <article class="feature reveal">
+      <span class="feature-number">02</span>
+      <div>
+        <h3 data-i18n="feat_2_title">Polyphonic 4-Track Sequencer.</h3>
+        <p data-i18n="feat_2_desc">Full 4-track × 32-step sequence editing with Grid, Piano Roll, and Behringer Table views. Dedicated lanes for velocity, gate length, and micro-timing offsets with MIDI and SysEx 04 0B import/export.</p>
+        <span class="feature-tag" data-i18n="feat_2_tag">4 Tracks × 32 Steps · Lanes &amp; Piano Roll</span>
+      </div>
+      <svg class="feature-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <rect x="10" y="14" width="44" height="36" rx="4" stroke="currentColor" stroke-width="2.5"/>
+        <line x1="21" y1="14" x2="21" y2="50" stroke="currentColor" stroke-width="2"/>
+        <line x1="32" y1="14" x2="32" y2="50" stroke="currentColor" stroke-width="2"/>
+        <line x1="43" y1="14" x2="43" y2="50" stroke="currentColor" stroke-width="2"/>
+        <rect x="13" y="22" width="5" height="12" rx="2" fill="currentColor"/>
+        <rect x="24" y="30" width="5" height="14" rx="2" fill="currentColor"/>
+        <rect x="35" y="18" width="5" height="20" rx="2" fill="currentColor"/>
+        <rect x="46" y="26" width="5" height="10" rx="2" fill="currentColor"/>
+      </svg>
+    </article>
+    <article class="feature reveal">
+      <span class="feature-number">03</span>
+      <div>
+        <h3 data-i18n="feat_3_title">OLED Multiplexing &amp; MIDI Follow.</h3>
+        <p data-i18n="feat_3_desc">Live time-shared OLED display tracks parameter changes as physical knobs turn. An always-on-top borderless floating display window keeps knob feedback visible above your DAW.</p>
+        <span class="feature-tag" data-i18n="feat_3_tag">OLED Multiplexing &amp; Floating Display</span>
+      </div>
+      <svg class="feature-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <rect x="8" y="12" width="48" height="32" rx="4" stroke="currentColor" stroke-width="2.5"/>
+        <rect x="14" y="18" width="36" height="20" rx="2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <path d="M22 52h20M32 44v8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </article>
+    <article class="feature reveal">
+      <span class="feature-number">04</span>
+      <div>
+        <h3 data-i18n="feat_4_title">Cubase MIDI Remote Export.</h3>
+        <p data-i18n="feat_4_desc">Exports complete JavaScript surface definitions for Cubase 12 and later. All 32 encoders and assigned keys appear natively in Cubase Mapping Assistant.</p>
+        <span class="feature-tag" data-i18n="feat_4_tag">Cubase 12+ MIDI Remote JS</span>
+      </div>
+      <svg class="feature-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M16 48L32 16L48 48" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 36h20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="32" cy="16" r="4" fill="currentColor"/>
+      </svg>
+    </article>
+    <article class="feature reveal">
+      <span class="feature-number">05</span>
+      <div>
+        <h3 data-i18n="feat_5_title">Printable A4 PDF Overlays.</h3>
+        <p data-i18n="feat_5_desc">Generate precise, high-resolution A4 PDF overlay sheets containing all your custom encoder and button labels, ready to print and position directly over the hardware panel.</p>
+        <span class="feature-tag" data-i18n="feat_5_tag">A4 Printable Cut-Out Masks</span>
+      </div>
+      <svg class="feature-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M14 10h28l12 12v32H14V10Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M22 10v16h20V10M22 54V38h20v16" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+      </svg>
+    </article>
+    <article class="feature reveal">
+      <span class="feature-number">06</span>
+      <div>
+        <h3 data-i18n="feat_6_title">Safe SysEx &amp; Dump Reader.</h3>
+        <p data-i18n="feat_6_desc">Parses 8-frame preset dumps (04 0C) and sequencer pattern blocks (04 0B) exported from hardware with 16-bit checksum validation. Strictly avoids blind memory writes that could freeze the controller.</p>
+        <span class="feature-tag" data-i18n="feat_6_tag">Non-Destructive &amp; Checksum Verified</span>
+      </div>
+      <svg class="feature-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <circle cx="32" cy="32" r="20" stroke="currentColor" stroke-width="2.5" stroke-dasharray="4 6"/>
+        <circle cx="32" cy="32" r="8" fill="currentColor"/>
+        <path d="M32 18v6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </article>
+  </div>
+</section>
+
+<section class="workflow" id="fonctionnement">
+  <div class="section inner">
+    <div class="section-heading reveal">
+      <p class="eyebrow" data-i18n="wf_eyebrow">03 / Crystal-clear routing</p>
+      <h2 data-i18n="wf_title">Choose who drives.</h2>
+      <p data-i18n="wf_lead">Direct Web MIDI in your browser or autonomous standalone operation with exported Cubase scripts and PDF overlays.</p>
+    </div>
+    <div class="route-toggle" role="group" aria-label="Choose illustrated workflow" data-i18n-aria="wf_toggle_aria">
+      <button data-route="agent" aria-pressed="true" data-i18n="wf_btn_agent">Web MIDI Studio</button>
+      <button data-route="browser" aria-pressed="false" data-i18n="wf_btn_browser">DAW &amp; Overlays alone</button>
+    </div>
+    <div class="route reveal" aria-label="Routing schema" data-i18n-aria="wf_route_aria">
+      <div class="route-node">
+        <span class="route-icon" aria-hidden="true">🎛</span>
+        <strong data-i18n="wf_node_cs12">Behringer BCR-32 (0715-AAW)</strong>
+        <small data-i18n="wf_sub_cs12">32 Push-Encoders · OLED · USB</small>
+      </div>
+      <div class="route-wire"><span>USB MIDI</span><i></i></div>
+      <div class="route-node main-node">
+        <img src="./site/assets/mark.svg" width="38" height="38" alt="">
+        <strong id="route-owner">BCR32 Studio</strong>
+        <small id="route-sub" data-i18n="wf_sub_agent">Controller &amp; Sequencer Engine</small>
+      </div>
+      <div class="route-wire"><span id="route-protocol">MIDI / CC</span><i></i></div>
+      <div class="route-node">
+        <span class="route-icon" aria-hidden="true">≋</span>
+        <strong data-i18n="wf_node_dest">Cubase, Synths &amp; Plugins</strong>
+        <small data-i18n="wf_sub_dest">MIDI Remote · DIN Out · USB</small>
+      </div>
+    </div>
+    <p class="route-explanation" id="route-explanation" data-i18n="wf_exp_agent">BCR32 Studio connects directly to your BCR-32 in Chrome, Edge, Brave, or Opera. Physical knob turns reflect instantly on screen, while UI gestures dispatch CC values to your target instruments without overwriting hardware flash.</p>
+    <div class="workflow-notes reveal">
+      <div>
+        <h3 data-i18n="wf_note_1_title">Driverless Web MIDI</h3>
+        <p data-i18n="wf_note_1_desc">USB MIDI class-compliant: no driver installation or kernel extensions needed. Works out of the box on macOS, Windows, and Linux.</p>
+      </div>
+      <div>
+        <h3 data-i18n="wf_note_2_title">Non-destructive design</h3>
+        <p data-i18n="wf_note_2_desc">Live sequencer edits change the current edit buffer. Persistent saves remain separate, explicit operations.</p>
+      </div>
+      <div>
+        <h3 data-i18n="wf_note_3_title">Multi-controller family</h3>
+        <p data-i18n="wf_note_3_desc">Shares the same modular foundation as BCR2000, BCF2000 motorized faders, and the X-Touch family (Mini, Compact, Classic, Extender).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="roadmap section" id="disponibilite">
+  <div class="section-heading reveal">
+    <p class="eyebrow" data-i18n="rm_eyebrow">04 / Ongoing roadmap</p>
+    <h2 data-i18n-html="rm_title">What’s here now.<br><span>What’s coming next.</span></h2>
+    <p data-i18n="rm_lead">Current features in v0.45.0-alpha.12 alpha and upcoming milestones actively in progress.</p>
+  </div>
+  <div class="roadmap-columns">
+    <div class="reveal">
+      <span class="badge-available" data-i18n="rm_badge_ready">Available in v0.45.0-alpha.12 alpha</span>
+      <ul class="roadmap-list">
+        <li data-i18n="rm_ready_1">Interactive front panel with 32 push-encoders and 20 functional keys</li>
+        <li data-i18n="rm_ready_2">Live bidirectional MIDI follow with OLED multiplexing and activity strip</li>
+        <li data-i18n="rm_ready_3">Per-control inspector: CC, 14-bit NRPN, Notes, MMC, Program Change, modes</li>
+        <li data-i18n="rm_ready_4">MIDI Learn for quick hardware knob-to-parameter binding</li>
+        <li data-i18n="rm_ready_5">Floating always-on-top OLED display window for DAW integration</li>
+        <li data-i18n="rm_ready_6">Printable A4 PDF overlay generator with custom labels</li>
+        <li data-i18n="rm_ready_7">Cubase 12+ MIDI Remote JavaScript script export</li>
+        <li data-i18n="rm_ready_8">8 languages supported: EN, FR, IT, DE, JA, ES, RU, ZH</li>
+      </ul>
+      <p class="roadmap-note" data-i18n-html="rm_ready_note">Hosted live on GitHub Pages: <a href="./editor/">https://thelazygeekguy.github.io/bcr32-studio/</a></p>
+    </div>
+    <div class="reveal">
+      <span class="badge-planned" data-i18n="rm_badge_planned">Under active development (In progress)</span>
+      <ul class="roadmap-list">
+        <li data-i18n="rm_plan_1">Complete sequencer track/global controls and persistent slot transfer validation.</li>
+        <li data-i18n="rm_plan_2">Optional desktop companion and virtual MIDI routing: separate from this browser build.</li>
+        <li data-i18n="rm_plan_3">Further display and hardware-feedback validation.</li>
+        <li data-i18n="rm_plan_4">Other controllers are separate modules; this distribution contains BCR32 only.</li>
+        <li data-i18n="rm_plan_5">Extend firmware 1.0.3 support beyond verified step editing; do not assume compatibility for every write.</li>
+      </ul>
+      <div class="roadmap-hw-box">
+        <strong data-i18n="rm_hw_title">Official Behringer Firmware &amp; Resources</strong>
+        <p data-i18n="rm_hw_desc">Need the official Firmware v1.0.3 update or Quick Start Guide? Visit the official Behringer BCR32 page.</p>
+        <a class="text-link" href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener"><span data-i18n="rm_hw_btn">Download official firmware (Behringer 0715-AAW)</span> <span aria-hidden="true">↗</span></a>
+      </div>
+      <p class="roadmap-note" data-i18n="rm_plan_note">Alpha software. Back up presets; no firmware flashing or automatic sequencer STORE.</p>
+    </div>
+  </div>
+</section>
+
+<section class="faq section">
+  <div class="faq-title reveal">
+    <p class="eyebrow" data-i18n="faq_eyebrow">Key questions</p>
+    <h2 data-i18n="faq_title">Before you start.</h2>
+  </div>
+  <div class="faq-list">
+    <details>
+      <summary><span data-i18n="faq_q1">Does BCR32 Studio risk corrupting my hardware presets?</span><span aria-hidden="true">+</span></summary>
+      <p data-i18n="faq_a1">This is alpha software, not a risk-free guarantee. Sequencer live edits require an explicit switch and affect the current edit buffer. Persistent saving is separate; back up presets before hardware changes.</p>
+    </details>
+    <details>
+      <summary><span data-i18n="faq_q_fw">Where can I download the official Behringer firmware update?</span><span aria-hidden="true">+</span></summary>
+      <p data-i18n-html="faq_a_fw">The official firmware (such as v1.0.3), Quick Start Guides, and device specifications can be downloaded directly from the official Behringer product page at <a href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener">https://www.behringer.com/en/products/0715-AAW</a>.</p>
+    </details>
+    <details>
+      <summary><span data-i18n="faq_q2">What browsers support the Web MIDI connection?</span><span aria-hidden="true">+</span></summary>
+      <p data-i18n="faq_a2">Web MIDI is supported out of the box in Chromium-based browsers: Google Chrome, Microsoft Edge, Brave, and Opera. Connect your BCR-32 via USB and grant MIDI access when prompted.</p>
+    </details>
+    <details>
+      <summary><span data-i18n="faq_q3">Can I use BCR32 Studio without a BCR-32 plugged in?</span><span aria-hidden="true">+</span></summary>
+      <p data-i18n="faq_a3">Yes. You can edit assignments, configure custom labels, generate printable A4 PDF overlays, export Cubase MIDI Remote scripts, and program polyphonic sequences completely offline in your browser.</p>
+    </details>
+    <details>
+      <summary><span data-i18n="faq_q4">How does the Cubase MIDI Remote export work?</span><span aria-hidden="true">+</span></summary>
+      <p data-i18n="faq_a4">The editor generates a complete .js script describing the physical front panel layout and assigned MIDI messages. Place it in Cubase's MIDI Remote Driver Scripts folder to instantly map controls via Cubase's Mapping Assistant.</p>
+    </details>
+    <details>
+      <summary><span data-i18n="faq_q5">Is BCR32 backward compatible with BCR2000?</span><span aria-hidden="true">+</span></summary>
+      <p data-i18n="faq_a5">This standalone distribution contains the BCR32 editor only. The shared MIDI Studio foundation has separate device modules; that does not make their protocols interchangeable.</p>
+    </details>
+  </div>
+</section>
+
+<section class="closing">
+  <div class="section">
+    <p class="eyebrow" data-i18n="closing_eyebrow">Ready to explore</p>
+    <h2 data-i18n-html="closing_title">Put your hands on your sound.<br><span>Drive your studio with precision.</span></h2>
+    <div class="closing-actions">
+      <a class="button primary" href="./editor/"><span data-i18n="closing_cta">Open editor</span> <span aria-hidden="true">↗</span></a>
+      <a class="button secondary" href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener"><span data-i18n="closing_hw">Official Behringer 0715-AAW Page</span> <span aria-hidden="true">↗</span></a>
+    </div>
+    <p data-i18n="closing_note">Open source community project · GitHub Pages build</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="brand">
+        <img src="./site/assets/mark.svg" alt="" width="28" height="28">
+        <span>BCR32 <small>STUDIO</small></span>
+      </div>
+      <p class="footer-tagline" data-i18n="footer_tagline">Web MIDI Controller Editor &amp; Polyphonic Step Sequencer for Behringer BCR-32.</p>
+    </div>
+    <div class="footer-links">
+      <div>
+        <strong data-i18n="footer_col_app">Application</strong>
+        <a href="./editor/">Live BCR32 Studio</a>
+        <a href="./editor/">Local Build Demo</a>
+        <button type="button" class="footer-btn" data-access>Quick Start Guide</button>
+      </div>
+      <div>
+        <strong data-i18n="footer_col_docs">Documentation</strong>
+        <a href="https://github.com/TheLazyGeekGuy/bcr32-studio" target="_blank" rel="noopener">GitHub Repository</a>
+        <a href="#duo">Controller &amp; Sequencer</a>
+        <a href="#fonctions">Hardware Map &amp; CC</a>
+        <a href="#disponibilite">Safety &amp; Protocol</a>
+      </div>
+      <div>
+        <strong data-i18n="footer_col_hardware">Official Hardware</strong>
+        <a href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener">Behringer BCR-32 (0715-AAW)</a>
+        <a href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener">Firmware 1.0.3 Downloads</a>
+        <a href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener">Official User Manual</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p data-i18n-html="footer_legal">&copy; 2026 MIDI Studio Project. Built for musicians, sound designers, and hardware tinkerers. Non-official community tool, not affiliated with Music Tribe or Behringer.</p>
+    <a href="#top" class="back-to-top" aria-label="Back to top" data-i18n="footer_top">↑ Top</a>
+  </div>
+</footer>
+
+<!-- Quick Start & Access Modal Dialog -->
+<div class="modal" id="access-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <img src="./site/assets/mark.svg" alt="" width="28" height="28">
+        <h3 id="modal-title" data-i18n="modal_title">Get Started with BCR32 Studio</h3>
+      </div>
+      <button class="modal-close" data-close aria-label="Close dialog" data-i18n-aria="modal_close_aria">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-intro" data-i18n="modal_intro">BCR32 Studio is available both as a direct zero-install Web MIDI application and as a local open-source project.</p>
+
+      <div class="modal-section">
+        <div class="modal-sec-icon">🌐</div>
+        <div>
+          <strong data-i18n="modal_sec1_title">1. Instant Web MIDI Access (Recommended)</strong>
+          <p data-i18n="modal_sec1_desc">Open the live build directly in Chrome, Edge, Brave, or Opera. Connect your BCR-32 via USB and accept the browser MIDI prompt.</p>
+          <a class="button primary modal-cta" href="./editor/"><span data-i18n="modal_sec1_btn">Open editor</span> <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-sec-icon">⚡</div>
+        <div>
+          <strong data-i18n="modal_sec2_title">2. Run Locally via Dev Server</strong>
+          <p data-i18n="modal_sec2_desc">Run the Vite development server on your machine with full offline capabilities:</p>
+          <pre class="code-box"><code>git clone https://github.com/TheLazyGeekGuy/bcr32-studio.git
+cd bcr32-studio
+npm install
+npm run dev -- --port 5183</code></pre>
+          <small class="muted" data-i18n="modal_sec2_note">Then navigate to http://localhost:5183/editor/ in any Chromium browser.</small>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-sec-icon">🎛</div>
+        <div>
+          <strong data-i18n="modal_sec3_title">3. Official Behringer Firmware (0715-AAW)</strong>
+          <p data-i18n="modal_sec3_desc">Download the latest official firmware updates (v1.0.3), Quick Start Guides, and technical specifications directly from Behringer:</p>
+          <a class="button secondary modal-cta" href="https://www.behringer.com/en/products/0715-AAW?h=live" target="_blank" rel="noopener"><span data-i18n="modal_sec3_btn">Go to Behringer Product Downloads (0715-AAW)</span> <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./site/site.js"></script>
+</body>
 </html>

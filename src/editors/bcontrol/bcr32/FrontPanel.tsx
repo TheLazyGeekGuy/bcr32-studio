@@ -1,3 +1,4 @@
+import {publicAsset} from '../../../deployment-base'
 import type {MoveKind,MoveMode} from '../../../control-move'
 import { controllerTrackColors, trackTextColor, type TrackFeedback } from './controller-tracks'
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
@@ -147,7 +148,7 @@ export function FrontPanel({ onModeKey, profile, selection, selections = [select
     <div className="panel-plate" aria-hidden="true" />
     {rectangle&&<div className="selection-rectangle" aria-hidden="true" style={region(Math.min(rectangle.x1,rectangle.x2),Math.min(rectangle.y1,rectangle.y2),Math.abs(rectangle.x2-rectangle.x1),Math.abs(rectangle.y2-rectangle.y1))} />}
     <ActivityLeds activity={activity} readings={indicators} />
-    {compact && <div className="editor-brand" style={region(700, 38, 305, 72)}><img src="branding/midi-studio-logo.svg" alt="MIDI Studio" draggable={false} /></div>}
+    {compact && <div className="editor-brand" style={region(700, 38, 305, 72)}><img src={publicAsset('branding/midi-studio-logo.svg')} alt="MIDI Studio" draggable={false} /></div>}
     {labels.map((label, i) => button(i + 5, label, 37 + (i % 8) * 161.4, i < 8 ? 247 : 369))}
     {['T1', 'T2', 'T3', 'T4'].map((label, i) => button(i + 21, label, i % 2 ? 1583 : 1422, i < 2 ? 247 : 369, 96))}
     {profile.encoders.map(e => {

@@ -10,6 +10,7 @@ import {automaticPorts,isControllerPort} from './auto-midi'
 import {isFrame,isFirmwareRead} from './firmware-codec'
 import {parseFirmwareReply} from './web-midi'
 import {plannedOperation,validateEditBuffer,validateQuery} from './host-policy'
+import {isZaqHostQuery,isZaqHostWrite,supportsZaqHost} from './zaq-host'
 import Workbench from './Workbench'
 import './workbench.css'
 
@@ -31,11 +32,12 @@ export function createWorkbenchBridge(context:EditorViewContext){
    if(!state.connected)throw Error('BCR32 is disconnected')
    let operation:MidiOperation='value',grant:MidiAuthorization|undefined
    if(bytes[0]===240){
-    if(validateQuery(bytes)){if(isFirmwareRead(bytes)&&(!identity||identity.firmware!=='1.0.2'))throw Error('Live firmware 1.0.2 required for indexed/preset reads');operation='query'}
+    if(validateQuery(bytes)){if(isFirmwareRead(bytes)&&(!identity||!['1.0.2','1.0.3'].includes(identity.firmware)))throw Error('Live firmware 1.0.2/1.0.3 required for indexed/preset reads');if(isZaqHostQuery(bytes)&&!supportsZaqHost(identity?.firmware))throw Error('Live firmware 1.0.3 required for sequencer reads');operation='query'}
     else if(isFrame(bytes)&&bytes[6]===32){
      if(!identity||identity.firmware!=='1.0.2'||bytes[4]!==identity.device||locked||!prepared||state.generation!==prepared.generation||JSON.stringify(bytes)!==JSON.stringify(prepared.frames[prepared.cursor]))throw Error('BCR32 BCL job is not prepared or is stale')
      operation=prepared.grant.operation;grant=prepared.grant
-    }else if(!locked&&identity?.firmware==='1.0.2'&&bytes[4]===identity.device&&validateEditBuffer(bytes))operation='edit-buffer'
+    }else if(!locked&&supportsZaqHost(identity?.firmware)&&isZaqHostWrite(bytes))operation='edit-buffer'
+    else if(!locked&&identity?.firmware==='1.0.2'&&bytes[4]===identity.device&&validateEditBuffer(bytes))operation='edit-buffer'
     else throw Error('BCR32 output refused by module policy')
    }
    if(!grant){grant=grants.get(operation);if(!grant){grant=context.broker.authorize(context.id,operation);grants.set(operation,grant)}}

@@ -1,13 +1,12 @@
 # Deployment
 
-BCR32 Studio is a static single-page app (no server code). The same build runs at a domain root or under a sub-path:
-asset URLs are relative (Vite `base: './'`).
+BCR32 Studio has two static HTML entry points (no server code): the presentation at `/` and the application at `/editor/`. The same build runs at a domain root or under a project subpath (Vite `base: './'`). Public assets and the service-worker scope stay at the project root. Do not deploy only one HTML file or move the editor without its shared `assets/` directory.
 
 ## GitHub Pages (primary)
 
-Every push to `main` runs the tests, builds and publishes **https://bcr32-studio.github.io/**
+Every push to `main` runs the tests, builds and publishes **https://thelazygeekguy.github.io/bcr32-studio/**
 (`.github/workflows/pages.yml`). No secret, no external service. GitHub Pages cannot send response headers, so the
-build injects the Content-Security-Policy of `public/_headers` as a `<meta>` tag (`META_CSP=1`); `frame-ancestors` and
+build injects the Content-Security-Policy of `public/_headers` into both HTML entries as a `<meta>` tag (`META_CSP=1`); `frame-ancestors` and
 `X-Frame-Options` are not available there. `404.html` is a copy of `index.html` for the single-page fallback.
 
 ## Cloudflare Workers (optional, disabled by default)

@@ -6,14 +6,16 @@ import { MidiImportDialog, type ImportSlot } from './MidiImportDialog'
 import { applyTemplate, randomPattern, scales, templates } from './sequencer-templates'
 import type { EditorStorage } from '../../../editor-environment'
 import { translate, useLanguage } from './i18n'
+import {useSequencerHost,type SequencerConnection} from './useSequencerHost'
 
 // Sequencer view (approved mockup of 2026-10-24): the four Zaquencer tracks × 32 steps as a grid, lanes, piano roll or
 // raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
-// stays in this browser: listening for a front-panel export sends nothing, and there is no path that sends a pattern.
+// File editing stays local. The separately gated firmware 1.0.3 host path reads lanes and sends individual edits,
+// never file blocks, preset STORE, firmware or mode changes.
 export { trackColors, noteName, keyboardNotes, stepGrids, noteDelayRange } from './sequencer-shared'
 import { tempoRange } from './sequencer-clock'
 import { trackColors, noteName, keyboardNotes, stepGrids, noteNames, noteLengths, noteDelayRange, stepDefaults, clockDividers, directions } from './sequencer-shared'
-type Entry = { pattern: ZaqPattern; data: number[]; label: string }
+type Entry = { pattern: ZaqPattern; data: number[]; label: string; host?: string; hostAt?: string }
 // A local template: eight kind-0 blocks whose 128 steps play the BCR32's own defaults. The header is all zero (fields not
 // located yet), so it is for files only.
 export function emptyPattern(): ZaqPattern {
@@ -59,9 +61,9 @@ export function patternToMidi(data: readonly number[], ppq = 96) {
 
 // Start/stop of the BCR32 sequencer, driven by the Workbench's MIDI clock master (Start, Clock, Stop only).
 export type SequencerTransport = { supported: boolean; available: boolean; running: boolean; bpm: number; setBpm: (bpm: number) => void; toggle: () => void }
-export function SequencerView({ storage, noteInput, noteInputName, openMidiSettings, receive, download, locked, transport }: {
+export function SequencerView({ storage, noteInput, noteInputName, openMidiSettings, receive, download, locked, transport, connection }: {
   storage: EditorStorage; noteInput: MutableRefObject<((note: number, velocity: number) => void) | null>; noteInputName: string; openMidiSettings: () => void; receive: MutableRefObject<(bytes: number[]) => void>
-  download: (data: BlobPart, name: string, type?: string) => void; locked: boolean; transport: SequencerTransport
+  download: (data: BlobPart, name: string, type?: string) => void; locked: boolean; transport: SequencerTransport; connection?: SequencerConnection
 }) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
   const [entries, setEntries] = useState<Entry[]>(() => [{ pattern: emptyPattern(), data: emptyPattern().data, label: 'Empty template' }])
@@ -78,27 +80,37 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   const [random, setRandom] = useState({ scale: 'minor', root: 45, octaves: 1, density: .5, allTracks: false })
   const [midi, setMidi] = useState<{ name: string; file: MidiFile; grid: number } | null>(null), dragging = useRef(false)
   const entry = entries[Math.min(current, entries.length - 1)], data = entry.data
+  const host=useSequencerHost(connection,locked,snapshot=>{
+    const pattern={...emptyPattern(),identity:'host-projection',data:snapshot.data}
+    setEntries(list=>[...list,{pattern,data:snapshot.data,label:`BCR32 · ${new Date(snapshot.capturedAt).toLocaleTimeString()}`,host:connection?.key,hostAt:snapshot.capturedAt}].slice(-24))
+    setCurrent(Number.MAX_SAFE_INTEGER);setUndo([]);setRedo([])
+  })
+  const hostReceive=useRef(host.receive);hostReceive.current=host.receive
+  useEffect(()=>{if(host.enabled)void host.read(emptyPattern().data)},[connection?.key,host.enabled,host.read])
+  useEffect(()=>{host.disarm()},[current,host.disarm])
+  const liveEntry=entry.host===connection?.key&&entry.host!==undefined&&entry.hostAt===host.snapshot.current?.capturedAt
   const state = useRef({ data, track, step, octave, velocity, locked }); state.current = { data, track, step, octave, velocity, locked }
   // A drag over a lane is one undo step: only its first change records the previous pattern.
   const commit = (next: number[], message?: string, continuing = false) => {
     if (state.current.locked) return
     if (!continuing) { setUndo(u => [...u.slice(-99), state.current.data]); setRedo([]) }
+    if(liveEntry)host.edit(state.current.data,next)
     setEntries(list => list.map((e, i) => i === Math.min(current, list.length - 1) ? { ...e, data: next } : e)); if (message) setNotice(message)
   }
   const restore = (from: number[][], to: (f: (v: number[][]) => number[][]) => void, setFrom: (f: (v: number[][]) => number[][]) => void) => {
     const last = from.at(-1); if (!last || locked) return
+    if(liveEntry)host.edit(data,last)
     to(v => [...v, data]); setFrom(v => v.slice(0, -1)); setEntries(list => list.map((e, i) => i === Math.min(current, list.length - 1) ? { ...e, data: last } : e))
   }
   const patch = (p: Partial<ZaqStep>, s = step, tr = track, continuing = false) => commit(patchStep(state.current.data, tr, s, p), undefined, continuing)
   const play = (note: number, vel: number) => { const { data: d, track: tr, step: st } = state.current; try { const r = enterNote(d, tr, st, note, vel); commit(r.data); setStep(r.next) } catch (e) { setNotice(String(e)) } }
   const playRef = useRef(play); playRef.current = play
-  const addPattern = (pattern: ZaqPattern, label: string) => { setEntries(list => [...list, { pattern, data: [...pattern.data], label }].slice(-24)); setCurrent(Number.MAX_SAFE_INTEGER); setUndo([]); setRedo([]) }
+  const addPattern = (pattern: ZaqPattern, label: string) => { host.disarm();setEntries(list => [...list, { pattern, data: [...pattern.data], label }].slice(-24)); setCurrent(Number.MAX_SAFE_INTEGER); setUndo([]); setRedo([]) }
 
   // Listening for a front-panel pattern export: receive only, never a request.
   useEffect(() => {
-    if (!listen) { receive.current = () => {}; return }
     const assembler = createZaqAssembler()
-    receive.current = bytes => { const block = decodeZaqBlock(bytes); if (!block) return; const p = assembler.receive(block); if (p) { addPattern(p, `${t('Front-panel export')} · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); setNotice('Pattern received. Nothing was sent to the BCR32.') } }
+    receive.current = bytes => { hostReceive.current(bytes);if(!listen)return;const block = decodeZaqBlock(bytes); if (!block) return; const p = assembler.receive(block); if (p) { addPattern(p, `${t('Front-panel export')} · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); setNotice('Pattern received. Nothing was sent to the BCR32.') } }
     return () => { receive.current = () => {} }
   }, [listen])
 
@@ -152,6 +164,8 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   return <section className="sequencer-view" tabIndex={0} onKeyDown={onKey} aria-label={t('Sequencer')}>
     <div className="seq-main">
       <div className="seq-bar">
+        <button disabled={!host.enabled||host.busy} onClick={()=>void host.read(emptyPattern().data)}>{t('Read current pattern')}</button>
+        <label className="mock-check"><input type="checkbox" checked={host.live} disabled={!host.ready||!liveEntry||locked||host.busy&&!host.live} onChange={e=>host.setLive(e.target.checked)}/>{t('Live step editing')}</label>
         <label className="seq-pattern">{t('Pattern')}<select value={Math.min(current, entries.length - 1)} onChange={e => { setCurrent(Number(e.target.value)); setUndo([]); setRedo([]) }}>{entries.map((e, i) => <option key={i} value={i}>{t(e.label)}</option>)}</select></label>
         <button aria-label={t('Undo')} title={t('Undo')} disabled={!undo.length || locked} onClick={() => restore(undo, setRedo, setUndo)}>↶</button><button aria-label={t('Redo')} title={t('Redo')} disabled={!redo.length || locked} onClick={() => restore(redo, setUndo, setRedo)}>↷</button>
         <div className="mock-seg" role="group" aria-label={t('Pattern display')}>{(['grid', 'roll', 'table'] as const).map(v => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{t({ grid: 'Grid', roll: 'Piano roll', table: 'Table (Behringer)' }[v])}</button>)}</div>
@@ -162,7 +176,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
           <button className={transport.running ? 'primary' : ''} aria-pressed={transport.running} disabled={!transport.available} title={t(transport.supported ? 'Space: start / stop (BCR32 clock source on USB)' : 'Not available: the BCR32 1.0.2 does not follow a clock sent over USB')} onClick={transport.toggle}>{transport.running ? '■' : '▶'}<span data-i18n-skip> </span>{t(transport.running ? 'Stop' : 'Play')}</button>
           <label>{t('BPM')}<input type="number" min={tempoRange.min} max={tempoRange.max} value={transport.bpm} onChange={e => { const v = Number(e.target.value); if (v >= tempoRange.min && v <= tempoRange.max) transport.setBpm(v) }} /></label>
         </div>
-        <span className="seq-offline">{t(transport.supported ? 'Patterns stay in this browser · only start/stop reaches the BCR32' : 'Offline · nothing is sent to the BCR32')}</span>
+        <span className="seq-offline" role="status">{t(host.enabled?host.status:transport.supported ? 'Patterns stay in this browser · only start/stop reaches the BCR32' : 'Offline · nothing is sent to the BCR32')}</span>
       </div>
       {templatesOpen && <section className="seq-templates mock-card">
         <div><b>{t('Built-in templates')}</b><div className="mock-actions">{templates.map(tp => <button key={tp.id} disabled={locked} onClick={() => { commit(applyTemplate(data, tp.id), t(tp.name)); setTemplatesOpen(false) }}>{t(tp.name)}</button>)}</div></div>
@@ -177,7 +191,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
           <button className="primary" disabled={locked} onClick={() => commit(randomPattern(data, { tracks: random.allTracks ? [0, 1, 2, 3] : [track], scale: random.scale, root: random.root, octaves: random.octaves, density: random.density }), t('Random pattern'))}>{t('Generate')}</button>
         </div></div>
       </section>}
-      <p className="mock-warn seq-preview-note">{t('Preview: MIDI and .syx files, keyboard and MIDI keyboard entry work in the editor. Capture from the BCR32 and sending to it are not implemented yet.')}</p>
+      <p className="mock-warn seq-preview-note">{t(host.enabled?'Firmware 1.0.3: read the current pattern, then enable Live step editing to send individual edits. No STORE is sent. Track/global settings and slot transfers are not included.':'Offline preview: MIDI and .syx files, keyboard and MIDI keyboard entry work locally. Hardware sequencer editing requires firmware 1.0.3.')}</p>
       <div className="seq-entry">
         <label className="mock-check"><input type="checkbox" checked={keyboardEntry} onChange={e => setKeyboardEntry(e.target.checked)} />{t('Computer keyboard entry')}</label>
         <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {transport.supported ? <>{t('Space: start / stop')} · </> : null}M {t('rest')} · ⌫</span>
@@ -230,7 +244,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         </>}
         {panel === 'track' && <>
           <p className="mock-caption mock-kind">{t('Track')} {track + 1}</p>
-          {(() => { const h = trackHeader(data, track); return <table className="seq-header"><tbody>
+          {liveEntry ? <p className="mock-caption">{t('Track/global settings are not part of this step capture. No hardware header is inferred.')}</p> : (() => { const h = trackHeader(data, track); return <table className="seq-header"><tbody>
             {([['Muted track', h.mute ? t('yes') : t('no')], ['Direction (code)', `${h.direction} · ${directions[h.direction] ?? '?'}`], ['Sequence start', h.start], ['Sequence length', h.length], ['Sequence offset', h.offset], ['Clock divider (code)', `${h.clockDivider} · ${clockDividers[h.clockDivider] ?? '?'}`], ['Shuffle even / odd ticks', `${h.shuffleEven} / ${h.shuffleOdd}`], ['Skipped steps', h.skipped], ['Muted drum voices', h.drumMutes]] as [string, string | number][]).map(([k, v]) => <tr key={k}><th>{t(k)}</th><td data-i18n-skip>{v}</td></tr>)}
           </tbody></table> })()}
           <p className="mock-caption">{t('Read only. Field names from the Zaquencer preset map published by its author; not yet observed on a BCR32 export. The header is kept byte for byte.')}</p>
@@ -238,10 +252,11 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
           <p className="mock-caption">{t('Sequencer global settings (scale, root, transpose, quantization) are in the Device tab.')}</p>
         </>}
         {panel === 'file' && <>
+          {host.snapshot.current&&<section className="mock-card"><b>{t('Hardware capture')}</b><p>{t('Step values only, not a complete preset backup. Track/global settings are not included.')}</p><button onClick={()=>download(JSON.stringify(host.snapshot.current,null,2),'bcr32-sequencer-values.json','application/json')}>{t('Export captured values')}</button></section>}
           <section className="mock-card"><b>{t('Front-panel export')}</b><p className="mock-caption">{t('Export the pattern on the BCR32: the editor only listens, nothing is sent.')}</p><div className="mock-actions"><button className={listen ? 'primary' : undefined} aria-pressed={listen} onClick={() => setListen(v => !v)}>{t(listen ? 'Stop listening' : 'Listen')}</button></div></section>
           <section className="mock-card"><b>{t('Files')}</b><div className="mock-actions">
             <label className="file">{t('Import .syx or MIDI…')}<input type="file" accept=".syx,.mid,.midi,.smf,application/octet-stream,audio/midi" onChange={e => { void importFile(e.target.files?.[0]); e.target.value = '' }} /></label>
-            <button onClick={() => { try { download(new Uint8Array(patternFile(entry.pattern, data)), 'bcr32-pattern.syx', 'application/octet-stream'); setNotice('File saved. Nothing was sent to the BCR32.') } catch (e) { setNotice(String(e)) } }}>{t('Export .syx')}</button>
+            <button disabled={entry.pattern.identity==='host-projection'} title={entry.pattern.identity==='host-projection'?'Step capture is not a complete .syx preset backup':undefined} onClick={() => { try { download(new Uint8Array(patternFile(entry.pattern, data)), 'bcr32-pattern.syx', 'application/octet-stream'); setNotice('File saved. Nothing was sent to the BCR32.') } catch (e) { setNotice(String(e)) } }}>{t('Export .syx')}</button>
             <button onClick={() => { try { download(patternToMidi(data), 'bcr32-pattern.mid', 'audio/midi'); setNotice('File saved. Nothing was sent to the BCR32.') } catch (e) { setNotice(String(e)) } }}>{t('Export MIDI')}</button></div></section>
 
           <section className="mock-card"><b>{t('Send to the BCR32')}</b><p className="mock-caption">{t('Disabled until the validation plan is done: backup, sacrificial slot, compared re-export, power-cycle check.')}</p><div className="mock-actions"><button disabled>{t('Send to a slot…')}</button></div></section>

@@ -11,6 +11,7 @@ import './editor-host/midi-connection.css'
 import {startOffline} from './offline'
 import {createPresetExchange} from './editor-host/preset-exchange'
 import {DocumentationLink} from './editor-host/DocumentationLink'
+import {deploymentBase} from './deployment-base'
 
 const App=loadLegacy?lazy(loadLegacy):null
 const WorkspaceApp=loadWorkspace?lazy(loadWorkspace):null
@@ -19,7 +20,7 @@ const presetExchange=createPresetExchange()
 const tools=<><DocumentationLink/>{LibraryTool?<Suspense fallback={<span>…</span>}><LibraryTool exchange={presetExchange}/></Suspense>:null}</>
 const installation=createLazyEditorInstallation(generatedLazyEditors)
 
-startOffline(new URL(import.meta.env.BASE_URL,document.baseURI),import.meta.env.PROD)
+startOffline(deploymentBase(),import.meta.env.PROD)
 const params=new URLSearchParams(window.location.search),editorId=params.get('editor')??(distribution.mode==='standalone'?distribution.modules[0]:null)
 const standalone=editorId&&installation.registry.list().some(m=>m.id===editorId)
   ? lazy(async()=>{const [selected,{StandaloneEditorApp}]=await Promise.all([installation.load(editorId),import('./editor-host/StandaloneEditorApp')]);return {default:()=> <StandaloneEditorApp automaticMidi={params.get('midi')!=='manual'} installation={selected} nativePresence={nativePresence} tools={tools} presetExchange={presetExchange}/>}}) : null

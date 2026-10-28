@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.0-alpha.12] — 2026-10-28
+
+- Firmware 1.0.3 sequencer host protocol, recovered from ControlTribe 1.12.4 and checked against a physical BCR32: read all nine lanes of four tracks; opt-in live edits of note, velocity, mute, delay, length, CC A/B, chord word and skip. Reuses the instance MIDI lease; serializes edits and coalesces pending changes. Disconnect, lock, changed device state, missing replies or unconfirmed edits stop sending. No STORE, firmware update or legacy command 07.
+- Hardware evidence: 36 lanes read; one temporary note change (60 → 61), independent read-back and restoration to 60, all confirmed. Other write fields have offline tests, not individual physical validation. Persistent sequencer storage, track/global editing and transport remain gated.
+- Reused the existing BCR32 product presentation at `/`; moved the editor to `/editor/`, keeping legacy explicit editor/workspace query links. Assets, documentation and offline navigation resolve under both a domain root and a project subpath. The presentation does not initialize MIDI or load the editor bundle.
+- Firmware/API provenance, capture fixtures, bounded hardware test tool and regression tests are documented. Existing firmware 1.0.2 write/store gates are not broadened to 1.0.3.
+
 ## [0.45.0-alpha.11] — 2026-10-24
 
 BCR32 sequencer view (preview), preset store fixes and display options. Pattern transfer to and from the BCR32 is not

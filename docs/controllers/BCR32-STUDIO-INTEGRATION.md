@@ -1,5 +1,7 @@
 # BCR32 firmware 1.0.2 in MIDI Studio
 
+> Version boundary: `0.45.0-alpha.12` adds a separately gated **1.0.3 sequencer step protocol**. See [the 1.0.3 integration reference](../BCR32-PROTOCOL-1.0.3.md). Existing 1.0.2 BCL/controller write/store permissions described below are not automatically extended to 1.0.3. The standalone editor now opens at `/editor/`; `/` is the product presentation.
+
 The BCR32 catalog entry now opens the firmware workbench inside the current Studio host. BCR2000 and BCF2000 keep their existing implementations and independent distribution entry points.
 
 ## Use

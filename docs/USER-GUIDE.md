@@ -1,4 +1,4 @@
-> Historical guide for the pre-1.0.2 editor. For the current release use the in-editor Documentation button and [firmware 1.0.2 notes](FIRMWARE-1.0.2.md). Legacy command assumptions do not establish firmware 1.0.2 support.
+> Historical guide for the pre-1.0.2 editor. For current capabilities see the in-editor Documentation, [firmware 1.0.2 notes](FIRMWARE-1.0.2.md) and [firmware 1.0.3 sequencer integration](BCR32-PROTOCOL-1.0.3.md). Open the product site at `/` and the application at `/editor/`. Legacy command assumptions do not establish support for later firmware.
 
 # BCR32 Studio — user guide
 

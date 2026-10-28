@@ -1,3 +1,4 @@
+import {publicAsset} from './deployment-base'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { version as studioVersion } from '../package.json'
 import { createProfile, parseProfile, valueLimit, parameterLimit, is14Bit, isRelative, modesFor, typesFor, mmcCommands, defaultSettings, type Bcr32Profile, type ControllerSettings, type Encoder, type EncoderMode, type EncoderType } from './profile'
@@ -510,7 +511,7 @@ function App({ tools, environment, initialState, requestAccess, bindPair, onSnap
     setPdfBusy(true)
     try {
       const p = makePreset(snapshot, presetName)
-      if (!pdfFont) pdfFont = fetch('fonts/NotoSans-Regular.ttf').then(response => { if (!response.ok) throw new Error('PDF font unavailable'); return response.arrayBuffer() }).catch(error => { pdfFont = null; throw error })
+      if (!pdfFont) pdfFont = fetch(publicAsset('fonts/NotoSans-Regular.ttf')).then(response => { if (!response.ok) throw new Error('PDF font unavailable'); return response.arrayBuffer() }).catch(error => { pdfFont = null; throw error })
       const { presetPdf } = await import('./preset-pdf')
       const bytes = await presetPdf(p, new Uint8Array((await pdfFont).slice(0)))
       download(bytes.buffer as ArrayBuffer, `bcr32-${fileStem(p.name)}-A4.pdf`, 'application/pdf')

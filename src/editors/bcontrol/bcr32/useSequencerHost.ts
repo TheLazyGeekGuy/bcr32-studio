@@ -1,0 +1,61 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { applyHostLane, changedHostSteps, createZaqHost, isZaqHostWrite, supportsZaqHost } from './zaq-host'
+
+export type SequencerConnection = { firmware: string | null; device: number | null; key: string; available: boolean; send: (bytes: number[]) => void }
+type Snapshot = { data: number[]; frames: number[][]; state: number[]; capturedAt: string }
+/** View-local lifecycle; reuses the host's lease and never opens another MIDI connection. */
+export function useSequencerHost(connection: SequencerConnection | undefined, locked: boolean, onRead: (s: Snapshot) => void) {
+  const [status,setStatus]=useState('Offline · nothing is sent to the BCR32'),[busy,setBusy]=useState(false),[live,setLive]=useState(false),[ready,setReady]=useState(false)
+  const session=useRef<ReturnType<typeof createZaqHost>|null>(null),latest=useRef({connection,locked,onRead}),snapshot=useRef<Snapshot|null>(null)
+  latest.current={connection,locked,onRead}
+  const enabled=!!connection?.available&&supportsZaqHost(connection.firmware)&&connection.device!==null&&connection.device!==127
+  const queue=useRef(new Map<string,{track:number;step:number;field:number;value:number}>()),flushing=useRef(false),armed=useRef(false),reading=useRef(false)
+  const disarm=useCallback(()=>{armed.current=false;setLive(false);queue.current.clear()},[])
+  useEffect(()=>{
+    disarm();setReady(false);snapshot.current=null;reading.current=false;flushing.current=false;setBusy(false)
+    if(!enabled||!connection||connection.device===null){setStatus('Offline · nothing is sent to the BCR32');return}
+    const client=createZaqHost(bytes=>{const c=latest.current;if(!c.connection?.available||c.locked&&isZaqHostWrite(bytes))throw Error('Sequencer unavailable');c.connection.send(bytes)},connection.device)
+    session.current=client;setStatus('Firmware 1.0.3 · ready to read the current pattern')
+    return()=>{session.current=null;client.close();queue.current.clear()}
+  },[connection?.key,enabled,disarm])
+  useEffect(()=>{if(locked)disarm()},[locked,disarm])
+  const read=useCallback(async(data: readonly number[])=>{
+    const client=session.current;if(!client||reading.current||flushing.current)return
+    disarm();reading.current=true;setBusy(true);setReady(false)
+    const frames:number[][]=[]
+    try{
+      const before=await client.state();let next=[...data]
+      for(let track=0;track<4;track++)for(let field=0;field<9;field++){
+        const r=await client.readLane(track,field);if(session.current!==client)return
+        frames.push([track,field,...r.values]);next=applyHostLane(next,track,field,r.values);setStatus(`Reading sequencer · ${frames.length} / 36`)
+      }
+      const after=await client.state();if(session.current!==client)return
+      if(JSON.stringify(before.values)!==JSON.stringify(after.values))throw Error('Device state changed during read; read again')
+      const result={data:next,frames,state:after.values,capturedAt:new Date().toISOString()};snapshot.current=result
+      latest.current.onRead(result);setReady(true);setStatus('Current pattern read · 4 tracks / 32 steps · no STORE sent')
+    }catch(e){if(session.current===client)setStatus(String(e))}finally{if(session.current===client){reading.current=false;setBusy(false)}}
+  },[disarm])
+  const edit=useCallback((before: readonly number[],after: readonly number[])=>{
+    const client=session.current;if(!client||latest.current.locked||reading.current)return
+    if(!armed.current){setReady(false);setStatus('Local edits differ from the hardware; read the current pattern before enabling live editing');return}
+    try {for(const c of changedHostSteps(before,after))queue.current.set(`${c.track}:${c.step}:${c.field}`,c)}catch(e){disarm();setStatus(String(e));return}
+    if(queue.current.size>128){disarm();setStatus('Too many changes: live editing paused; read the device again');setReady(false);return}
+    if(flushing.current)return
+    flushing.current=true;setBusy(true)
+    void(async()=>{try{
+      while(queue.current.size&&armed.current&&!latest.current.locked&&session.current===client){
+        const state=await client.state()
+        if(!armed.current||latest.current.locked||session.current!==client)break
+        if(JSON.stringify(state.values)!==JSON.stringify(snapshot.current?.state))throw Error('Device state changed; read the current pattern again')
+        const [key,c]=queue.current.entries().next().value!;queue.current.delete(key)
+        const reply=await client.write(c.track,c.step,c.field,c.value)
+        if(reply.status!==0||(reply.values[0]&65535)!==(c.value&65535))throw Error('Sequencer write not confirmed')
+      }
+      if(session.current===client)setStatus('Live edit confirmed · edit buffer only · press STORE on the BCR32 to keep it')
+    }catch(e){if(session.current===client){disarm();setReady(false);setStatus(String(e))}}finally{if(session.current===client){flushing.current=false;setBusy(false)}}})()
+  },[disarm])
+  return {enabled,busy,ready,live,status,read,edit,disarm,snapshot,
+    receive:(bytes:number[])=>session.current?.receive(bytes),
+    setLive:(value:boolean)=>{if(value&&(!ready||busy||locked))return;armed.current=value;setLive(value);if(!value)queue.current.clear()},
+  }
+}
