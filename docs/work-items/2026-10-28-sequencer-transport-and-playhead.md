@@ -47,3 +47,25 @@ Transport remains gated. These unresolved criteria keep this ticket open. There 
 ## Executed software checks
 
 2026-10-28 14:38–14:41 CET: 47/47 offline scripts and TypeScript pass; production build/distribution passes with the existing large-chunk warning. Normal and synchronous-reply production browser runs pass, including auto-follow without page/step writes, paused-draft preservation and visible Pitch/Chord distinctions. Production subpath/offline regression passes; smoke serves `0.45.0-alpha.15`. One development-browser run was interrupted by navigation during concurrent regeneration/build; the stable production runs passed afterward. These are software checks, not physical transport/playhead proof.
+
+## Physical routing test — 2026-10-28 16:41–16:51 CET
+
+Codex primary agent, exact model/effort unavailable, reviewed full commit `b18dbfb1221602bd0842e900112862fb3455c2da` with a clean worktree before these documentation-only additions. The new explicitly gated test script and captures are outside Git in the existing analysis dossier. ControlTribe was not running when checked; this does not exclude every other possible MIDI client.
+
+The owner confirmed readiness after setting PAT'N CH = CH16 and Clock Out = USB and starting playback. Input-only recording received **112 F8 messages in 8 seconds**, then **2,520 in a separate 180-second window**, 14 per second throughout. The long window also contains the 28 explicitly requested read-only timing replies below, and no captured FA/FC event. The additional physical STOP → PLAY → STOP action was requested but is not yet confirmed performed; absence of FA/FC here must not be presented as proof that the device never emits them.
+
+Independent settings reads: operating mode `1F=0` (USB), clock source `50=0` (Internal), clock output `51=4` (USB), clock rate `18=3` (24 PPQ option). `47 01 00` read the native Tempo field as raw int16 350. The observed 14 F8/second corresponds to 35 BPM under standard 24-PPQ MIDI clock; retain raw 350 rather than silently promoting a new tempo-write unit contract.
+
+The only performance write was **`BF 04 00`**, CC4=0 on channel16. Independent host reads before and after both returned `[1,0,0,0,0]`: **Stop was not confirmed**. No second CC, speculative selector, globals write, mode change, STORE or firmware command followed. The test did not qualify UI transport and does not establish whether another routing mode/DIN path could work. Do not enable the writer from a documented sibling model alone.
+
+Timing read requests were `F0 00 20 32 7F 64 46 01 track field F7`, four tracks × seven fields. All 28 returned status0, 15-byte frames; every track reported start1, length32, offset0, divider code4, shuffle even/odd0, direction0. These selectors are independently mapped by native `buildTrack` at `0x1005bb750`: 0 start, 1 length, 2 offset, 3 divider, 4/5 shuffle, 6 direction. The native divider table maps code4 to six MIDI ticks/step. These **reads are research evidence, not newly enabled UI writes or a completed playhead**.
+
+Evidence:
+
+- `cc4-ch16-1642.json`, SHA-256 `6d27a93a1f71370b291fc3afe785afba63916186ca95544f06f594e43476c8be`.
+- `track-timing-1646.json`, SHA-256 `10ea4f2d8105d5e503ab7ca167032e6bb91717fe7c18ff842cbb8b568c81f39e`.
+- Local ignored passive logs: `output/hw/2026-10-28T15-41-14-635Z-all.log` and `output/hw/2026-10-28T15-44-49-482Z-all.log` (F8 counted in the recorder's terminal summary, not individually written to those log files).
+
+Next physical gate: capture the owner's STOP → PLAY → STOP with Clock Out still USB, to establish a phase/reset anchor. PAT'N CH16 and Clock Out USB are temporary owner changes and are **not yet restored** while that test remains pending. Ask the owner to return both to Off after the test; no automatic undocumented setting writer is introduced. UI transport and exact playhead remain open.
+
+At 16:53 the owner reported the physical cycle completed, but the 180-second recorder had already ended at approximately 16:47:49. That action was **missed**, not a negative MIDI result. Do not infer missing FA/FC support from it. At 16:54:39 a new input-only persistent recorder was armed, writing an interim capture every second and retaining the result after an observed Start → clocks → Stop. It has a 30-minute safety cap rather than a short three-minute interaction window. The owner was asked to repeat PLAY → wait two seconds → STOP once. Outside-Git source/capture: `listen_until_transport.cjs`, `transport-persistent-1655.json`. No hardware output is possible from this recorder.
