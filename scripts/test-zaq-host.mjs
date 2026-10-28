@@ -6,6 +6,11 @@ const result=await build({stdin:{contents:"export * from './src/editors/bcontrol
 const module={exports:{}};new Function('module','exports',result.outputFiles[0].text)(module,module.exports);const z=module.exports
 const fixture=JSON.parse(readFileSync(new URL('./fixtures/zaq-host-103.json',import.meta.url),'utf8'))
 const stateFixture=JSON.parse(readFileSync(new URL('./fixtures/zaq-host-103-state.json',import.meta.url),'utf8'))
+const timingFixture=JSON.parse(readFileSync(new URL('./fixtures/zaq-host-103-timing.json',import.meta.url),'utf8'))
+assert.equal(timingFixture.frames.length,28)
+for(const frame of timingFixture.frames){const r=z.parseHostReply(frame,0);assert.equal(r.command,0x46);assert.equal(r.values[0],[1,32,0,4,0,0,0][r.field]);assert.equal(z.parseHostReply(frame,1),null);assert.equal(z.parseHostReply(frame,127),null)}
+for(let tr=0;tr<4;tr++)for(let f=0;f<7;f++){const b=z.readHostTiming(tr,f);assert.ok(z.isZaqHostQuery(b));assert.equal(z.isZaqHostWrite(b),false)}
+assert.throws(()=>z.readHostTiming(0,7));assert.throws(()=>z.readHostTiming(4,0));assert.equal(z.isZaqHostQuery(z.midiFrame(0x46,[2,0,0])),false)
 assert.deepEqual(z.parseHostReply(stateFixture.runningTrack0,0).values,[1,0,0,0,0])
 assert.deepEqual(z.parseHostReply(stateFixture.runningTrack1,0).values,[1,0,1,0,0])
 assert.deepEqual(stateFixture.runningTrack0,stateFixture.restoredTrack0)
@@ -44,4 +49,5 @@ await assert.rejects(client.state(),/timeout/);assert.equal(sent.length,2,'no re
 const cancelled=client.readLane(1,0);client.close();await assert.rejects(cancelled,/cancelled/)
 await assert.rejects(client.state(),/closed/)
 const failing=z.createZaqHost(()=>{throw Error('disconnected')},0);await assert.rejects(failing.state(),/disconnected/);failing.close()
+const refused=z.createZaqHost(()=>{},0);const unavailable=refused.state();refused.receive([240,0,32,50,0,100,72,0,2,247]);await assert.rejects(unavailable,/status 02/);refused.close()
 console.log('PASS Zaq host 1.0.3: physical read/write/restoration fixtures; all 9 lanes, signed/16-bit packing, strict ranges and firmware gates, echo/source/selector refusal, timeout/no retry, cancellation and no STORE/transport/legacy export')

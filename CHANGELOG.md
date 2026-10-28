@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.0-alpha.16] — 2026-10-28
+
+- Passive playback cursors use the physical BCR32's Start/Clock/Stop stream and its independently read track timing. Separate markers in grid, lanes, piano roll and table never move the edit cursor or send MIDI. Clock alone after attaching mid-playback does not invent a start phase; stale clock, Stop, rebind, local draft or new snapshot clears the phase.
+- Cursor qualification currently covers forward, unshuffled tracks with no skipped step in the active sequence. Unsupported tracks remain visibly unavailable. Unknown timing values are preserved rather than granted an invented cursor.
+- Narrow read-only `46 01 track field` queries obtain start/length/offset/divider/shuffle/direction (28 replies). Missing optional timing does not disable successful step reads/live edits. BPM shows observed MIDI clock tempo, read-only on hardware sessions, not the unrelated local preview tempo.
+- Physical proof: one Start, 71 clocks and one Stop captured persistently; replayed in offline tests. Browser tests cover four independent heads, all views, selection preservation, Stop/stale clearing and no writes. Visual alignment against the physical BCR32 still needs user acceptance. UI Play/Stop and Space remain gated: the previous remote-CC test did not establish a working command.
+
 ## [0.45.0-alpha.15] — 2026-10-28
 
 - Follow an actual hardware pattern/context change with an automatic atomic reread while live editing is armed. Do not reselect the hardware page during playback, send step writes or replace an explicitly paused local draft. Serialize the refresh with any pending state poll/edit.

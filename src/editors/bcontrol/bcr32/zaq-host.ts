@@ -13,6 +13,7 @@ const bounds: Record<HostLane, readonly [number, number]> = { note: [0,127], vel
 const i = (v: number, lo: number, hi: number) => integer(v,lo,hi)
 const unpack = (wire: readonly number[]) => {try{return unpack7(wire)}catch{return null}}
 export function readHostLane(track: number, field: number) { return midiFrame(0x45,[1,i(track,0,3),i(field,0,8)]) }
+export function readHostTiming(track:number,field:number) {return midiFrame(0x46,[1,i(track,0,3),i(field,0,6)])}
 export function writeHostStep(track: number, step: number, field: number, value: number) {
   i(field,0,8); const [lo,hi] = bounds[hostLanes[field]]; i(value,lo,hi)
   const word = value & 0xffff
@@ -28,7 +29,8 @@ export const hostPage = (page: 'controller' | 'sequencer') => midiFrame(page==='
 export const isHostPage = (b: readonly number[]) => isFrame(b)&&b[4]===127&&b.length===8&&[0x0b,0x0c].includes(b[6])
 export function isZaqHostQuery(b: readonly number[]) {
   return isFrame(b) && b[4] === 127 && ((b.length === 9 && b[6] === 0x48 && b[7] === 0) ||
-    (b.length === 11 && b[6] === 0x45 && b[7] === 1 && b[8] < 4 && b[9] < 9))
+    (b.length === 11 && b[6] === 0x45 && b[7] === 1 && b[8] < 4 && b[9] < 9) ||
+    (b.length === 11 && b[6] === 0x46 && b[7] === 1 && b[8] < 4 && b[9] < 7))
 }
 export function isZaqHostWrite(b: readonly number[]) {
   if (!isFrame(b) || b[4] !== 127 || b.length !== 15 || b[6] !== 0x44 || b[7] !== 2 || b[8] > 3 || b[9] > 31 || b[10] > 8) return false
@@ -40,6 +42,11 @@ export function isZaqHostWrite(b: readonly number[]) {
 export type HostReply = { command: number; operation: number; track?: number; step?: number; field?: number; status: number; values: number[] }
 export function parseHostReply(b: readonly number[], device: number): HostReply | null {
   if (device === 127 || !isFrame(b) || b[4] !== device) return null
+  if(b[6]===0x48&&b.length===10&&b[7]===0&&b[8]>0)return {command:0x48,operation:0,status:b[8],values:[]}
+  if(b[6]===0x46&&b.length===15&&b[7]===1&&b[8]<4&&b[9]<7&&b[10]===0){
+    const raw=unpack(b.slice(11,-1));if(!raw||raw.length!==2)return null
+    return {command:0x46,operation:1,track:b[8],field:b[9],status:0,values:[raw[0]*256+raw[1]]}
+  }
   if (b[6] === 0x48 && b.length === 16 && b[7] === 0 && b[8] === 0) {
     const values = unpack(b.slice(9,-1)); return values?.length === 5 ? {command:0x48,operation:0,status:0,values} : null
   }
@@ -96,7 +103,8 @@ export function createZaqHost(send: (bytes: number[]) => void, device: number, t
     receive(bytes: readonly number[]) {if(pending&&bytes[0]===240)diagnostics(bytes);const r=parseHostReply(bytes,device);if(!r||!pending||!pending.matches(r))return;const p=pending;pending=null;clearTimeout(p.timer);p.resolve(r)},
     enterSequencer() {if(closed||pending)throw Error('Sequencer transfer busy');send(hostPage('sequencer'))},
     readLane(track:number,field:number) {return request(readHostLane(track,field),r=>r.command===0x45&&r.track===track&&r.field===field)},
-    state() {return request(readHostState(),r=>r.command===0x48)},
+    readTiming(track:number,field:number) {return request(readHostTiming(track,field),r=>r.command===0x46&&r.track===track&&r.field===field)},
+    state() {return request(readHostState(),r=>r.command===0x48).then(r=>{if(r.status!==0)throw Error(`Sequencer request refused · command 48 · status ${r.status.toString(16).padStart(2,'0').toUpperCase()}`);return r})},
     write(track:number,step:number,field:number,value:number) {return request(writeHostStep(track,step,field,value),r=>r.command===0x44&&r.track===track&&r.step===step&&r.field===field)},
     close() {closed=true;if(pending){const p=pending;pending=null;clearTimeout(p.timer);p.reject(Error('Sequencer session cancelled'))}},
   }

@@ -1,5 +1,17 @@
 # BCR32 firmware 1.0.3: sequencer host integration
 
+## Alpha.16 — passive clock-qualified playback cursors
+
+Read/implementation review: Codex primary agent, 2026-10-28 17:00–17:27 CET, full baseline commit `afaf47e8dd770537e60bbd8793043817571b17cf`, branch `work/firmware-103-sequencer`, plus initially uncommitted module codec/hook/view/CSS/tests/translations/version/docs. Exact model ID and effort are not exposed, so that provenance remains incomplete. Outside-Git inputs are the same native binary/dossier plus `transport-persistent-1655.json` and the independently read timing capture. No main/remote changes.
+
+The persistent physical capture contains **one FA, 71 F8 and one FC**, over 5.018 seconds between Start and Stop. It is now a source-hashed sanitized fixture, `scripts/fixtures/zaq-clock-103.json`, replayed only into the passive software follower. Native timing replies are independently retained in `zaq-host-103-timing.json`. The divider table at native VA `0x100d7deac` is `[96,48,24,12,6,3,4,8,16,32]` ticks/step.
+
+`sequencer-follow.ts` has no sender/port access: Start establishes tick zero, actual received clocks advance the marker, Stop clears it, and a 250-ms watchdog only expires stale phase after a 1-second clock gap—it never generates playback ticks. Cursor and edit selection are separate in grid/lanes/piano roll/table. Attaching mid-playback, Continue without retained phase, rebinding and a new snapshot require a fresh hardware Start. Forward, zero-shuffle tracks without skipped steps are qualified; other tracks expose an unavailable cursor instead of an invented path. Offset/start/length and per-track divider are read from hardware, not guessed from the synthetic local file header. Physical visual agreement still needs user acceptance.
+
+The existing atomic snapshot adds 28 narrowly validated command46 read-only timing queries. Optional timing failure preserves successful step reading/editing while disabling the cursor. Unknown timing words are retained but cannot qualify playback. BPM is measured from incoming clock, not the local clock-master value. No timing write, clock-routing write, PAT'N CH write, transport command, STORE or firmware operation is added. State refusal `48 00 02` is reported directly rather than disguised as a timeout.
+
+UI Play/Stop and Space remain **unresolved**: this follower is an input feature, not a successful outgoing transport implementation. The failed CC16 and selector tests remain recorded below and in BCR103-05.
+
 ## Alpha.15 — accepted page switch, pattern follow, transport still open
 
 The user confirmed the physical Controller/Sequencer switch and physical Start/Stop feedback on 2026-10-28. This clears those two user-session gates, **not** UI transport or a synchronized playhead. A live armed snapshot now follows a real hardware pattern/context change using a fresh atomic read, without reselecting the hardware page or overwriting paused local edits. Pitch notes and Chord codes are shown separately.
@@ -70,7 +82,7 @@ The native editor sends host requests to device **7F**; the actual unit replies 
 | `44` | `01 track step field` | Read one step field | No; bulk lane reads used instead |
 | `44` | `02 track step field packed-int16` | Edit one step field | Yes, current edit buffer only |
 | `45` | `01 track field` | Read 32 values in one lane | Yes |
-| `46` | `01 track field` / `02 track field packed-int16` | Track parameter read/write | Observed in binary; not enabled |
+| `46` | `01 track field` / `02 track field packed-int16` | Track parameter read/write | Read selectors0..6 enabled for timing in alpha.16; no writes |
 | `47` | `01 field` / `02 field packed-int16` | Global parameter read/write | Observed in binary; not enabled |
 | `48` | `00` | Read current state | Yes; guarded against state changes |
 | `48` | Other state selectors and optional value | Native state commands | Not exposed; no transport, mode change or STORE inferred |

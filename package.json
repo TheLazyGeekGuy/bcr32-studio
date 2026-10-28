@@ -1,6 +1,6 @@
 {
   "name": "bcr32-studio",
-  "version": "0.45.0-alpha.15",
+  "version": "0.45.0-alpha.16",
   "private": true,
   "description": "BCR32 editor with firmware 1.0.3 sequencer integration, shared MIDI Studio tools and preset library.",
   "scripts": {

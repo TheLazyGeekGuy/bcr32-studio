@@ -1,17 +1,19 @@
 // Real browser, simulated Web MIDI only. Does not enumerate or send to hardware.
 const {chromium}=require(process.env.PLAYWRIGHT_CORE||'playwright-core')
 const assert=require('node:assert/strict')
-function fakeMidi({sync=false}={}){
+function fakeMidi({sync=false,timingMissing=false}={}){
  localStorage.setItem('bcr32_site_lang','en');localStorage.setItem('bcr32-studio.language.v1','en');localStorage.setItem('bcr32-studio.controller-autoread','false')
  window.__requests=0;window.__sent=[];window.__note=60;window.__running=0;window.__preset=0
  const input={id:'bcr-in',name:'BCR-32 SIM',state:'connected',type:'input',onmidimessage:null}
  const reply=b=>{const emit=()=>input.onmidimessage?.({data:new Uint8Array(b)});return sync?emit():setTimeout(emit,2)},prefix=[240,0,32,50,0,100]
+ window.__emit=reply
  const pack=raw=>{const b=[];for(let i=0;i<raw.length;i+=7){const c=raw.slice(i,i+7);b.push(c.reduce((m,v,n)=>m|(v>>7)<<n,0),...c.map(x=>x&127))}return b}
  const output={id:'bcr-out',name:'BCR-32 SIM',state:'connected',type:'output',send(bytes){
   const b=Array.from(bytes);window.__sent.push(b);const cmd=b[6]
   if(cmd===0)return reply([...prefix,0,1,0,0,1,0,3,247])
   if(cmd===0x48&&b.length===9)return reply([...prefix,0x48,0,0,...pack([window.__running,window.__preset,2,0,0]),247])
   if(cmd===0x45){const raw=Array.from({length:32},(_,s)=>b[9]===0?(b[8]===0&&s===0?window.__note:60):b[9]===1?100:b[9]===4?2:[5,6].includes(b[9])?-1:0).flatMap(v=>[v>>8&255,v&255]);return reply([...prefix,cmd,1,b[8],b[9],0,...pack(raw),247])}
+  if(cmd===0x46){if(timingMissing)return;const value=[1,32,0,4,0,0,0][b[9]];return reply([...prefix,cmd,1,b[8],b[9],0,...pack([0,value]),247])}
   if(cmd===0x44){if(b[10]===0&&b[8]===0&&b[9]===0)window.__note=b[13];return reply([...prefix,cmd,2,b[8],b[9],b[10],0,...b.slice(11,14),247])}
   if(cmd===0x41&&b.length===8){['$rev BCR32','$global','  .opmode usb','  .ctrlout ua','$end'].forEach((l,i)=>reply([...prefix,32,0,i,...Array.from(l,c=>c.charCodeAt(0)),247]));return}
   if(b.length===8)return reply([...prefix,cmd,0,247])
@@ -19,7 +21,7 @@ function fakeMidi({sync=false}={}){
  Object.defineProperty(navigator,'requestMIDIAccess',{configurable:true,value:async()=>{window.__requests++;return {sysexEnabled:true,inputs:new Map([[input.id,input]]),outputs:new Map([[output.id,output]]),onstatechange:null}}})
 }
 ;(async()=>{const browser=await chromium.launch({headless:true});try{
- const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.addInitScript(fakeMidi,{sync:process.env.SYNC_REPLY==='1'})
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.addInitScript(fakeMidi,{sync:process.env.SYNC_REPLY==='1',timingMissing:process.env.TIMING_MISSING==='1'})
  const base=process.argv[2]||'http://127.0.0.1:5186'
  await page.goto(base+'/');await page.getByRole('heading',{level:1}).waitFor();assert.equal(await page.evaluate(()=>window.__requests),0)
  assert.equal(await page.locator('#root').count(),0);assert.equal(await page.locator('img:not([loading="lazy"])').evaluateAll(imgs=>imgs.filter(x=>!x.complete||x.naturalWidth===0).length),0)
@@ -35,10 +37,37 @@ function fakeMidi({sync=false}={}){
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),36)
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),0,'opening never writes')
  const live=page.getByRole('checkbox',{name:'Live step editing',exact:true});assert.ok(await live.isChecked(),'live editing is automatic after a successful read')
+ if(process.env.TIMING_MISSING==='1'){
+   await page.getByText('Playback timing unavailable · read current pattern',{exact:true}).waitFor()
+   await page.locator('.seq-panel').getByRole('combobox',{name:'Note',exact:true}).selectOption('61')
+   await page.getByText('Live edit confirmed · edit buffer only · press STORE on the BCR32 to keep it',{exact:true}).waitFor()
+   assert.equal(await page.evaluate(()=>window.__note),61);assert.equal(await page.locator('[data-playing=true]').count(),0)
+   assert.deepEqual(errors,[]);console.log('PASS browser: missing optional timing disables cursor, not step reads or verified live edits');return
+ }
  assert.ok(await page.evaluate(()=>window.__sent.some(b=>b.length===8&&b[6]===0x0b)),'hardware sequencer page command is sent')
  await page.evaluate(()=>window.__running=1)
  await page.getByText('Hardware playing',{exact:true}).waitFor()
  assert.ok(await live.isChecked(),'physical PLAY does not disarm step editing')
+ assert.equal(await page.locator('[data-playing=true]').count(),0,'mid-playback attachment does not invent a phase')
+ await page.evaluate(()=>window.__emit([248]));await page.waitForTimeout(20)
+ assert.equal(await page.locator('[data-playing=true]').count(),0,'clock alone has no absolute start phase')
+ const beforeCursorWrites=await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length)
+ await page.evaluate(()=>window.__emit([250]));await page.waitForFunction(()=>document.querySelectorAll('[data-playing=true]').length===4)
+ await page.evaluate(()=>{for(let i=0;i<7;i++)window.__emit([248])})
+ await page.waitForFunction(()=>Array.from(document.querySelector('.seq-row').querySelectorAll('[role=gridcell]')).findIndex(c=>c.dataset.playing==='true')===1)
+ assert.equal(await page.locator('.seq-bar.playing').count(),7,'all lanes follow the selected track cursor')
+ await page.getByRole('button',{name:'Piano roll',exact:true}).click()
+ assert.ok(await page.locator('.seq-roll-cell.playing').count()>0,'piano roll follows the same cursor')
+ await page.getByRole('button',{name:'Table (Behringer)',exact:true}).click()
+ assert.equal(await page.locator('.seq-table tr[data-playing=true]').count(),1,'table follows without changing edit selection')
+ await page.getByRole('button',{name:'Grid',exact:true}).click()
+ assert.ok((await page.locator('.seq-cell.sel').getAttribute('aria-label')).includes('Step 1'),'playback cursor never moves the edit selection')
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),beforeCursorWrites,'cursor is input-only')
+ await page.evaluate(()=>window.__emit([252]));await page.waitForFunction(()=>!document.querySelector('[data-playing=true]'))
+ await page.evaluate(()=>{window.__emit([250]);for(let n=0;n<7;n++)window.__emit([248])})
+ await page.waitForFunction(()=>document.querySelectorAll('[data-playing=true]').length===4)
+ await page.waitForFunction(()=>!document.querySelector('[data-playing=true]'),{},{timeout:3000})
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),beforeCursorWrites,'stale clock never sends any MIDI edit')
  await page.locator('.seq-panel').getByRole('combobox',{name:'Note',exact:true}).selectOption('61')
  await page.getByText('Live edit confirmed · edit buffer only · press STORE on the BCR32 to keep it',{exact:true}).waitFor()
  assert.equal(await page.evaluate(()=>window.__note),61)

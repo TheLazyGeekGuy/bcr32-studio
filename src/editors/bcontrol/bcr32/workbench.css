@@ -955,6 +955,10 @@
 .bcr32-workbench .seq-num.beat{background:var(--mk-accent);color:#1b1408;font-weight:700;border-radius:3px;font-size:13px}
 .bcr32-workbench .studio.compact .seq-cell:nth-child(4n+2){box-shadow:inset 3px 0 0 rgba(255,255,255,.28)}
 .bcr32-workbench .seq-bars{cursor:ns-resize;touch-action:none;user-select:none}
+.bcr32-workbench .studio.compact :is(.seq-cell,.seq-bar,.seq-roll-cell).playing{box-shadow:inset 0 0 0 3px var(--mk-accent);opacity:1}
+.bcr32-workbench .seq-num.playing{outline:2px solid var(--mk-text);outline-offset:1px}
+.bcr32-workbench .seq-table tr[data-playing=true] th{box-shadow:inset 0 0 0 3px var(--mk-accent)}
+.bcr32-workbench .seq-clock-status{font-size:12px;color:var(--mk-muted)}
 .bcr32-workbench .seq-table tbody tr:nth-child(4n+1) th{background:var(--mk-accent);color:#1b1408;font-weight:700}
 /* MIDI import preview dialog */
 .midi-import-dialog{width:min(1280px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--theme-line,#34363b);border-radius:8px;background:var(--theme-surface,#1c1d20);color:var(--theme-text,#e6e3dc);display:flex;flex-direction:column}

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { applyHostLane, changedHostSteps, createZaqHost, isZaqHostWrite, sameHostPatternContext, supportsZaqHost } from './zaq-host'
+import {decodeTrackTiming,type TrackTiming} from './sequencer-follow'
 
 export type SequencerConnection = { firmware: string | null; device: number | null; key: string; available: boolean; send: (bytes: number[]) => void }
-type Snapshot = { data: number[]; frames: number[][]; state: number[]; capturedAt: string }
+type Snapshot = { data: number[]; frames: number[][]; state: number[]; timing:TrackTiming[]; timingError?:string; capturedAt: string }
 /** View-local lifecycle; reuses the host's lease and never opens another MIDI connection. */
 export function useSequencerHost(connection: SequencerConnection | undefined, locked: boolean, onRead: (s: Snapshot) => void) {
   const [status,setStatus]=useState('Offline · nothing is sent to the BCR32'),[busy,setBusy]=useState(false),[live,setLive]=useState(false),[ready,setReady]=useState(false)
@@ -62,10 +63,17 @@ export function useSequencerHost(connection: SequencerConnection | undefined, lo
         const r=await client.readLane(track,field);if(session.current!==client)return
         frames.push([track,field,...r.values]);next=applyHostLane(next,track,field,r.values);setStatus(`Reading sequencer · ${frames.length} / 36`)
       }
+      const timing:TrackTiming[]=[]
+      let timingError:string|undefined
+      try{for(let track=0;track<4;track++){
+          const values:number[]=[]
+          for(let field=0;field<7;field++){const r=await client.readTiming(track,field);if(session.current!==client)return;values.push(r.values[0])}
+          timing.push(decodeTrackTiming(values))
+      }}catch(e){if(session.current!==client)return;timing.length=0;timingError=String(e)}
       const after=await client.state();if(session.current!==client)return
       if(!sameHostPatternContext(before.values,after.values))throw Error('Device state changed during read; read again')
       setRunning(Boolean(after.values[0]))
-      const result={data:next,frames,state:after.values,capturedAt:new Date().toISOString()};snapshot.current=result
+      const result={data:next,frames,state:after.values,timing,timingError,capturedAt:new Date().toISOString()};snapshot.current=result
       latest.current.onRead(result);setReady(true);armed.current=!latest.current.locked;setLive(armed.current);setStatus('Current pattern read · 4 tracks / 32 steps · no STORE sent')
     }catch(e){if(session.current===client)setStatus(String(e))}finally{if(session.current===client){reading.current=false;setBusy(false)}}
   },[disarm])
