@@ -894,7 +894,7 @@
 .bcr32-workbench .seq-lane-label{padding:6px;font-size:11px;color:var(--mk-muted);border-right:1px solid var(--mk-line)}
 .bcr32-workbench .seq-bars{display:grid;grid-template-columns:repeat(32,minmax(14px,1fr));gap:3px;height:70px;padding:6px;align-items:end}
 .bcr32-workbench .seq-bars.delay{align-items:center}
-.bcr32-workbench .seq-bars.gate .seq-bar{position:relative}
+.bcr32-workbench .seq-bars .seq-bar{position:relative}
 .bcr32-workbench .seq-bar-value{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;color:var(--mk-text);pointer-events:none;white-space:nowrap}
 .bcr32-workbench .studio.compact .seq-bar{margin:0;padding:0;border:0;border-radius:2px 2px 0 0;background:var(--c);opacity:.85;cursor:ns-resize;min-height:2px}
 .bcr32-workbench .studio.compact .seq-bar.off{opacity:.18}.bcr32-workbench .studio.compact .seq-bar.sel{outline:1px solid #fff}

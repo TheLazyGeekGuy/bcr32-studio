@@ -12,7 +12,7 @@ Codex primary agent; exact runtime model ID/effort unavailable, so those provena
 - [x] Idle state query reflects physical PLAY without clock spam/duplicate ports or invalidating a four-track snapshot.
 - [x] Both UI page directions send native guarded commands; clicking the already-active view reasserts the command without losing a draft.
 - [x] Returning to Sequencer performs the automatic 36-lane read.
-- [ ] Visible physical Controller/Sequencer change confirmed by the user; wire commands have no page acknowledgement.
+- [x] Visible physical Controller/Sequencer change confirmed by the user on 2026-10-28 after alpha.14; wire commands still have no page acknowledgement.
 - [ ] Play/Stop/Space sends a verified working command. **Not complete.** Standard USB clock produced no notes. Approved selector `01` experiment falsified the transport hypothesis: it selects a track. No alternative selector is guessed or enabled.
 - [ ] User-session Firefox acceptance after reload.
 

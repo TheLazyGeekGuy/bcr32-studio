@@ -1,5 +1,11 @@
 # BCR32 firmware 1.0.3: sequencer host integration
 
+## Alpha.15 — accepted page switch, pattern follow, transport still open
+
+The user confirmed the physical Controller/Sequencer switch and physical Start/Stop feedback on 2026-10-28. This clears those two user-session gates, **not** UI transport or a synchronized playhead. A live armed snapshot now follows a real hardware pattern/context change using a fresh atomic read, without reselecting the hardware page or overwriting paused local edits. Pitch notes and Chord codes are shown separately.
+
+An explicitly authorized `48 00 + packed boolean` candidate was refused with status `07`; it is not exposed by the application. PAT'N CH was reported Off, Clock Out was independently read as 0, and the bounded passive capture contained state replies but no clock/step position. Detailed source revision, reader/version availability, experiment bytes, outside-Git evidence and remaining physical routing test are recorded in [BCR103-05](work-items/2026-10-28-sequencer-transport-and-playhead.md). No inferred transport or artificial playback cursor is claimed as implemented.
+
 ## Alpha.14 correction — lanes, selective import and transport evidence
 
 Reviewed/implemented by **Codex, primary agent**, 2026-10-28 13:53–14:15 CET, repository `bcr32-studio`, branch `work/firmware-103-sequencer`, full baseline commit `f79f552df0b55356fc4efa40cefe05b267c48817` plus the then-uncommitted alpha.14 patch. Exact model ID and effort are not exposed by this runtime; that part of review provenance remains incomplete. Read scope: sequencer view/import dialog/host codec/hook, Workbench, tests, this document, and the same outside-Git native binary/dossier described below.

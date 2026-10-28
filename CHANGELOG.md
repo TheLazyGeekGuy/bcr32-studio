@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.0-alpha.15] — 2026-10-28
+
+- Follow an actual hardware pattern/context change with an automatic atomic reread while live editing is armed. Do not reselect the hardware page during playback, send step writes or replace an explicitly paused local draft. Serialize the refresh with any pending state poll/edit.
+- Show note names directly in the Pitch lane, separately from Chord codes; add actual value text/tooltips to lanes.
+- User acceptance confirms the physical Controller/Sequencer switch and hardware-to-UI running-state feedback. This does **not** confirm UI transport commands or an in-pattern playhead.
+- Authorized targeted `48 00 + boolean` transport experiment was refused with status `07`; no transport writer is enabled. Physical PAT'N CH is Off; Clock Out read as 0. No step position or clock was received during the bounded passive capture. Play/Space and exact playhead remain open, pending the separate explicitly requested MIDI-routing test.
+
 ## [0.45.0-alpha.14] — 2026-10-28
 
 - Seven editable numeric sequencer lanes: Pitch, Velocity, Length, Delay, Ctrl A, Ctrl B and Chord. Mute and Skip remain per-step flags. Native Chord codes are bounded to 0–55; unknown legacy words remain lossless on reads but cannot be written as arbitrary chords.

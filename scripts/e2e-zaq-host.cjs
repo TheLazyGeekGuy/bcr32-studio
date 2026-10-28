@@ -3,14 +3,14 @@ const {chromium}=require(process.env.PLAYWRIGHT_CORE||'playwright-core')
 const assert=require('node:assert/strict')
 function fakeMidi({sync=false}={}){
  localStorage.setItem('bcr32_site_lang','en');localStorage.setItem('bcr32-studio.language.v1','en');localStorage.setItem('bcr32-studio.controller-autoread','false')
- window.__requests=0;window.__sent=[];window.__note=60;window.__running=0
+ window.__requests=0;window.__sent=[];window.__note=60;window.__running=0;window.__preset=0
  const input={id:'bcr-in',name:'BCR-32 SIM',state:'connected',type:'input',onmidimessage:null}
  const reply=b=>{const emit=()=>input.onmidimessage?.({data:new Uint8Array(b)});return sync?emit():setTimeout(emit,2)},prefix=[240,0,32,50,0,100]
  const pack=raw=>{const b=[];for(let i=0;i<raw.length;i+=7){const c=raw.slice(i,i+7);b.push(c.reduce((m,v,n)=>m|(v>>7)<<n,0),...c.map(x=>x&127))}return b}
  const output={id:'bcr-out',name:'BCR-32 SIM',state:'connected',type:'output',send(bytes){
   const b=Array.from(bytes);window.__sent.push(b);const cmd=b[6]
   if(cmd===0)return reply([...prefix,0,1,0,0,1,0,3,247])
-  if(cmd===0x48&&b.length===9)return reply([...prefix,0x48,0,0,...pack([window.__running,0,2,0,0]),247])
+  if(cmd===0x48&&b.length===9)return reply([...prefix,0x48,0,0,...pack([window.__running,window.__preset,2,0,0]),247])
   if(cmd===0x45){const raw=Array.from({length:32},(_,s)=>b[9]===0?(b[8]===0&&s===0?window.__note:60):b[9]===1?100:b[9]===4?2:[5,6].includes(b[9])?-1:0).flatMap(v=>[v>>8&255,v&255]);return reply([...prefix,cmd,1,b[8],b[9],0,...pack(raw),247])}
   if(cmd===0x44){if(b[10]===0&&b[8]===0&&b[9]===0)window.__note=b[13];return reply([...prefix,cmd,2,b[8],b[9],b[10],0,...b.slice(11,14),247])}
   if(cmd===0x41&&b.length===8){['$rev BCR32','$global','  .opmode usb','  .ctrlout ua','$end'].forEach((l,i)=>reply([...prefix,32,0,i,...Array.from(l,c=>c.charCodeAt(0)),247]));return}
@@ -30,6 +30,8 @@ function fakeMidi({sync=false}={}){
  await page.getByRole('button',{name:'Sequencer',exact:true}).click()
  await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
  assert.equal(await page.locator('.seq-lane').count(),7,'all seven numeric lanes are present')
+ assert.equal(await page.locator('.seq-bars.note .seq-bar-value').first().textContent(),'C3','Pitch visibly names the actual note')
+ assert.equal(await page.locator('.seq-bars.voices .seq-bar-value').first().textContent(),'—','Chord is shown as a separate code, not a pitch')
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),36)
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),0,'opening never writes')
  const live=page.getByRole('checkbox',{name:'Live step editing',exact:true});assert.ok(await live.isChecked(),'live editing is automatic after a successful read')
@@ -42,13 +44,25 @@ function fakeMidi({sync=false}={}){
  assert.equal(await page.evaluate(()=>window.__note),61)
  await page.getByRole('button',{name:'Undo',exact:true}).last().click()
  await page.waitForFunction(()=>window.__note===60)
+ await page.getByText('Live edit confirmed · edit buffer only · press STORE on the BCR32 to keep it',{exact:true}).waitFor()
+ const beforeFollow=await page.evaluate(()=>({pages:window.__sent.filter(b=>b.length===8&&b[6]===0x0b).length,writes:window.__sent.filter(b=>b[6]===0x44).length}))
+ await page.evaluate(()=>{window.__preset=1;window.__note=67})
+ await page.waitForFunction(()=>window.__sent.filter(b=>b[6]===0x45).length===72)
+ await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
+ assert.equal(await page.locator('.seq-panel').getByRole('combobox',{name:'Note',exact:true}).inputValue(),'67','hardware pattern change rereads and displays the new pattern')
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b.length===8&&b[6]===0x0b).length),beforeFollow.pages,'following a pattern never reselects hardware mode')
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),beforeFollow.writes,'following a pattern sends no step edit')
  await live.uncheck();const before=await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length)
  await page.locator('.seq-panel').getByRole('combobox',{name:'Note',exact:true}).selectOption('62');await page.waitForTimeout(100)
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),before)
  const activeModeCount=await page.evaluate(()=>window.__sent.filter(b=>b.length===8&&b[6]===0x0b).length)
  await page.getByRole('button',{name:'Sequencer',exact:true}).click()
  await page.waitForFunction(n=>window.__sent.filter(b=>b.length===8&&b[6]===0x0b).length>n,activeModeCount)
- assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),36,'active tab reasserts page without replacing the draft')
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),72,'active tab reasserts page without replacing the draft')
+ assert.equal(await page.locator('.seq-panel').getByRole('combobox',{name:'Note',exact:true}).inputValue(),'62')
+ await page.evaluate(()=>{window.__preset=2;window.__note=70})
+ await page.waitForTimeout(1200)
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),72,'a paused local draft is not replaced by a hardware pattern change')
  assert.equal(await page.locator('.seq-panel').getByRole('combobox',{name:'Note',exact:true}).inputValue(),'62')
  assert.ok(await page.evaluate(()=>!window.__sent.some(b=>[4,7,0x72,0x77].includes(b[6]))),'no dumps, legacy export, STORE or firmware')
  const beforeRows=await page.locator('.seq-row').evaluateAll(rows=>rows.map(r=>Array.from(r.querySelectorAll('[role=gridcell]')).map(c=>c.getAttribute('aria-label'))))
@@ -72,7 +86,7 @@ function fakeMidi({sync=false}={}){
  await page.getByRole('button',{name:'Sequencer',exact:true}).click()
  await page.waitForFunction(n=>window.__sent.filter(b=>b.length===8&&b[6]===0x0b).length>n,pageCounts.sequencer)
  await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
- assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),72,'returning to Sequencer rereads all lanes')
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),108,'returning to Sequencer rereads all lanes')
  assert.deepEqual(errors,[])
- console.log('PASS browser: Controller↔Sequencer commands and reread; hardware PLAY polling; seven lanes; T3-only MIDI import preserving T1/T2/T4; no STORE or errors')
+ console.log('PASS browser: automatic hardware pattern follow without mode/writes or paused-draft replacement; Controller↔Sequencer; PLAY polling; seven lanes; selective import; no STORE/errors')
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1})

@@ -26,6 +26,6 @@ Read scope: BCR32 sequencer codec/hook/view, Workbench RX and controller-reader 
 - Simulated browser regression: automatic live editing, edit/undo, explicit pause, no STORE; also exercised with immediate replies to detect listener-installation races.
 - Existing offline suite: 47 scripts plus TypeScript and production build pass.
 - [ ] User-session Firefox retest. Chromium success is **not** evidence that the Firefox timeout is fixed. Native/Chromium observations do not establish its exact cause.
-- [ ] User-visible physical page change confirmation; the page command has no acknowledgement, and the state reply is not a documented page indicator.
+- [x] User-visible physical page change confirmed by the user on 2026-10-28 after alpha.14; the page command itself still has no acknowledgement, and the state reply is not a documented page indicator.
 
 Version: `0.45.0-alpha.13`, same local `/editor/` route. No push/merge/deployment; main unchanged.
