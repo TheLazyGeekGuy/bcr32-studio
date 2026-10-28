@@ -4,7 +4,7 @@
 
 Input-only native capture at the owner's 300 BPM received 960 clocks in eight seconds: **300.0384 BPM** from the timestamp span, not a demonstrated hardware ceiling. The old median-of-short-gaps algorithm reproduces 277.8 with a 9/9/7-ms clock sequence that actually averages 300. Alpha.17 preserves Web MIDI source timestamps through the shared broker/access wrapper, uses a bounded rolling clock-index/time fit, and separates tempo/status and animation-frame playback markers from full sequencer rendering. No device setting, outgoing clock, transport command or STORE was changed. The displayed BPM still does not drive playback positions.
 
-Full baseline SHA, reader/model availability, source and outside-Git capture provenance, optional metadata contract delta, tests, performance measurements and physical Firefox acceptance limits are recorded in [BCR103-07](work-items/2026-10-28-high-tempo-clock.md). This corrects the software path; physical alignment at 300 BPM still needs the owner's acceptance after reload and a fresh hardware Start. Previous alpha.16 qualification limits and unresolved outgoing Play/Stop/Space remain unchanged.
+Full baseline SHA, reader/model availability, source and outside-Git capture provenance, optional metadata contract delta, tests, performance measurements and physical Firefox acceptance limits are recorded in [BCR103-07](work-items/2026-10-28-high-tempo-clock.md). At 18:41 CET the owner reported the local issue resolved and authorized production publication; no additional physical measurements are inferred. Previous alpha.16 qualification limits and unresolved outgoing Play/Stop/Space remain unchanged.
 
 ## Alpha.16 — passive clock-qualified playback cursors
 

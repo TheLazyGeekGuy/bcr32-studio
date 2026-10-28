@@ -1,6 +1,8 @@
 # BCR103-07 — 300 BPM clock estimation and presentation load
 
-Status: **software implemented; physical Firefox acceptance pending**. Related: [BCR103-05](2026-10-28-sequencer-transport-and-playhead.md). This is not completion of outgoing Play/Stop/Space.
+Status: **software implemented; owner reports the local timing issue resolved and authorizes production publication on 2026-10-28**. Related: [BCR103-05](2026-10-28-sequencer-transport-and-playhead.md). This is not completion of outgoing Play/Stop/Space.
+
+Acceptance update, Codex primary agent, 2026-10-28 18:41 CET: the owner reports that the site/editor now works and requests GitHub production publication. This is owner acceptance of the previously reported local timing issue, not a new automated physical measurement or evidence for every timing mode. Reviewed revision: `a785b07be0b1e4559ecd38d1054b734804531d69`; exact model ID/reasoning level remain unavailable.
 
 ## Traceable review
 
@@ -45,7 +47,7 @@ No saved-state schema, port ownership, grant/validator policy, hardware capabili
 - Production build/distribution verification and generic leak gate pass. Existing large-chunk warnings remain; they are not solved by this timing patch.
 - Real Chromium with simulated MIDI: automatic read, editing, seven lanes, selective import, all cursor views, independent edit selection, Stop/stale clearing, pattern follow and both async/synchronous replies pass. Missing optional timing still disables only the cursor, not successful reads/verified edits. No browser test uses physical ports.
 - `scripts/bench-sequencer-clock.cjs` compares preserved alpha.16 production output against alpha.17 at 1440×1000, CPU throttling 4×, two alternating eight-second runs/build, 960 simulated ticks/run. Reported marker latency is **DOM mutation latency**, not a captured physical/pixel-paint measurement. Final results are recorded below.
-- [ ] Owner reloads alpha.17 in Firefox on port 5187, then performs physical STOP → PLAY at 300 BPM and accepts tempo plus cursor alignment over multiple loops. Current browser automation does not prove this physical Firefox outcome.
+- [x] Owner reports the previously described local timing issue resolved and requests production publication. No new loop-count or physical timing measurement was supplied; automated browser proof remains simulated MIDI only.
 - [ ] Outgoing UI Play/Stop/Space remains a separate unresolved protocol capability; no speculative transport command was enabled.
 
 ## Final production-browser measurements
