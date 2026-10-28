@@ -335,6 +335,13 @@ function loadWorkspace() {
     try{output.send(hostPage('controller'))}catch(e){setNotice(`Controller mode: ${String(e)}`)}
   },[editorMode,liveFirmware,liveDeviceId,locked,output])
   const brightnessEnabled = !!access?.sysexEnabled && isBcrOutput(output) && isControllerPort(output) && inputs.some(p=>p.id===inputId && isControllerPort(p))
+  const chooseEditorMode=(mode:'controller'|'sequencer')=>{
+    if(mode!==editorMode){setEditorMode(mode);return}
+    // Reassert the requested page even when the view is already selected (the hardware may have changed).
+    // Do not reread/replace a local draft just because the active tab was clicked again.
+    if(locked||!brightnessEnabled||!supportsZaqHost(liveFirmware)||liveDeviceId===null)return
+    try{output?.send?.(hostPage(mode))}catch(e){setNotice(`Hardware mode: ${String(e)}`)}
+  }
   const selected = profile[selection.kind].find((encoder) => encoder.id === selection.id)!
   const selectedItems = selectedControls(profile,selections)
   const multiple = selections.length>1
@@ -1042,7 +1049,7 @@ function loadWorkspace() {
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
         <div className="editor-toolbar" role="toolbar" aria-label="Editor toolbar">
-          <div className="mock-seg editor-mode" role="group" aria-label="Editor view"><button aria-pressed={editorMode === 'controller'} onClick={() => setEditorMode('controller')}>Controller</button><button aria-pressed={editorMode === 'sequencer'} onClick={() => setEditorMode('sequencer')}>Sequencer</button></div>
+          <div className="mock-seg editor-mode" role="group" aria-label="Editor view"><button aria-pressed={editorMode === 'controller'} onClick={() => chooseEditorMode('controller')}>Controller</button><button aria-pressed={editorMode === 'sequencer'} onClick={() => chooseEditorMode('sequencer')}>Sequencer</button></div>
           {editorMode === 'controller' && <>
           <span className="tb-sep" aria-hidden="true" />
           {renaming !== null ? <input className="preset-chip-input" autoFocus aria-label="Preset name" maxLength={24} value={renaming} onChange={e=>setRenaming(e.target.value.replace(/[^\x20-\x7e]|'/g,''))} onKeyDown={e=>{if(e.key==='Enter'&&renaming.trim())requestStore(renaming.trim(),true);if(e.key==='Escape'){e.stopPropagation();setRenaming(null)}}} onBlur={()=>setRenaming(null)} />

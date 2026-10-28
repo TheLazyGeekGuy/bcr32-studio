@@ -1,5 +1,18 @@
 # BCR32 firmware 1.0.3: sequencer host integration
 
+## Alpha.14 correction — lanes, selective import and transport evidence
+
+Reviewed/implemented by **Codex, primary agent**, 2026-10-28 13:53–14:15 CET, repository `bcr32-studio`, branch `work/firmware-103-sequencer`, full baseline commit `f79f552df0b55356fc4efa40cefe05b267c48817` plus the then-uncommitted alpha.14 patch. Exact model ID and effort are not exposed by this runtime; that part of review provenance remains incomplete. Read scope: sequencer view/import dialog/host codec/hook, Workbench, tests, this document, and the same outside-Git native binary/dossier described below.
+
+- The grid now exposes seven numeric lanes: Pitch, Velocity, Length, Delay, Ctrl A, Ctrl B and Chord. Mute/Skip remain per-step flags. Native `ZaqLaneEditor::setFromY` field 7 clamps to `0x37` (55), and its formatter renders zero as `--`, otherwise `#n`. Chord names/intervals are not invented. Read projection retains unknown 16-bit words, but new writes are limited to 0–55.
+- MIDI import defaults to **only the current destination**, with explicit destination checkboxes, Select all/none and a selected count. Unchecked destinations map to null and are untouched. Clicking an active view reasserts its native page command without replacing a local draft; actually returning to Sequencer performs the automatic read.
+- A physical PLAY action by the user changed host state from `[0,0,0,0,0]` to `[1,0,0,0,0]`. Byte 0 therefore reflects running state. An explicitly approved selector-01 experiment showed byte 2 is selected track, **not transport**. Running/track selection are excluded from pattern identity checks; bytes 1/3/4 remain guarded. Idle state polling is one query per second, single-flight with reads/edits, and fails closed on errors.
+- Standard Start/Clock/Stop, 120 BPM/3 seconds: 1 Start, 147 clocks, 1 Stop; zero note output. This does not establish a working USB playback route or by itself prove a firmware defect. Host transport writes remain unavailable; Space cannot honestly be enabled yet.
+
+The selector-01 test sent `48 01 00 00 00` (packed value 0) while running. Running stayed 1. The attempted restoration with value 1 changed selected track from 0 to 1, exposing the incorrect hypothesis. A targeted value-0 restoration returned the **entire** state to `[1,0,0,0,0]`. A separate complete 36-lane read was byte/value-identical to the pre-test capture. The initial experimental JSON's `restored:true` checked only running and was insufficient: its raw restoration state was `[1,0,1,0,0]`. The separate restoration and final comparison are the authoritative proof. The temporary speculative probe was removed, not exposed in the application or retained as a runnable transport utility. No STORE, firmware operation or opcode scan was performed.
+
+Outside-Git raw evidence in the local dossier: `hardware-while-playing.json`, `hardware-transport-probe-1404.json`, `hardware-transport-restoration-1405.json`, `hardware-after-transport-probe.json`. Native disassembly: existing `function-35.asm.txt` / `function-36.asm.txt`, plus `transport.asm.txt`. Browser simulations prove seven lanes, one-track import preserving other tracks, running-state polling, both page commands and rereading on re-entry. **Actual visible hardware page switching and Firefox acceptance remain user-session gates.**
+
 ## Alpha.13 correction — automatic page/read/edit workflow
 
 User acceptance of alpha.12 reported a Firefox response timeout and the absence of a hardware page change. Alpha.13 sends the native page messages `F0 00 20 32 7F 64 0B F7` (Sequencer) and `… 0C F7` (Controller). These come from ControlTribe 1.12.4 ARM64 functions `SendZaquencerPageMode` at `0x1005b8ccc` and `SendControllerPageMode` at `0x1005b8c40`; they have no immediate acknowledgement. The opaque host state vector must not be misrepresented as confirmation of the visible hardware page.
@@ -67,7 +80,7 @@ Signed values use a big-endian 16-bit word. Seven-bit packing prepends a mask to
 | `04` | Note length code | 0–15; existing length-label ordering remains inferred |
 | `05` | Ctrl A | −1…127; −1 maps to local raw 255 |
 | `06` | Ctrl B | −1…127; −1 maps to local raw 255 |
-| `07` | Chord/polyphony word | All 16 bits retained; signed reply converted to unsigned local word |
+| `07` | Chord code | Writes 0–55 (`--` / `#n`); all 16 bits retained on reads, not treated as a voice mask |
 | `08` | Skip | 0/1, mapped to `mask` |
 
 Field names 0/1/3/4/5/6/7 come from the native lane table at `0x10108b2a0`. Step Mute → 2 and Skip → 8 are visible in the native lane painter (`0x1005ed848` onwards), preventing a guessed/reversed flag mapping.
@@ -90,7 +103,7 @@ Actual reply:
 
 The response includes status 0 and the echoed accepted value. The physical test then made a **separate lane read**, confirmed 61, wrote the original 60 back and separately read 60. No STORE was sent. UI confirmation is based on the device reply; the physical read-back test is additional evidence, not proof of power-cycle persistence.
 
-State read returned five packed bytes, `[0, 0, 2, 0, 0]` in this capture. Their complete semantics are not asserted. The integration compares the full vector before/after a snapshot and before queued edits; any difference stops editing and requires another read.
+State read returned five packed bytes, `[0, 0, 2, 0, 0]` in the original capture. Byte 0 is now physically confirmed as running; byte 2 is selected track. Complete semantics of the other bytes are not asserted. The integration compares bytes 1/3/4 before/after a snapshot and before queued edits; a difference stops editing and requires another read. Changing transport or selection does not invalidate a snapshot containing all four tracks.
 
 ## Native analysis entry points
 
@@ -109,7 +122,7 @@ Focused disassembly and extraction scripts stay in the local analysis dossier. T
 
 - `zaq-host.ts`: pure codec, strict query/edit validators, single-flight session, finite timeout, no retries or opcode scan.
 - `useSequencerHost.ts`: instance/view lifecycle, atomic 36-lane read, state-change checks, latest-value queue (128 distinct pending edits maximum), stop-on-error, lock/disconnect/unmount cleanup.
-- `SequencerView.tsx`: preserves the existing grid/lanes/piano roll, templates and MIDI imports. Entering Sequencer on a connected verified 1.0.3 reads the current step values. Live editing is an explicit switch after the read, not a side effect of opening the page.
+- `SequencerView.tsx`: preserves the grid/lanes/piano roll, templates and MIDI imports. Entering Sequencer on a connected verified 1.0.3 reads the current step values. As of alpha.13, live editing is automatic only after a successful read; its explicit switch can pause sending.
 - `host-policy.ts` and `registration.tsx`: existing broker authorizations remain authoritative. Only the narrow new step-edit packet is granted as `edit-buffer`; it cannot borrow `preset-store` authority.
 - Captured host values project onto the existing local step model. **Unknown track/global/header bytes are not a complete preset backup.** Export captured values as JSON; do not advertise the synthetic local header as a hardware dump.
 - Bulk slot upload, persistent sequencer storage, copy commands, new globals and host transport remain unimplemented/gated. Existing firmware 1.0.2 BCL/controller write/store gates are deliberately unchanged for 1.0.3.

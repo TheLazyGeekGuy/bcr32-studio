@@ -8,7 +8,8 @@ import { patchStep, readStep } from './zaquencer'
 export const hostLanes = ['note', 'velocity', 'rest', 'delay', 'gate', 'alpha', 'beta', 'voices', 'mask'] as const
 export type HostLane = typeof hostLanes[number]
 export const supportsZaqHost = (firmware: string | null | undefined) => firmware === '1.0.3'
-const bounds: Record<HostLane, readonly [number, number]> = { note: [0,127], velocity: [0,127], rest: [0,1], delay: [-5,5], gate: [0,15], alpha: [-1,127], beta: [-1,127], voices: [0,65535], mask: [0,1] }
+// Native lane editor field 7 is a Chord code (0..55), not an editable 16-bit voice mask.
+const bounds: Record<HostLane, readonly [number, number]> = { note: [0,127], velocity: [0,127], rest: [0,1], delay: [-5,5], gate: [0,15], alpha: [-1,127], beta: [-1,127], voices: [0,55], mask: [0,1] }
 const i = (v: number, lo: number, hi: number) => integer(v,lo,hi)
 const unpack = (wire: readonly number[]) => {try{return unpack7(wire)}catch{return null}}
 export function readHostLane(track: number, field: number) { return midiFrame(0x45,[1,i(track,0,3),i(field,0,8)]) }
@@ -18,6 +19,9 @@ export function writeHostStep(track: number, step: number, field: number, value:
   return midiFrame(0x44,[2,i(track,0,3),i(step,0,31),field,...pack7([word >>> 8,word & 255])])
 }
 export const readHostState = () => midiFrame(0x48,[0])
+// Hardware comparisons on 2026-10-28: byte 0 = running, byte 2 = selected track.
+// Neither changes the identity of a snapshot containing all four tracks.
+export const sameHostPatternContext = (a: readonly number[],b: readonly number[]) => a.length===5&&b.length===5&&[1,3,4].every(n=>a[n]===b[n])
 // Native SendZaquencerPageMode / SendControllerPageMode (ControlTribe 1.12.4).
 // These switch the hardware page; they are not queries or persistent STORE operations.
 export const hostPage = (page: 'controller' | 'sequencer') => midiFrame(page==='sequencer'?0x0b:0x0c)
@@ -57,7 +61,8 @@ export function applyHostLane(data: readonly number[], track: number, field: num
   let next = [...data]
   values.forEach((value,step) => {
     if (lane === 'voices') value &= 0xffff
-    i(value,lo,hi)
+    // Keep unknown legacy Chord words losslessly on reads; never grant writes outside native 0..55.
+    i(value,lo,lane==='voices'?65535:hi)
     const local = lane === 'rest' || lane === 'mask' ? Boolean(value) : (lane === 'alpha' || lane === 'beta') && value === -1 ? 255 : value
     next = patchStep(next,track,step,{[lane]:local})
   })

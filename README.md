@@ -2,7 +2,7 @@
 
 Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support, **1.0.3 sequencer step editing**, and the shared MIDI Studio editor tools.
 
-Current version: **0.45.0-alpha.13** · [Changelog](CHANGELOG.md)
+Current version: **0.45.0-alpha.14** · [Changelog](CHANGELOG.md)
 
 The product presentation is at `/`; choose **Open editor** to enter `/editor/`. Existing local presets remain on the same origin. The presentation page never requests MIDI access.
 

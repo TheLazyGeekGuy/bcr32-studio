@@ -1,0 +1,14 @@
+{
+  "firmware": "1.0.3",
+  "captureWindow": "2026-10-28 14:00–14:10 CET",
+  "provenance": "Physical BCR32; user started PLAY, explicitly approved selector-01 hypothesis test; initial full state restored, 36 lanes independently unchanged. Responses only, never replay to hardware.",
+  "runningTrack0": [240,0,32,50,0,100,72,0,0,0,1,0,0,0,0,247],
+  "runningTrack1": [240,0,32,50,0,100,72,0,0,0,1,0,1,0,0,247],
+  "restoredTrack0": [240,0,32,50,0,100,72,0,0,0,1,0,0,0,0,247],
+  "sourceSha256": {
+    "hardware-while-playing.json": "c496626c9ffbb350bd646a0bc989e35f35e7baf3277f50c4ee53ee40967002ec",
+    "hardware-transport-probe-1404.json": "6cd34a7c91a79bd5e775d4fe51ec5e15411d8fe86a6c1859235e8e526bc9a1b4",
+    "hardware-transport-restoration-1405.json": "504c317c7477e500a4ed3c1ff4817671097d08be7a71e2195c05afbcb5909217",
+    "hardware-after-transport-probe.json": "120430c7680f53f8ab91540807721c91c46855db394527f4b0bbe710282bb2c3"
+  }
+}

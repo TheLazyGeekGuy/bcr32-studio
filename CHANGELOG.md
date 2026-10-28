@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.45.0-alpha.14] — 2026-10-28
+
+- Seven editable numeric sequencer lanes: Pitch, Velocity, Length, Delay, Ctrl A, Ctrl B and Chord. Mute and Skip remain per-step flags. Native Chord codes are bounded to 0–55; unknown legacy words remain lossless on reads but cannot be written as arbitrary chords.
+- Selective MIDI import: only the current destination is selected initially; explicitly select one or several T1–T4 destinations. Unchecked destinations are left unchanged. Timeline previews show only selected imports.
+- Poll the hardware transport state once per second while idle, using the existing single-flight connection. Physical PLAY and track selection no longer invalidate a four-track pattern snapshot. Failed polls disarm live edits; no parallel port, clock stream or persistent write is added.
+- Re-clicking the active Controller/Sequencer button reasserts its page command without discarding a local draft; returning to Sequencer still rereads the current pattern automatically.
+- Playback control is **not fixed**: the standard MIDI clock test produced no note output. An explicitly approved host-state selector `01` experiment disproved the transport hypothesis: it selects the track. Initial state was restored; all 36 lanes remained identical. No guessed transport command is exposed. Play/Space remain disabled pending a verified control route.
+
 ## [0.45.0-alpha.13] — 2026-10-28
 
 - Switching to Sequencer now sends the native hardware page command `0B` before reading; returning to Controller sends `0C`. These are narrowly authorized page changes, never STORE or arbitrary SysEx.

@@ -31,6 +31,14 @@ export function emptyPattern(): ZaqPattern {
 export const plays = (s: ZaqStep) => !s.mask && !s.rest && s.velocity > 0
 export const ccValue = (raw: number) => raw > 127 ? raw - 256 : raw
 export const ccRaw = (value: number) => value < 0 ? 255 : value
+export const sequencerLanes = [
+  {key:'note',label:'Pitch',min:0,max:127}, {key:'velocity',label:'Velocity',min:0,max:127},
+  {key:'gate',label:'Note length',min:0,max:15}, {key:'delay',label:'Start offset',min:-noteDelayRange,max:noteDelayRange},
+  {key:'alpha',label:'Ctrl A',min:-1,max:127}, {key:'beta',label:'Ctrl B',min:-1,max:127},
+  {key:'voices',label:'Chord',min:0,max:55},
+] as const
+type NumericLane = typeof sequencerLanes[number]
+const laneValue = (step: ZaqStep, lane: NumericLane) => lane.key==='alpha'||lane.key==='beta'?ccValue(step[lane.key]):step[lane.key]
 export function trackHeader(data: readonly number[], track: number) {
   const o = track * 256, flags = (p: number, n: number) => Array.from({ length: n }, (_, i) => data[o + p + (i >> 3)] >> (i & 7) & 1)
   return { skipped: flags(0, 32).reduce((a, v) => a + v, 0), mute: data[o + 4] & 1, direction: data[o + 5] & 3, start: data[o + 6] & 31, length: data[o + 7] & 31, offset: data[o + 8] & 31, clockDivider: data[o + 9] & 15, shuffleEven: data[o + 10], shuffleOdd: data[o + 11], drumMutes: flags(12, 16).reduce((a, v) => a + v, 0) }
@@ -144,7 +152,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   }
   const applyMidi = (slots: ImportSlot[], stepTicks: number) => {
     if (!midi) return
-    const sources = slots.map(slot => { const source = midi.file.tracks.find(tr => tr.index === slot.source); return source ? { notes: source.notes, startTick: slot.startTick } : null })
+    const sources = slots.map(slot => { if(slot.enabled===false)return null;const source = midi.file.tracks.find(tr => tr.index === slot.source); return source ? { notes: source.notes, startTick: slot.startTick } : null })
     const { data: next, report } = applyMidiTracks(data, sources, stepTicks)
     commit(next, `${midi.name}: ${t('chord notes dropped')} ${report.chordsDropped} · ${t('notes after step 32')} ${report.beyond} · ${t('offsets clamped')} ${report.delayClamped}`); setMidi(null)
   }
@@ -152,13 +160,13 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   const all = useMemo(() => [0, 1, 2, 3].map(tr => Array.from({ length: 32 }, (_, i) => readStep(data, tr, i))), [data]), steps = all[track]
   const s = all[track][step]
   // Lane drag: the pointer's column picks the step, its height the value; one undo step per drag.
-  const dragLane = (e: React.PointerEvent<HTMLDivElement>, lane: { key: 'velocity' | 'gate' | 'delay'; min: number; max: number }, moving: boolean) => {
+  const dragLane = (e: React.PointerEvent<HTMLDivElement>, lane: NumericLane, moving: boolean) => {
     const r = e.currentTarget.getBoundingClientRect(), i = Math.max(0, Math.min(31, Math.floor((e.clientX - r.left - 6) / ((r.width - 12) / 32)))), f = Math.max(0, Math.min(1, (r.bottom - 6 - e.clientY) / (r.height - 12)))
-    const v = lane.min < 0 ? Math.round((f - .5) * 2 * lane.max) : Math.round(lane.min + f * (lane.max - lane.min)), value = Math.max(lane.key === 'velocity' ? 1 : lane.min, Math.min(lane.max, v))
-    if (moving && all[track][i][lane.key] === value) return
-    setStep(i); patch({ [lane.key]: value } as Partial<ZaqStep>, i, track, moving && dragging.current); dragging.current = true
+    const v = Math.round(lane.min + f * (lane.max - lane.min)), value = Math.max(lane.key === 'velocity' ? 1 : lane.min, Math.min(lane.max, v))
+    if (moving && laneValue(all[track][i],lane) === value) return
+    setStep(i); patch({ [lane.key]: lane.key==='alpha'||lane.key==='beta'?ccRaw(value):value } as Partial<ZaqStep>, i, track, moving && dragging.current); dragging.current = true
   }
-  const lanes: { key: 'velocity' | 'gate' | 'delay'; label: string; max: number; min: number }[] = [{ key: 'velocity', label: 'Velocity', min: 0, max: 127 }, { key: 'gate', label: 'Note length', min: 0, max: 15 }, { key: 'delay', label: 'Start offset', min: -noteDelayRange, max: noteDelayRange }]
+  const lanes = sequencerLanes
   const active = steps.filter(plays), low = Math.min(...active.map(x => x.note), 60) - 2, high = Math.max(low + 14, ...active.map(x => x.note + 1))
   return <section className="sequencer-view" tabIndex={0} onKeyDown={onKey} aria-label={t('Sequencer')}>
     <div className="seq-main">
@@ -172,7 +180,8 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         <button onClick={() => { addPattern(emptyPattern(), `${t('New pattern')} ${entries.length + 1}`); setNotice('Nothing is sent to the BCR32.') }}>{t('New pattern')}</button>
         <span className="seq-spacer" />
         <div className="seq-transport" role="group" aria-label={t('BCR32 transport')}>
-          <button className={transport.running ? 'primary' : ''} aria-pressed={transport.running} disabled={!transport.available} title={t(transport.supported ? 'Space: start / stop (BCR32 clock source on USB)' : 'Not available: the BCR32 1.0.2 does not follow a clock sent over USB')} onClick={transport.toggle}>{transport.running ? '■' : '▶'}<span data-i18n-skip> </span>{t(transport.running ? 'Stop' : 'Play')}</button>
+          <button className={(host.running??transport.running) ? 'primary' : ''} aria-pressed={host.running??transport.running} disabled={!transport.available} title={t(transport.supported ? 'Space: start / stop (BCR32 clock source on USB)' : host.enabled?'Playback is not verified for this firmware. Use PLAY on the BCR32.':'Not available: the BCR32 1.0.2 does not follow a clock sent over USB')} onClick={transport.toggle}>{(host.running??transport.running) ? '■' : '▶'}<span data-i18n-skip> </span>{t((host.running??transport.running) ? 'Stop' : 'Play')}</button>
+          {host.running!==null&&<span role="status">{t(host.running?'Hardware playing':'Hardware stopped')}</span>}
           <label>{t('BPM')}<input type="number" min={tempoRange.min} max={tempoRange.max} value={transport.bpm} onChange={e => { const v = Number(e.target.value); if (v >= tempoRange.min && v <= tempoRange.max) transport.setBpm(v) }} /></label>
         </div>
         <span className="seq-offline" role="status">{t(host.enabled?host.status:transport.supported ? 'Patterns stay in this browser · only start/stop reaches the BCR32' : 'Offline · nothing is sent to the BCR32')}</span>
@@ -208,8 +217,8 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         </div>
         <h3>{t('Track')} {track + 1} · {t('lanes')}</h3>
         <div className="seq-lanes">{lanes.map(lane => <div key={lane.key} className="seq-lane"><span className="seq-lane-label">{t(lane.label)}</span><div className={`seq-bars ${lane.key}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); dragging.current = false; dragLane(e, lane, false) }} onPointerMove={e => { if (e.buttons & 1) dragLane(e, lane, true) }} onPointerUp={() => { dragging.current = false }}>{steps.map((x, i) => {
-          const value = x[lane.key], ratio = lane.min < 0 ? Math.abs(value) / lane.max / 2 : (value - lane.min) / (lane.max - lane.min)
-          return <span key={i} role="slider" aria-valuemin={lane.min} aria-valuemax={lane.max} aria-valuenow={value} className={`seq-bar${plays(x) ? '' : ' off'}${i === step ? ' sel' : ''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.min < 0 ? (value < 0 ? 'start' : 'end') : undefined }}>{lane.key === 'gate' && <b className="seq-bar-value" data-i18n-skip>{noteLengths[value]}</b>}</span>
+          const value = laneValue(x,lane), ratio = Math.max(0,Math.min(1,lane.key==='delay' ? Math.abs(value) / lane.max / 2 : (value - lane.min) / (lane.max - lane.min)))
+          return <span key={i} role="slider" aria-valuemin={lane.min} aria-valuemax={lane.max} aria-valuenow={value} className={`seq-bar${plays(x) ? '' : ' off'}${i === step ? ' sel' : ''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.key==='delay' ? (value < 0 ? 'start' : 'end') : undefined }}>{lane.key === 'gate' && <b className="seq-bar-value" data-i18n-skip>{noteLengths[value]}</b>}</span>
         })}</div></div>)}</div>
       </div>}
       {view === 'roll' && <div className="seq-rollview">
@@ -240,6 +249,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
           <h3>{t('Track CC values')} <span className="mock-caption">{t('−1 = off')}</span></h3>
           <div className="fields two"><label>CC 1 (α)<input type="number" min="-1" max="127" value={ccValue(s.alpha)} onChange={e => patch({ alpha: ccRaw(Math.max(-1, Math.min(127, Math.round(Number(e.target.value) || 0)))) })} /></label>
             <label>CC 2 (β)<input type="number" min="-1" max="127" value={ccValue(s.beta)} onChange={e => patch({ beta: ccRaw(Math.max(-1, Math.min(127, Math.round(Number(e.target.value) || 0)))) })} /></label></div>
+          <label>{t('Chord')}<select value={s.voices} onChange={e=>patch({voices:Number(e.target.value)})}>{s.voices>55&&<option value={s.voices}>Raw {s.voices}</option>}{Array.from({length:56},(_,n)=><option key={n} value={n} data-i18n-skip>{n?`#${n}`:'—'}</option>)}</select></label>
         </>}
         {panel === 'track' && <>
           <p className="mock-caption mock-kind">{t('Track')} {track + 1}</p>
@@ -263,6 +273,6 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
       </div>
       <p className="seq-status" role="status">{t(notice)}</p>
     </aside>
-    {midi && <MidiImportDialog name={midi.name} file={midi.file} initialGrid={midi.grid} onApply={applyMidi} onCancel={() => setMidi(null)} />}
+    {midi && <MidiImportDialog name={midi.name} file={midi.file} initialGrid={midi.grid} targetTrack={track} onApply={applyMidi} onCancel={() => setMidi(null)} />}
   </section>
 }
