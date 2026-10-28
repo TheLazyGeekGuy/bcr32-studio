@@ -1,6 +1,6 @@
 # BCR103-08 — Publish the accepted site and editor
 
-Status: **local preparation; remote deployment not yet verified**.
+Status: **owner accepted; release candidate verified locally for GitHub publication**. The delivery result is the GitHub Pages workflow run for the published commit, not this preparation status.
 
 ## Authorization and scope
 
@@ -25,3 +25,13 @@ Codex, primary agent, 2026-10-28 18:41–18:46 CET. Exact model identifier/reaso
 - Primary production is GitHub Pages from `.github/workflows/pages.yml`: product site at `/bcr32-studio/`, editor at `/bcr32-studio/editor/`. Existing optional Cloudflare deployment is not activated.
 - Run tests/typecheck, production build, privacy/whitespace checks and browser/site routing checks before publication. Push without force; remote concurrent changes require reintegration, not overwrite.
 - Verify the GitHub deployment run and the version actually served at both public routes. A push alone is not deployment proof. Record final SHA/run/public checks in the delivery response.
+
+## Release candidate verification — 2026-10-28 18:49 CET
+
+Codex primary agent reviewed merged candidate **`c6a6ed2484e59868e7a63b615f3d44dd2a5416ec`** in an isolated single-branch checkout with a fresh `npm ci`, not the shared development dependency symlink. The exact model/reasoning level remains unavailable. Subsequent changes are this publication record only.
+
+- 49/49 tests, TypeScript and production build/distribution pass with React/React DOM 19.3.1 and Wrangler 4.151.3.
+- Production-browser simulated MIDI regression and production subpath/offline regression pass; neither accesses hardware. Existing large-chunk warnings remain.
+- Generic privacy gate passes on **373 files / 82 reachable commits**. The isolated full private scan has four contextual file findings: public manufacturer references in site/translation/release documentation and the already reviewed technical substring. No commit-identity/history finding remains; unrelated local branches are absent. This is a manual disposition of these exact findings, not an automated full-gate pass.
+- `npm audit --omit=dev` reports **zero** production dependency vulnerabilities. Development-only Wrangler/Miniflare/Undici report three advisories (two moderate, one high), with Wrangler 4.154.0 suggested. Optional Cloudflare tooling is not used by this GitHub Pages publication; upgrading/testing that tooling is separate follow-up, not an unreviewed forced dependency change in this release.
+- No physical device operation or device-setting modification was needed. The earlier owner acceptance is preserved without inventing a new physical validation.
