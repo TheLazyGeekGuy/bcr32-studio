@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { createZaqAssembler, decodeZaqBlock, patchStep, patternFile, readStep, type ZaqPattern, type ZaqStep } from './zaquencer'
 import { splitSysex } from './firmware-codec'
 import { parseMidiFile, stepsToMidiFile, suggestStepTicks, trackToSteps, type MidiFile } from './midi-file'
@@ -86,8 +86,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
     setCurrent(Number.MAX_SAFE_INTEGER);setUndo([]);setRedo([])
   })
   const hostReceive=useRef(host.receive);hostReceive.current=host.receive
-  useEffect(()=>{if(host.enabled)void host.read(emptyPattern().data)},[connection?.key,host.enabled,host.read])
-  useEffect(()=>{host.disarm()},[current,host.disarm])
+  useEffect(()=>{if(host.enabled&&!locked)void host.read(emptyPattern().data)},[connection?.key,host.enabled,host.read,locked])
   const liveEntry=entry.host===connection?.key&&entry.host!==undefined&&entry.hostAt===host.snapshot.current?.capturedAt
   const state = useRef({ data, track, step, octave, velocity, locked }); state.current = { data, track, step, octave, velocity, locked }
   // A drag over a lane is one undo step: only its first change records the previous pattern.
@@ -108,7 +107,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   const addPattern = (pattern: ZaqPattern, label: string) => { host.disarm();setEntries(list => [...list, { pattern, data: [...pattern.data], label }].slice(-24)); setCurrent(Number.MAX_SAFE_INTEGER); setUndo([]); setRedo([]) }
 
   // Listening for a front-panel pattern export: receive only, never a request.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const assembler = createZaqAssembler()
     receive.current = bytes => { hostReceive.current(bytes);if(!listen)return;const block = decodeZaqBlock(bytes); if (!block) return; const p = assembler.receive(block); if (p) { addPattern(p, `${t('Front-panel export')} · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); setNotice('Pattern received. Nothing was sent to the BCR32.') } }
     return () => { receive.current = () => {} }
@@ -166,7 +165,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
       <div className="seq-bar">
         <button disabled={!host.enabled||host.busy} onClick={()=>void host.read(emptyPattern().data)}>{t('Read current pattern')}</button>
         <label className="mock-check"><input type="checkbox" checked={host.live} disabled={!host.ready||!liveEntry||locked||host.busy&&!host.live} onChange={e=>host.setLive(e.target.checked)}/>{t('Live step editing')}</label>
-        <label className="seq-pattern">{t('Pattern')}<select value={Math.min(current, entries.length - 1)} onChange={e => { setCurrent(Number(e.target.value)); setUndo([]); setRedo([]) }}>{entries.map((e, i) => <option key={i} value={i}>{t(e.label)}</option>)}</select></label>
+        <label className="seq-pattern">{t('Pattern')}<select value={Math.min(current, entries.length - 1)} onChange={e => { host.disarm();setCurrent(Number(e.target.value)); setUndo([]); setRedo([]) }}>{entries.map((e, i) => <option key={i} value={i}>{t(e.label)}</option>)}</select></label>
         <button aria-label={t('Undo')} title={t('Undo')} disabled={!undo.length || locked} onClick={() => restore(undo, setRedo, setUndo)}>↶</button><button aria-label={t('Redo')} title={t('Redo')} disabled={!redo.length || locked} onClick={() => restore(redo, setUndo, setRedo)}>↷</button>
         <div className="mock-seg" role="group" aria-label={t('Pattern display')}>{(['grid', 'roll', 'table'] as const).map(v => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{t({ grid: 'Grid', roll: 'Piano roll', table: 'Table (Behringer)' }[v])}</button>)}</div>
         <button aria-expanded={templatesOpen} onClick={() => setTemplatesOpen(v => !v)}>{t('Templates')}<span aria-hidden="true" data-i18n-skip> ▾</span></button>
@@ -191,7 +190,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
           <button className="primary" disabled={locked} onClick={() => commit(randomPattern(data, { tracks: random.allTracks ? [0, 1, 2, 3] : [track], scale: random.scale, root: random.root, octaves: random.octaves, density: random.density }), t('Random pattern'))}>{t('Generate')}</button>
         </div></div>
       </section>}
-      <p className="mock-warn seq-preview-note">{t(host.enabled?'Firmware 1.0.3: read the current pattern, then enable Live step editing to send individual edits. No STORE is sent. Track/global settings and slot transfers are not included.':'Offline preview: MIDI and .syx files, keyboard and MIDI keyboard entry work locally. Hardware sequencer editing requires firmware 1.0.3.')}</p>
+      <p className="mock-warn seq-preview-note">{t(host.enabled?'The hardware switches to Sequencer and reads the current pattern automatically. Live step editing starts after a successful read. No STORE is sent.':'Offline preview: MIDI and .syx files, keyboard and MIDI keyboard entry work locally. Hardware sequencer editing requires firmware 1.0.3.')}</p>
       <div className="seq-entry">
         <label className="mock-check"><input type="checkbox" checked={keyboardEntry} onChange={e => setKeyboardEntry(e.target.checked)} />{t('Computer keyboard entry')}</label>
         <span className="mock-caption" data-i18n-skip>A W S E D F T G Y H U J K · Z/X {t('octave')} {octave} · C/V {t('velocity')} {velocity} · ←→↑↓ · {transport.supported ? <>{t('Space: start / stop')} · </> : null}M {t('rest')} · ⌫</span>

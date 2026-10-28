@@ -41,6 +41,7 @@ import { buttonNames } from './panel-layout'
 import { ControlSearch } from './ControlSearch'
 import { LibraryList } from './LibraryList'
 import { SequencerView } from './SequencerView'
+import {hostPage,supportsZaqHost} from './zaq-host'
 import { createBrightnessTransport } from './led-brightness'
 import { applySelectionChange, selectControls, selectedControls, selectionKey, sharedField, type SelectionGesture, type ControlChange } from './multi-selection'
 import { applyLearn, createLearnSession, describeApplied, type LearnResult } from './midi-learn'
@@ -329,6 +330,10 @@ function loadWorkspace() {
   const inputs = useMemo(() => access ? Array.from(access.inputs.values()) : [], [access, portVersion])
   const outputs = useMemo(() => access ? Array.from(access.outputs.values()) : [], [access, portVersion])
   const output = outputs.find(port => port.id === outputId)
+  useEffect(()=>{
+    if(editorMode!=='controller'||!supportsZaqHost(liveFirmware)||liveDeviceId===null||locked||!output?.send)return
+    try{output.send(hostPage('controller'))}catch(e){setNotice(`Controller mode: ${String(e)}`)}
+  },[editorMode,liveFirmware,liveDeviceId,locked,output])
   const brightnessEnabled = !!access?.sysexEnabled && isBcrOutput(output) && isControllerPort(output) && inputs.some(p=>p.id===inputId && isControllerPort(p))
   const selected = profile[selection.kind].find((encoder) => encoder.id === selection.id)!
   const selectedItems = selectedControls(profile,selections)
@@ -891,7 +896,7 @@ function loadWorkspace() {
   useEffect(() => { presetCache.current.clear(); cacheInitialized.current = false; setFromPresetCache(false); setControllerRead(emptyControllerRead()) }, [access, inputId, output, portVersion, liveFirmware, liveDeviceId])
   useEffect(() => {
     setControllerRead(state => state.status === 'reading' ? { ...state, status: 'cancelled' } : state)
-    if (!brightnessEnabled || !output?.send || !firmwareOne(liveFirmware) || liveDeviceId === null) return
+    if (editorMode === 'sequencer' || !brightnessEnabled || !output?.send || !firmwareOne(liveFirmware) || liveDeviceId === null) return
     const port = output
     const reader = createControllerReader(bytes => {
       if (!isBcrOutput(port) || !isFirmwareRead(bytes)) throw Error('Controller read unavailable')
@@ -900,7 +905,7 @@ function loadWorkspace() {
     controllerReader.current = reader
     if (autoReadControllerRef.current) void readControllerAssignments(reader)
     return () => { controllerReader.current?.close(); controllerReader.current = null; reader.close() }
-  }, [access, inputId, output, brightnessEnabled, portVersion, liveFirmware, liveDeviceId, autoReadController])
+  }, [access, inputId, output, brightnessEnabled, portVersion, liveFirmware, liveDeviceId, autoReadController, editorMode])
 
   async function readControllerAssignments(reader = controllerReader.current) {
     if (!reader) return

@@ -1,5 +1,5 @@
 /** BCR32 1.0.3 Zaq host protocol. Provenance and capture hashes: docs/BCR32-PROTOCOL-1.0.3.md.
- * No persistent writes, mode switches, transport or legacy command 07 are exposed here.
+ * No persistent writes, transport or legacy command 07 are exposed here. Hardware page changes are explicit.
  * This codec does not acquire MIDI ports; the caller supplies the existing instance transport.
  */
 import { integer, isFrame, midiFrame, pack7, unpack7 } from './firmware-codec'
@@ -18,6 +18,10 @@ export function writeHostStep(track: number, step: number, field: number, value:
   return midiFrame(0x44,[2,i(track,0,3),i(step,0,31),field,...pack7([word >>> 8,word & 255])])
 }
 export const readHostState = () => midiFrame(0x48,[0])
+// Native SendZaquencerPageMode / SendControllerPageMode (ControlTribe 1.12.4).
+// These switch the hardware page; they are not queries or persistent STORE operations.
+export const hostPage = (page: 'controller' | 'sequencer') => midiFrame(page==='sequencer'?0x0b:0x0c)
+export const isHostPage = (b: readonly number[]) => isFrame(b)&&b[4]===127&&b.length===8&&[0x0b,0x0c].includes(b[6])
 export function isZaqHostQuery(b: readonly number[]) {
   return isFrame(b) && b[4] === 127 && ((b.length === 9 && b[6] === 0x48 && b[7] === 0) ||
     (b.length === 11 && b[6] === 0x45 && b[7] === 1 && b[8] < 4 && b[9] < 9))
@@ -76,12 +80,16 @@ export function createZaqHost(send: (bytes: number[]) => void, device: number, t
   let closed=false, pending: {matches:(r:HostReply)=>boolean;resolve:(r:HostReply)=>void;reject:(e:Error)=>void;timer:ReturnType<typeof setTimeout>} | null=null
   const request = (bytes: number[], matches: (r:HostReply)=>boolean) => new Promise<HostReply>((resolve,reject) => {
     if(closed || pending){reject(Error(closed?'Sequencer session closed':'Sequencer transfer busy'));return}
-    const timer=setTimeout(()=>{pending=null;reject(Error('Sequencer response timeout'))},timeout)
+    let received=0,lastHeader='none'
+    const timer=setTimeout(()=>{pending=null;reject(Error(`Sequencer response timeout · command ${bytes[6].toString(16).toUpperCase()} · device ${device} · RX ${received} · last ${lastHeader}`))},timeout)
     pending={matches,resolve,reject,timer}
+    diagnostics=bytes=>{received++;lastHeader=bytes.slice(4,11).map(v=>v.toString(16).padStart(2,'0')).join(' ')}
     try {send(bytes)} catch(e) {clearTimeout(timer);pending=null;reject(e instanceof Error?e:Error(String(e)))}
   })
+  let diagnostics: (bytes:readonly number[])=>void=()=>{}
   return {
-    receive(bytes: readonly number[]) {const r=parseHostReply(bytes,device);if(!r||!pending||!pending.matches(r))return;const p=pending;pending=null;clearTimeout(p.timer);p.resolve(r)},
+    receive(bytes: readonly number[]) {if(pending&&bytes[0]===240)diagnostics(bytes);const r=parseHostReply(bytes,device);if(!r||!pending||!pending.matches(r))return;const p=pending;pending=null;clearTimeout(p.timer);p.resolve(r)},
+    enterSequencer() {if(closed||pending)throw Error('Sequencer transfer busy');send(hostPage('sequencer'))},
     readLane(track:number,field:number) {return request(readHostLane(track,field),r=>r.command===0x45&&r.track===track&&r.field===field)},
     state() {return request(readHostState(),r=>r.command===0x48)},
     write(track:number,step:number,field:number,value:number) {return request(writeHostStep(track,step,field,value),r=>r.command===0x44&&r.track===track&&r.step===step&&r.field===field)},

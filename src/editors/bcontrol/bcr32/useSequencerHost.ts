@@ -24,6 +24,8 @@ export function useSequencerHost(connection: SequencerConnection | undefined, lo
     disarm();reading.current=true;setBusy(true);setReady(false)
     const frames:number[][]=[]
     try{
+      if(latest.current.locked)throw Error('Unlock the editor before changing hardware mode')
+      client.enterSequencer()
       const before=await client.state();let next=[...data]
       for(let track=0;track<4;track++)for(let field=0;field<9;field++){
         const r=await client.readLane(track,field);if(session.current!==client)return
@@ -32,7 +34,7 @@ export function useSequencerHost(connection: SequencerConnection | undefined, lo
       const after=await client.state();if(session.current!==client)return
       if(JSON.stringify(before.values)!==JSON.stringify(after.values))throw Error('Device state changed during read; read again')
       const result={data:next,frames,state:after.values,capturedAt:new Date().toISOString()};snapshot.current=result
-      latest.current.onRead(result);setReady(true);setStatus('Current pattern read · 4 tracks / 32 steps · no STORE sent')
+      latest.current.onRead(result);setReady(true);armed.current=!latest.current.locked;setLive(armed.current);setStatus('Current pattern read · 4 tracks / 32 steps · no STORE sent')
     }catch(e){if(session.current===client)setStatus(String(e))}finally{if(session.current===client){reading.current=false;setBusy(false)}}
   },[disarm])
   const edit=useCallback((before: readonly number[],after: readonly number[])=>{

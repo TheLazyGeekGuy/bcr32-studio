@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.0-alpha.13] — 2026-10-28
+
+- Switching to Sequencer now sends the native hardware page command `0B` before reading; returning to Controller sends `0C`. These are narrowly authorized page changes, never STORE or arbitrary SysEx.
+- Successful automatic pattern reads enable live editing immediately, as requested. Explicitly pausing live edits, lock and failed reads still prevent step writes.
+- Install the sequencer RX relay in a layout effect before any read effect; stop the parallel Controller assignment scan while using Sequencer. Timeout diagnostics now include command, expected device and received packet header/count.
+- Real Chromium Web MIDI read of all 36 lanes succeeded against the connected 1.0.3 device. The reported Firefox failure remains a separate acceptance gate until retested in the user's session; no claim of a reproduced/fixed Firefox root cause.
+
 ## [0.45.0-alpha.12] — 2026-10-28
 
 - Firmware 1.0.3 sequencer host protocol, recovered from ControlTribe 1.12.4 and checked against a physical BCR32: read all nine lanes of four tracks; opt-in live edits of note, velocity, mute, delay, length, CC A/B, chord word and skip. Reuses the instance MIDI lease; serializes edits and coalesces pending changes. Disconnect, lock, changed device state, missing replies or unconfirmed edits stop sending. No STORE, firmware update or legacy command 07.

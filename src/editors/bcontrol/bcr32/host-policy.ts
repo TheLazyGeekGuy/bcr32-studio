@@ -3,7 +3,7 @@ import {deviceGlobals} from './device-globals'
 import {isEncoderAssignmentWrite} from './controller-write'
 import {isBclWrite,presetStorePlan} from './preset-store'
 import {controllerTracksFromBcl} from './controller-tracks'
-import {isZaqHostQuery,isZaqHostWrite} from './zaq-host'
+import {isZaqHostQuery,isZaqHostWrite,isHostPage} from './zaq-host'
 
 /** Model-specific framing. These validators add no grant or automatic device operation. */
 export function validateQuery(bytes:readonly number[]) {
@@ -18,7 +18,7 @@ export function validateBclPacket(bytes:readonly number[],persistent:boolean) {
  if(line.startsWith('$'))return ['$rev BCR32','$preset','$end',...(!persistent?['$global']:[])].includes(line)||/^\$encoder (?:[1-9]|[12]\d|3[0-2])$/.test(line)||/^\$button (?:[1-9]|[1-4]\d|50)$/.test(line)||persistent&&/^\$store (?:[1-9]|[1-5]\d|6[0-4])$/.test(line)
  return /^\.(?:name|snapshot|request|init|easypar|showvalue|mode|default|tx)(?:\s|$)/.test(line)||!persistent&&/^\.tracks(?: \d+){5}$/.test(line)
 }
-export function validateEditBuffer(bytes:readonly number[]) {return isZaqHostWrite(bytes)||isEncoderAssignmentWrite(bytes,bytes[4])||validateBclPacket(bytes,false)}
+export function validateEditBuffer(bytes:readonly number[]) {return isHostPage(bytes)||isZaqHostWrite(bytes)||isEncoderAssignmentWrite(bytes,bytes[4])||validateBclPacket(bytes,false)}
 export function validatePresetStore(bytes:readonly number[]) {return validateBclPacket(bytes,true)}
 
 /** Full job preflight is stricter than a frame validator. Prepared frames are consumed exactly once by the view. */

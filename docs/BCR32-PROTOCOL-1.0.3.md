@@ -1,5 +1,15 @@
 # BCR32 firmware 1.0.3: sequencer host integration
 
+## Alpha.13 correction — automatic page/read/edit workflow
+
+User acceptance of alpha.12 reported a Firefox response timeout and the absence of a hardware page change. Alpha.13 sends the native page messages `F0 00 20 32 7F 64 0B F7` (Sequencer) and `… 0C F7` (Controller). These come from ControlTribe 1.12.4 ARM64 functions `SendZaquencerPageMode` at `0x1005b8ccc` and `SendControllerPageMode` at `0x1005b8c40`; they have no immediate acknowledgement. The opaque host state vector must not be misrepresented as confirmation of the visible hardware page.
+
+Entering Sequencer now sends its page command, automatically reads the pattern, then enables live step editing **after successful completion only**. RX relay installation happens before the first read effect, including synchronous replies. The large Controller assignment scan is cancelled/excluded while in Sequencer; failed reads, lock, disconnection and explicitly paused sending still prevent note writes. `0B`/`0C` use narrow page-change authorization, not a general-purpose raw sender or STORE grant.
+
+On 2026-10-28, a real Chromium 155.0.8059.12 Web MIDI session against the connected BCR32 read all 36 lanes immediately after entering Sequencer (without waiting for the Controller scan), observed 38 host requests/replies including the two state reads, and showed live editing enabled. Native page-command output was recorded. **The reported Firefox failure has not yet been reproduced or cleared in the user's session.** Timeout errors now show command, expected device, RX count and last received header to make that next comparison specific.
+
+This correction was reviewed/implemented by Codex, primary agent, 2026-10-28 13:41–13:51 CET, against full commit `75d091084073d73a0fc3ddef8e83037e151e97f9` plus this initially uncommitted patch. Exact model/effort are not exposed. Previous alpha.12 statements below about opt-in live editing and the absence of page changes are historical and superseded by this section. No STORE or firmware update was performed.
+
 ## Scope and provenance
 
 Reviewed on 2026-10-28, 13:02–13:25 CET, by **Codex, primary agent**. The runtime does not expose the exact model identifier or reasoning-effort setting; provenance is therefore **incomplete at that level**, not asserted to be a separately versioned independent review.

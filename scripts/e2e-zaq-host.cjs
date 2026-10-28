@@ -1,11 +1,11 @@
 // Real browser, simulated Web MIDI only. Does not enumerate or send to hardware.
 const {chromium}=require(process.env.PLAYWRIGHT_CORE||'playwright-core')
 const assert=require('node:assert/strict')
-function fakeMidi(){
+function fakeMidi({sync=false}={}){
  localStorage.setItem('bcr32_site_lang','en');localStorage.setItem('bcr32-studio.language.v1','en');localStorage.setItem('bcr32-studio.controller-autoread','false')
  window.__requests=0;window.__sent=[];window.__note=60
  const input={id:'bcr-in',name:'BCR-32 SIM',state:'connected',type:'input',onmidimessage:null}
- const reply=b=>setTimeout(()=>input.onmidimessage?.({data:new Uint8Array(b)}),2),prefix=[240,0,32,50,0,100]
+ const reply=b=>{const emit=()=>input.onmidimessage?.({data:new Uint8Array(b)});return sync?emit():setTimeout(emit,2)},prefix=[240,0,32,50,0,100]
  const pack=raw=>{const b=[];for(let i=0;i<raw.length;i+=7){const c=raw.slice(i,i+7);b.push(c.reduce((m,v,n)=>m|(v>>7)<<n,0),...c.map(x=>x&127))}return b}
  const output={id:'bcr-out',name:'BCR-32 SIM',state:'connected',type:'output',send(bytes){
   const b=Array.from(bytes);window.__sent.push(b);const cmd=b[6]
@@ -19,7 +19,7 @@ function fakeMidi(){
  Object.defineProperty(navigator,'requestMIDIAccess',{configurable:true,value:async()=>{window.__requests++;return {sysexEnabled:true,inputs:new Map([[input.id,input]]),outputs:new Map([[output.id,output]]),onstatechange:null}}})
 }
 ;(async()=>{const browser=await chromium.launch({headless:true});try{
- const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.addInitScript(fakeMidi)
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.addInitScript(fakeMidi,{sync:process.env.SYNC_REPLY==='1'})
  const base=process.argv[2]||'http://127.0.0.1:5186'
  await page.goto(base+'/');await page.getByRole('heading',{level:1}).waitFor();assert.equal(await page.evaluate(()=>window.__requests),0)
  assert.equal(await page.locator('#root').count(),0);assert.equal(await page.locator('img:not([loading="lazy"])').evaluateAll(imgs=>imgs.filter(x=>!x.complete||x.naturalWidth===0).length),0)
@@ -31,7 +31,8 @@ function fakeMidi(){
  await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x45).length),36)
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),0,'opening never writes')
- const live=page.getByRole('checkbox',{name:'Live step editing',exact:true});await live.check()
+ const live=page.getByRole('checkbox',{name:'Live step editing',exact:true});assert.ok(await live.isChecked(),'live editing is automatic after a successful read')
+ assert.ok(await page.evaluate(()=>window.__sent.some(b=>b.length===8&&b[6]===0x0b)),'hardware sequencer page command is sent')
  await page.locator('.seq-panel').getByRole('combobox',{name:'Note',exact:true}).selectOption('61')
  await page.getByText('Live edit confirmed · edit buffer only · press STORE on the BCR32 to keep it',{exact:true}).waitFor()
  assert.equal(await page.evaluate(()=>window.__note),61)
@@ -42,5 +43,5 @@ function fakeMidi(){
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===0x44).length),before)
  assert.ok(await page.evaluate(()=>!window.__sent.some(b=>[4,7,0x72,0x77].includes(b[6]))),'no dumps, legacy export, STORE or firmware')
  assert.deepEqual(errors,[])
- console.log('PASS browser: root presentation → /editor/, no MIDI on root, 36 automatic reads, explicit live note edit + undo, local-only disarm, no STORE, no browser errors')
+ console.log('PASS browser: root presentation → /editor/, no MIDI on root, 36 automatic reads, automatic live edit + undo, local-only disarm, no STORE, no browser errors')
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1})
