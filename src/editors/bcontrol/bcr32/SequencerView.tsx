@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type MutableRefObject } from 'react'
 import { createZaqAssembler, decodeZaqBlock, patchStep, patternFile, readStep, type ZaqPattern, type ZaqStep } from './zaquencer'
 import { splitSysex } from './firmware-codec'
 import { parseMidiFile, stepsToMidiFile, suggestStepTicks, trackToSteps, type MidiFile } from './midi-file'
@@ -7,7 +7,7 @@ import { applyTemplate, randomPattern, scales, templates } from './sequencer-tem
 import type { EditorStorage } from '../../../editor-environment'
 import { translate, useLanguage } from './i18n'
 import {useSequencerHost,type SequencerConnection} from './useSequencerHost'
-import {createPlaybackFollower,emptyPlayback} from './sequencer-follow'
+import {createPlaybackFollower,emptyPlayback,type PlaybackState} from './sequencer-follow'
 
 // Sequencer view (approved mockup of 2026-10-24): the four Zaquencer tracks × 32 steps as a grid, lanes, piano roll or
 // raw table, with step entry from the computer keyboard or a MIDI keyboard, and .syx / MIDI file exchange. Everything
@@ -70,8 +70,25 @@ export function patternToMidi(data: readonly number[], ppq = 96) {
 
 // Start/stop of the BCR32 sequencer, driven by the Workbench's MIDI clock master (Start, Clock, Stop only).
 export type SequencerTransport = { supported: boolean; available: boolean; running: boolean; bpm: number; setBpm: (bpm: number) => void; toggle: () => void }
+// Clock updates belong to two tiny status islands, not the hundreds of editable step controls.
+function createClockStatus(){
+  let state=emptyPlayback(),key='';const listeners=new Set<()=>void>()
+  return {get:()=>state,subscribe(fn:()=>void){listeners.add(fn);return()=>{listeners.delete(fn)}},publish(next:PlaybackState){
+    const signature=JSON.stringify([next.running,next.clockSeen,next.synced,next.reason,next.bpm]);if(signature===key)return
+    state=next;key=signature;for(const fn of listeners)fn()
+  }}
+}
+type ClockStatus=ReturnType<typeof createClockStatus>
+function ClockTempo({source,enabled,transport,t}:{source:ClockStatus;enabled:boolean;transport:SequencerTransport;t:(s:string)=>string}){
+  const state=useSyncExternalStore(source.subscribe,source.get,source.get)
+  return <label>{t('BPM')}<input type="number" min={tempoRange.min} max={tempoRange.max} value={enabled?state.bpm??'':transport.bpm} placeholder="—" readOnly={enabled} title={enabled?t('Observed MIDI clock tempo'):undefined} onChange={e=>{const v=Number(e.target.value);if(v>=tempoRange.min&&v<=tempoRange.max)transport.setBpm(v)}}/></label>
+}
+function ClockNotice({source,t}:{source:ClockStatus;t:(s:string)=>string}){
+  const playback=useSyncExternalStore(source.subscribe,source.get,source.get)
+  return <span className="seq-clock-status" role="status">{t(playback.reason==='unbound'?'Playback timing unavailable · read current pattern':playback.reason==='following'?'Following hardware MIDI clock':playback.reason==='unsupported'?'Playback cursor unavailable for shuffled, skipped or non-forward tracks':playback.reason==='stopped'?'Hardware stopped':playback.clockSeen?'Clock received · press hardware PLAY to synchronize':'Waiting for USB MIDI clock and hardware PLAY')}</span>
+}
 export function SequencerView({ storage, noteInput, noteInputName, openMidiSettings, receive, download, locked, transport, connection }: {
-  storage: EditorStorage; noteInput: MutableRefObject<((note: number, velocity: number) => void) | null>; noteInputName: string; openMidiSettings: () => void; receive: MutableRefObject<(bytes: number[]) => void>
+  storage: EditorStorage; noteInput: MutableRefObject<((note: number, velocity: number) => void) | null>; noteInputName: string; openMidiSettings: () => void; receive: MutableRefObject<(bytes: number[],timeStamp?:number) => void>
   download: (data: BlobPart, name: string, type?: string) => void; locked: boolean; transport: SequencerTransport; connection?: SequencerConnection
 }) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
@@ -97,14 +114,34 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   const hostReceive=useRef(host.receive);hostReceive.current=host.receive
   useEffect(()=>{if(host.enabled&&!locked)void host.read(emptyPattern().data)},[connection?.key,host.enabled,host.read,locked])
   const liveEntry=entry.host===connection?.key&&entry.host!==undefined&&entry.hostAt===host.snapshot.current?.capturedAt
-  const [playback,setPlayback]=useState(emptyPlayback)
-  const follower=useMemo(()=>createPlaybackFollower(setPlayback),[])
+  const root=useRef<HTMLElement>(null),clockStatus=useMemo(createClockStatus,[])
+  const cursor=useRef({heads:[null,null,null,null] as (number|null)[],painted:[null,null,null,null] as (number|null)[],nodes:new Map<string,HTMLElement[]>(),enabled:false,frame:0})
+  const paint=useMemo(()=>()=>{
+    const c=cursor.current,heads=c.enabled?c.heads:[null,null,null,null]
+    for(let tr=0;tr<4;tr++)if(heads[tr]!==c.painted[tr]){
+      for(const [step,on] of [[c.painted[tr],false],[heads[tr],true]] as const)if(step!==null)for(const node of c.nodes.get(`${tr}:${step}`)??[]){node.classList.toggle('playing',on);if(on&&node.matches('.seq-cell,tr'))node.dataset.playing='true';else delete node.dataset.playing}
+    }
+    c.painted=[...heads]
+  },[])
+  const follower=useMemo(()=>createPlaybackFollower(next=>{
+    clockStatus.publish(next);cursor.current.heads=next.positions
+    if(!cursor.current.frame)cursor.current.frame=requestAnimationFrame(()=>{cursor.current.frame=0;paint()})
+  }),[clockStatus,paint])
+  // Re-index only when the editor itself renders (selection/view/edits), never for each clock tick.
+  useLayoutEffect(()=>{
+    const c=cursor.current;c.nodes.clear();c.enabled=liveEntry;c.painted=[null,null,null,null]
+    for(const node of root.current?.querySelectorAll<HTMLElement>('[data-playhead-track][data-playhead-step]')??[]){
+      node.classList.remove('playing');delete node.dataset.playing
+      const key=`${node.dataset.playheadTrack}:${node.dataset.playheadStep}`,list=c.nodes.get(key)??[];list.push(node);c.nodes.set(key,list)
+    }
+    paint()
+  })
+  useEffect(()=>()=>{cancelAnimationFrame(cursor.current.frame);cursor.current.frame=0;cursor.current.enabled=false;cursor.current.nodes.clear()},[])
   useEffect(()=>{
     follower.configure(`${connection?.key}:${entry.hostAt}`,liveEntry&&host.ready&&host.enabled?host.snapshot.current?.timing??null:null,
       [0,1,2,3].map(tr=>Array.from({length:32},(_,n)=>readStep(data,tr,n).mask)))
   },[follower,connection?.key,entry.hostAt,liveEntry,host.ready,host.enabled,data])
   useEffect(()=>{if(!host.enabled)return;const timer=setInterval(()=>follower.checkStale(),250);return()=>clearInterval(timer)},[follower,host.enabled])
-  const heads=liveEntry?playback.positions:[null,null,null,null]
   const state = useRef({ data, track, step, octave, velocity, locked }); state.current = { data, track, step, octave, velocity, locked }
   // A drag over a lane is one undo step: only its first change records the previous pattern.
   const commit = (next: number[], message?: string, continuing = false) => {
@@ -126,7 +163,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   // Listening for a front-panel pattern export: receive only, never a request.
   useLayoutEffect(() => {
     const assembler = createZaqAssembler()
-    receive.current = bytes => { follower.receive(bytes);hostReceive.current(bytes);if(!listen)return;const block = decodeZaqBlock(bytes); if (!block) return; const p = assembler.receive(block); if (p) { addPattern(p, `${t('Front-panel export')} · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); setNotice('Pattern received. Nothing was sent to the BCR32.') } }
+    receive.current = (bytes,timeStamp) => { follower.receive(bytes,timeStamp);hostReceive.current(bytes);if(!listen)return;const block = decodeZaqBlock(bytes); if (!block) return; const p = assembler.receive(block); if (p) { addPattern(p, `${t('Front-panel export')} · ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); setNotice('Pattern received. Nothing was sent to the BCR32.') } }
     return () => { receive.current = () => {} }
   }, [listen,follower])
 
@@ -177,7 +214,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
   }
   const lanes = sequencerLanes
   const active = steps.filter(plays), low = Math.min(...active.map(x => x.note), 60) - 2, high = Math.max(low + 14, ...active.map(x => x.note + 1))
-  return <section className="sequencer-view" tabIndex={0} onKeyDown={onKey} aria-label={t('Sequencer')}>
+  return <section ref={root} className="sequencer-view" tabIndex={0} onKeyDown={onKey} aria-label={t('Sequencer')}>
     <div className="seq-main">
       <div className="seq-bar">
         <button disabled={!host.enabled||host.busy} onClick={()=>void host.read(emptyPattern().data)}>{t('Read current pattern')}</button>
@@ -191,9 +228,9 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         <div className="seq-transport" role="group" aria-label={t('BCR32 transport')}>
           <button className={(host.running??transport.running) ? 'primary' : ''} aria-pressed={host.running??transport.running} disabled={!transport.available} title={t(transport.supported ? 'Space: start / stop (BCR32 clock source on USB)' : host.enabled?'Playback is not verified for this firmware. Use PLAY on the BCR32.':'Not available: the BCR32 1.0.2 does not follow a clock sent over USB')} onClick={transport.toggle}>{(host.running??transport.running) ? '■' : '▶'}<span data-i18n-skip> </span>{t((host.running??transport.running) ? 'Stop' : 'Play')}</button>
           {host.running!==null&&<span role="status">{t(host.running?'Hardware playing':'Hardware stopped')}</span>}
-          <label>{t('BPM')}<input type="number" min={tempoRange.min} max={tempoRange.max} value={host.enabled?playback.bpm??'':transport.bpm} placeholder="—" readOnly={host.enabled} title={host.enabled?t('Observed MIDI clock tempo'):undefined} onChange={e => { const v = Number(e.target.value); if (v >= tempoRange.min && v <= tempoRange.max) transport.setBpm(v) }} /></label>
+          <ClockTempo source={clockStatus} enabled={host.enabled} transport={transport} t={t}/>
         </div>
-        {host.enabled&&<span className="seq-clock-status" role="status">{t(playback.reason==='unbound'?'Playback timing unavailable · read current pattern':playback.reason==='following'?'Following hardware MIDI clock':playback.reason==='unsupported'?'Playback cursor unavailable for shuffled, skipped or non-forward tracks':playback.reason==='stopped'?'Hardware stopped':playback.clockSeen?'Clock received · press hardware PLAY to synchronize':'Waiting for USB MIDI clock and hardware PLAY')}</span>}
+        {host.enabled&&<ClockNotice source={clockStatus} t={t}/>}
         <span className="seq-offline" role="status">{t(host.enabled?host.status:transport.supported ? 'Patterns stay in this browser · only start/stop reaches the BCR32' : 'Offline · nothing is sent to the BCR32')}</span>
       </div>
       {templatesOpen && <section className="seq-templates mock-card">
@@ -218,10 +255,10 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
       {view === 'grid' && <div className="seq-gridview">
         <h3>{t('Tracks T1–T4 · 32 steps')} <span className="mock-caption">{t('click: select · Shift+click: mute · Alt+click: skip')}</span></h3>
         <div className="seq-grid" role="grid" aria-label={t('Pattern grid')}>
-          <span />{Array.from({ length: 32 }, (_, i) => <span key={i} className={`${i % 4 ? 'seq-num' : 'seq-num beat'}${heads[track]===i?' playing':''}`} data-i18n-skip>{i + 1}</span>)}
+          <span />{Array.from({ length: 32 }, (_, i) => <span key={i} data-playhead-track={track} data-playhead-step={i} className={`${i % 4 ? 'seq-num' : 'seq-num beat'}`} data-i18n-skip>{i + 1}</span>)}
           {[0, 1, 2, 3].map(tr => <div key={tr} className="seq-row" role="row" style={{ display: 'contents' }}>
             <button className="seq-track" aria-pressed={tr === track} onClick={() => setTrack(tr)}><i style={{ background: trackColors[tr] }} />T{tr + 1}</button>
-            {Array.from({ length: 32 }, (_, i) => { const x = all[tr][i]; return <button key={i} role="gridcell" data-playing={heads[tr]===i||undefined} className={`seq-cell${plays(x) ? ' on' : ''}${x.mask ? ' skip' : x.rest ? ' rest' : ''}${tr === track && i === step ? ' sel' : ''}${heads[tr]===i?' playing':''}`} style={{ ['--c' as string]: trackColors[tr] }} aria-label={`T${tr + 1} · ${t('Step')} ${i + 1} · ${plays(x) ? noteName(x.note) : t(x.mask ? 'Skipped' : 'Muted')}`} title={`T${tr + 1} · ${i + 1} · ${noteName(x.note)} · ${x.velocity}`}
+            {Array.from({ length: 32 }, (_, i) => { const x = all[tr][i]; return <button key={i} role="gridcell" data-playhead-track={tr} data-playhead-step={i} className={`seq-cell${plays(x) ? ' on' : ''}${x.mask ? ' skip' : x.rest ? ' rest' : ''}${tr === track && i === step ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[tr] }} aria-label={`T${tr + 1} · ${t('Step')} ${i + 1} · ${plays(x) ? noteName(x.note) : t(x.mask ? 'Skipped' : 'Muted')}`} title={`T${tr + 1} · ${i + 1} · ${noteName(x.note)} · ${x.velocity}`}
               onClick={e => { setTrack(tr); setStep(i); if (e.shiftKey) patch({ rest: !x.rest }, i, tr); else if (e.altKey) patch({ mask: !x.mask }, i, tr) }}>{plays(x) && <><span className="seq-vel" style={{ height: `${100 - x.velocity / 127 * 100}%` }} /><span className="seq-note" data-i18n-skip>{noteName(x.note)}</span></>}</button> })}
           </div>)}
         </div>
@@ -229,17 +266,17 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
         <div className="seq-lanes">{lanes.map(lane => <div key={lane.key} className="seq-lane"><span className="seq-lane-label">{t(lane.label)}</span><div className={`seq-bars ${lane.key}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); dragging.current = false; dragLane(e, lane, false) }} onPointerMove={e => { if (e.buttons & 1) dragLane(e, lane, true) }} onPointerUp={() => { dragging.current = false }}>{steps.map((x, i) => {
           const value = laneValue(x,lane), ratio = Math.max(0,Math.min(1,lane.key==='delay' ? Math.abs(value) / lane.max / 2 : (value - lane.min) / (lane.max - lane.min)))
           const text=lane.key==='note'?noteName(value):lane.key==='gate'?noteLengths[value]:lane.key==='voices'?(value?`#${value}`:'—'):String(value)
-          return <span key={i} role="slider" aria-valuemin={lane.min} aria-valuemax={lane.max} aria-valuenow={value} aria-valuetext={text} title={`${t(lane.label)} · ${i+1} · ${text}`} className={`seq-bar${plays(x) ? '' : ' off'}${i === step ? ' sel' : ''}${heads[track]===i?' playing':''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.key==='delay' ? (value < 0 ? 'start' : 'end') : undefined }}>{['note','gate','voices'].includes(lane.key) && <b className="seq-bar-value" data-i18n-skip>{text}</b>}</span>
+          return <span key={i} data-playhead-track={track} data-playhead-step={i} role="slider" aria-valuemin={lane.min} aria-valuemax={lane.max} aria-valuenow={value} aria-valuetext={text} title={`${t(lane.label)} · ${i+1} · ${text}`} className={`seq-bar${plays(x) ? '' : ' off'}${i === step ? ' sel' : ''}`} aria-label={`${t(lane.label)} · ${t('Step')} ${i + 1}`} style={{ ['--c' as string]: trackColors[track], height: `${Math.max(3, ratio * 100)}%`, alignSelf: lane.key==='delay' ? (value < 0 ? 'start' : 'end') : undefined }}>{['note','gate','voices'].includes(lane.key) && <b className="seq-bar-value" data-i18n-skip>{text}</b>}</span>
         })}</div></div>)}</div>
       </div>}
       {view === 'roll' && <div className="seq-rollview">
         <h3>{t('Track')} {track + 1} · {t('piano roll')}</h3>
         <div className="seq-roll" style={{ ['--rows' as string]: String(high - low + 1) }}>
-          {Array.from({ length: high - low + 1 }, (_, r) => { const n = high - r; return <div key={n} className={`seq-roll-row${noteNames[n % 12].includes('#') ? ' black' : ''}`}><span className="seq-roll-key" data-i18n-skip>{noteName(n)}</span>{Array.from({ length: 32 }, (_, i) => { const x = steps[i], on = plays(x) && x.note === n; return <button key={i} className={`seq-roll-cell${heads[track]===i?" playing":""}${on ? ' on' : ''}${i % 4 ? '' : ' beat'}${i === step && n === s.note ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[track] }} aria-label={`${noteName(n)} · ${t('Step')} ${i + 1}`} onClick={() => { setStep(i); patch(on ? { rest: true } : { note: n, mask: false, rest: false, velocity: x.velocity || velocity }, i) }} /> })}</div> })}
+          {Array.from({ length: high - low + 1 }, (_, r) => { const n = high - r; return <div key={n} className={`seq-roll-row${noteNames[n % 12].includes('#') ? ' black' : ''}`}><span className="seq-roll-key" data-i18n-skip>{noteName(n)}</span>{Array.from({ length: 32 }, (_, i) => { const x = steps[i], on = plays(x) && x.note === n; return <button key={i} data-playhead-track={track} data-playhead-step={i} className={`seq-roll-cell${on ? ' on' : ''}${i % 4 ? '' : ' beat'}${i === step && n === s.note ? ' sel' : ''}`} style={{ ['--c' as string]: trackColors[track] }} aria-label={`${noteName(n)} · ${t('Step')} ${i + 1}`} onClick={() => { setStep(i); patch(on ? { rest: true } : { note: n, mask: false, rest: false, velocity: x.velocity || velocity }, i) }} /> })}</div> })}
         </div>
       </div>}
       {view === 'table' && <div className="seq-table-wrap"><table className="seq-table"><thead><tr>{['Step', 'Note', 'Velocity', 'Start offset', 'Note length', 'CC 1 (raw)', 'CC 2 (raw)', 'Polyphony (raw)', 'Muted', 'Skipped'].map(h => <th key={h}>{t(h)}</th>)}</tr></thead>
-        <tbody>{steps.map((x, i) => <tr key={i} data-playing={heads[track]===i||undefined} aria-selected={i === step} onClick={() => setStep(i)}><th data-i18n-skip>{i + 1}</th>{(['note', 'velocity', 'delay', 'gate', 'alpha', 'beta', 'voices'] as const).map(k => <td key={k}>{k === 'gate' ? <select aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x.gate} onChange={e => patch({ gate: Number(e.target.value) }, i)}>{noteLengths.map((l, n) => <option key={n} value={n} data-i18n-skip>{l}</option>)}</select> : <input type="number" min={k === 'delay' ? -noteDelayRange : undefined} max={k === 'delay' ? noteDelayRange : undefined} aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x[k]} onChange={e => { const v = Number(e.target.value); if (Number.isFinite(v)) try { patch({ [k]: k === 'delay' ? Math.max(-noteDelayRange, Math.min(noteDelayRange, v)) : v } as Partial<ZaqStep>, i) } catch (error) { setNotice(String(error)) } }} />}</td>)}
+        <tbody>{steps.map((x, i) => <tr key={i} data-playhead-track={track} data-playhead-step={i} aria-selected={i === step} onClick={() => setStep(i)}><th data-i18n-skip>{i + 1}</th>{(['note', 'velocity', 'delay', 'gate', 'alpha', 'beta', 'voices'] as const).map(k => <td key={k}>{k === 'gate' ? <select aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x.gate} onChange={e => patch({ gate: Number(e.target.value) }, i)}>{noteLengths.map((l, n) => <option key={n} value={n} data-i18n-skip>{l}</option>)}</select> : <input type="number" min={k === 'delay' ? -noteDelayRange : undefined} max={k === 'delay' ? noteDelayRange : undefined} aria-label={`${t('Step')} ${i + 1} · ${k}`} value={x[k]} onChange={e => { const v = Number(e.target.value); if (Number.isFinite(v)) try { patch({ [k]: k === 'delay' ? Math.max(-noteDelayRange, Math.min(noteDelayRange, v)) : v } as Partial<ZaqStep>, i) } catch (error) { setNotice(String(error)) } }} />}</td>)}
           {(['rest', 'mask'] as const).map(k => <td key={k}><input type="checkbox" aria-label={`${t('Step')} ${i + 1} · ${t(k === 'rest' ? 'Muted' : 'Skipped')}`} checked={x[k]} onChange={e => patch({ [k]: e.target.checked }, i)} /></td>)}</tr>)}</tbody></table></div>}
     </div>
     <aside className="seq-panel">

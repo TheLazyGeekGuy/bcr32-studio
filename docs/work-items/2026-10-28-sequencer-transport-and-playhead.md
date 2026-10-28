@@ -2,6 +2,8 @@
 
 Status: **partial/open**, not a completed transport implementation.
 
+Follow-up alpha.17: the owner reports poor timing at 300 BPM. [BCR103-07](2026-10-28-high-tempo-clock.md) records the native 300.04-BPM capture, reproduced 277.8 estimator defect, timestamp preservation, isolated cursor presentation and software/performance verification. High-tempo physical Firefox acceptance is open; outgoing UI transport remains open here.
+
 ## Provenance
 
 Reviewed by Codex, primary agent, 2026-10-28 14:19–14:41 CET. Exact model identifier/effort are not exposed; these review fields remain incomplete. Repository `bcr32-studio`, worktree `<workspace>/bcr-studio-firmware-103`, branch `work/firmware-103-sequencer`, full baseline **`806e56d15dccb4e60c4402b5a6e632228b7071b9`**, plus initially uncommitted hook/view/CSS/browser-test/version/documentation changes. Read scope: host codec/hook, Workbench MIDI RX, sequencer view/shared constants, broker validators, existing hardware tools, protocol documentation and ControlTribe 1.12.4 ARM64 state/parser/dispatcher functions.

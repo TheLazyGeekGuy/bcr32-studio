@@ -5,7 +5,7 @@ function fakeMidi({sync=false,timingMissing=false}={}){
  localStorage.setItem('bcr32_site_lang','en');localStorage.setItem('bcr32-studio.language.v1','en');localStorage.setItem('bcr32-studio.controller-autoread','false')
  window.__requests=0;window.__sent=[];window.__note=60;window.__running=0;window.__preset=0
  const input={id:'bcr-in',name:'BCR-32 SIM',state:'connected',type:'input',onmidimessage:null}
- const reply=b=>{const emit=()=>input.onmidimessage?.({data:new Uint8Array(b)});return sync?emit():setTimeout(emit,2)},prefix=[240,0,32,50,0,100]
+ const reply=(b,timeStamp)=>{const emit=()=>input.onmidimessage?.({data:new Uint8Array(b),timeStamp:timeStamp??performance.now()});return sync?emit():setTimeout(emit,2)},prefix=[240,0,32,50,0,100]
  window.__emit=reply
  const pack=raw=>{const b=[];for(let i=0;i<raw.length;i+=7){const c=raw.slice(i,i+7);b.push(c.reduce((m,v,n)=>m|(v>>7)<<n,0),...c.map(x=>x&127))}return b}
  const output={id:'bcr-out',name:'BCR-32 SIM',state:'connected',type:'output',send(bytes){
@@ -20,7 +20,8 @@ function fakeMidi({sync=false,timingMissing=false}={}){
  }}
  Object.defineProperty(navigator,'requestMIDIAccess',{configurable:true,value:async()=>{window.__requests++;return {sysexEnabled:true,inputs:new Map([[input.id,input]]),outputs:new Map([[output.id,output]]),onstatechange:null}}})
 }
-;(async()=>{const browser=await chromium.launch({headless:true});try{
+module.exports={fakeMidi}
+if(require.main===module)(async()=>{const browser=await chromium.launch({headless:true});try{
  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.addInitScript(fakeMidi,{sync:process.env.SYNC_REPLY==='1',timingMissing:process.env.TIMING_MISSING==='1'})
  const base=process.argv[2]||'http://127.0.0.1:5186'
  await page.goto(base+'/');await page.getByRole('heading',{level:1}).waitFor();assert.equal(await page.evaluate(()=>window.__requests),0)

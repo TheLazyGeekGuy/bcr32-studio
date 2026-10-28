@@ -3,7 +3,7 @@ export interface MidiPort {
   name?: string | null
   manufacturer?: string | null
   state?: string
-  onmidimessage: ((event: { data: Uint8Array }) => void) | null
+  onmidimessage: ((event: { data: Uint8Array; timeStamp?:number }) => void) | null
   send?(message: number[], timestamp?: number): void
 }
 

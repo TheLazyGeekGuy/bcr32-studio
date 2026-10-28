@@ -29,4 +29,22 @@ assert.ok(burstUpdates<=425,'120Hz clocks cause step/tempo updates, not 120Hz fu
 for(const bad of [[1,32,0,4,0,0,-1],[1,32,0,4,0,0,NaN],[]])assert.throws(()=>decodeTrackTiming(bad))
 assert.equal(decodeTrackTiming([1,32,0,4,45,0,99]).direction,99,'unknown read values are preserved, never granted a cursor')
 const narrow=tracks.map(t=>({...t,start:30,length:4,offset:2,divider:2}));f.configure('offset wrap',narrow,masks);f.receive([250],30000);assert.deepEqual(f.snapshot().positions,[31,31,31,31]);for(let n=0;n<=24;n++)f.receive([248],30000+n*70);assert.deepEqual(f.snapshot().positions,[0,0,0,0])
+const fast=JSON.parse(readFileSync(new URL('./fixtures/zaq-clock-300.json',import.meta.url),'utf8'))
+for(const quantum of [0,1,2,10]){
+  const follower=createPlaybackFollower(()=>{});follower.configure('native 300 tempo only',tracks,masks)
+  for(const time of fast.clockOffsetsMs)follower.receive([248],quantum?Math.round(time/quantum)*quantum:time)
+  assert.ok(Math.abs(follower.snapshot().bpm-300)<1,`300 BPM survives ${quantum}ms timestamp quantization: ${follower.snapshot().bpm}`)
+  assert.equal(follower.snapshot().synced,false,'native high-rate capture has no Start; no invented phase')
+}
+// Callback batching can be arbitrarily late: source timestamps, not delivery intervals, determine tempo.
+for(const quantum of [1,2,10]){
+  let deliveredAt=0;const follower=createPlaybackFollower(()=>{},()=>deliveredAt);follower.configure('batched 300',tracks,masks);follower.receive([250],0)
+  for(let n=0;n<1200;n++){deliveredAt=Math.ceil(n/12)*100;follower.receive([248],Math.round(n*1000/120/quantum)*quantum)}
+  assert.ok(Math.abs(follower.snapshot().bpm-300)<.2)
+  assert.deepEqual(follower.snapshot().positions,[7,7,7,7],'all 1200 ticks counted, not dropped or interpolated')
+}
+const edge=createPlaybackFollower(()=>{});for(let n=0;n<500;n++)edge.receive([248],n*60000/24/300.1)
+assert.equal(edge.snapshot().bpm,300.1,'small measurement overshoot above 300 never freezes an older estimate')
+const medianTrap=createPlaybackFollower(()=>{});for(let n=0;n<600;n++)medianTrap.receive([248],Math.floor(n/3)*25+[0,9,18][n%3])
+assert.ok(Math.abs(medianTrap.snapshot().bpm-300)<.2,'9/9/7ms gaps average 300 BPM, not median-derived 277.8')
 console.log('PASS passive sequencer follower: real FA/71 F8/FC replay, timing/phase, no guessed midstream cursor, loss/stop/rebind, unsupported modes, isolation and bounded render updates; no MIDI sender')

@@ -45,16 +45,25 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
   const inputOwners = new Map<string, string>(), outputOwners = new Map<string, string>()
   const grants = new WeakMap<MidiAuthorization, { lease: InternalLease; generation: number; revoked: boolean }>()
   const observers = new Set<() => void>()
-  const hubs=new Map<string,{port:MidiPort;listener:MidiPort['onmidimessage'];subscribers:Set<(bytes:number[])=>void>}>()
+  const hubs=new Map<string,{port:MidiPort;listener:MidiPort['onmidimessage'];subscribers:Set<(bytes:number[],timestamp:number)=>void>}>()
   const routers=new Set<()=>void>()
   const routingOwners=new Set<string>(),routingChecks=new Set<()=>void>()
   let closed = false
-  function observeInput(id:string,fn:(bytes:number[])=>void){
+  function observeInput(id:string,fn:(bytes:number[],timestamp:number)=>void){
     if(closed)throw Error('MIDI broker closed')
     const port=access.inputs.get(id);if(!port||port.state!=='connected')throw Error('MIDI input unavailable')
     let hub=hubs.get(id)
     if(hub&&(hub.port!==port||port.onmidimessage!==hub.listener))throw Error('MIDI input binding changed')
-    if(!hub){if(port.onmidimessage)throw Error('MIDI input already reserved outside broker');const subscribers=new Set<(bytes:number[])=>void>();const listener:MidiPort['onmidimessage']=event=>{for(const callback of [...subscribers])try{callback(Array.from(event.data))}catch{/* subscriber isolation */}};hub={port,listener,subscribers};try{port.onmidimessage=listener;hubs.set(id,hub)}catch(e){try{port.onmidimessage=null}catch{/* cleanup best effort */}throw e}}
+    if(!hub){
+      if(port.onmidimessage)throw Error('MIDI input already reserved outside broker')
+      const subscribers=new Set<(bytes:number[],timestamp:number)=>void>()
+      const listener:MidiPort['onmidimessage']=event=>{
+        const source=event.timeStamp,timestamp=typeof source==='number'&&Number.isFinite(source)&&source>=0?source:now()
+        for(const callback of [...subscribers])try{callback(Array.from(event.data),timestamp)}catch{/* subscriber isolation */}
+      }
+      hub={port,listener,subscribers}
+      try{port.onmidimessage=listener;hubs.set(id,hub)}catch(e){try{port.onmidimessage=null}catch{/* cleanup best effort */}throw e}
+    }
     hub.subscribers.add(fn);const current=hub
     return ()=>{current.subscribers.delete(fn);if(!current.subscribers.size){if(current.port.onmidimessage===current.listener)current.port.onmidimessage=null;if(hubs.get(id)===current)hubs.delete(id)}}
   }
@@ -116,11 +125,10 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
           l.state = { connected: true, generation: l.state.generation + 1, binding: { ...binding }, error: null }
           const generation = l.state.generation
           const inputId = binding.inputId
-          try{l.offInput=observeInput(inputId,bytes=>{
+          try{l.offInput=observeInput(inputId,(bytes,timestamp)=>{
             refresh()
             if (!l.state.connected || l.state.generation !== generation || l.disposed) return
             activity(l, 'rx', bytes)
-            const timestamp = now()
             for (const fn of l.packets) { try { fn({ bytes: [...bytes], inputId, generation, timestamp }) } catch { /* observer isolation */ } }
           });l.listener=hubs.get(inputId)!.listener}catch(e){release(owner,l,'MIDI input could not be opened');throw e}
           inputOwners.set(binding.inputId, owner); outputOwners.set(binding.outputId, owner)

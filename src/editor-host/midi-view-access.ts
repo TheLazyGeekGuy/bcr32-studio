@@ -54,7 +54,7 @@ export function createMidiViewAccess(owner: string, device: DeviceDefinition, sh
   const schedule = () => { if (!queued && !disposed) { queued = true; queueMicrotask(() => { queued = false; refresh() }) } }
   const offState = lease.onState(schedule)
   const offBroker = broker.subscribe(schedule)
-  const offInput = lease.subscribe(packet => { if (!disposed) view.inputs.get(packet.inputId)?.onmidimessage?.({ data: new Uint8Array(packet.bytes) }) })
+  const offInput = lease.subscribe(packet => { if (!disposed) view.inputs.get(packet.inputId)?.onmidimessage?.({ data: new Uint8Array(packet.bytes),timeStamp:packet.timestamp }) })
   refresh()
   return {
     access: view, refresh,

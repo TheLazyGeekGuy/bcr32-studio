@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.0-alpha.17] — 2026-10-28
+
+- Correct high-tempo clock estimation: a rolling clock-index/time regression replaces the median of individual gaps. At 300 BPM, 9/9/7ms arrival intervals no longer misleadingly report 277.8; a slightly-above-300 measurement no longer freezes an old estimate.
+- Preserve optional Web MIDI source timestamps through the shared broker, legacy access wrapper and BCR32 receive path, with arrival-time fallback for older synthetic providers. Clock and transport bytes bypass unrelated assignment/Learn decoders.
+- Playback markers paint the latest received step once per animation frame; isolated tempo/status subscribers replace full sequencer reconciliation on every step. No synthesized clocks, extrapolated steps, MIDI writes or device-setting changes are introduced.
+- Input-only physical capture confirms 960 ticks in eight seconds, approximately 300.04 BPM. Source-hashed replay and quantized/batched 300-BPM regressions are included; physical Firefox alignment remains an acceptance gate.
+
 ## [0.45.0-alpha.16] — 2026-10-28
 
 - Passive playback cursors use the physical BCR32's Start/Clock/Stop stream and its independently read track timing. Separate markers in grid, lanes, piano roll and table never move the edit cursor or send MIDI. Clock alone after attaching mid-playback does not invent a start phase; stale clock, Stop, rebind, local draft or new snapshot clears the phase.

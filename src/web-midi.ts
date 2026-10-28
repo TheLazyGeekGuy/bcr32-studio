@@ -14,7 +14,7 @@ export interface MidiPort {
   onstatechange?: ((event?: MidiConnectionEvent) => void) | null
   addEventListener?(type: 'statechange', listener: (event?: MidiConnectionEvent) => void): void
   removeEventListener?(type: 'statechange', listener: (event?: MidiConnectionEvent) => void): void
-  onmidimessage: ((event: { data: Uint8Array }) => void) | null
+  onmidimessage: ((event: { data: Uint8Array; timeStamp?:number }) => void) | null
   send?(message: number[]): void
 }
 export interface MidiConnectionEvent {port?: MidiPort | null}

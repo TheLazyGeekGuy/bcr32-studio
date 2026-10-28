@@ -289,7 +289,7 @@ function loadWorkspace() {
   const [dumps, setDumps] = useState<ControllerDump[]>([])
   const [liveFirmware, setLiveFirmware] = useState<string | null>(null)
   const [liveDeviceId, setLiveDeviceId] = useState<number | null>(null)
-  const firmwareReceive = useRef<(bytes: number[]) => void>(() => {}), sequencerReceive = useRef<(bytes: number[]) => void>(() => {})
+  const firmwareReceive = useRef<(bytes: number[]) => void>(() => {}), sequencerReceive = useRef<(bytes: number[],timeStamp?:number) => void>(() => {})
   // Controller view (front panel and panel) or the full-width sequencer view; remembered per browser.
   const [editorMode, setEditorMode] = useState<'controller' | 'sequencer'>(() => { try { return storage.getItem('bcr32-studio.editor-mode') === 'sequencer' ? 'sequencer' : 'controller' } catch { return 'controller' } })
   useEffect(() => { try { storage.setItem('bcr32-studio.editor-mode', editorMode) } catch { /* Optional preference. */ } }, [editorMode])
@@ -561,6 +561,8 @@ function loadWorkspace() {
     setValues(current => Object.fromEntries(Object.entries(current).map(([id, v]) => [id, { value: v.value, source: v.source }])))
     input.onmidimessage = (event) => {
       const data = Array.from(event.data)
+      // Preserve arrival time and keep clock/transport off unrelated assignment/learn/render paths.
+      if(data.length===1&&[248,250,251,252,254].includes(data[0])){sequencerReceive.current(data,event.timeStamp);return}
       // Clock (F8) and active sensing (FE) touch no React state: no activity pulse, no log line, no App render.
       if (data.length && !isSystemRealtime(data)) {
         setEvents((current) => [{ hex: asHex(data), text: describeMessage(data) }, ...current].slice(0, 12))
@@ -570,7 +572,7 @@ function loadWorkspace() {
       controllerReader.current?.receive(data)
       assignmentWriter.current?.receive(data)
       firmwareReceive.current(data)
-      sequencerReceive.current(data)
+      sequencerReceive.current(data,event.timeStamp)
       presetReceive.current(data)
       const dump = decodeControllerDump(data)
       // Up to 64 presets × 8 blocks are kept; the notice counts messages instead of announcing each block.

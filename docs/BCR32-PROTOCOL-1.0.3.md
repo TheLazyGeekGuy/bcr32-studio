@@ -1,5 +1,11 @@
 # BCR32 firmware 1.0.3: sequencer host integration
 
+## Alpha.17 — high-tempo timing correction
+
+Input-only native capture at the owner's 300 BPM received 960 clocks in eight seconds: **300.0384 BPM** from the timestamp span, not a demonstrated hardware ceiling. The old median-of-short-gaps algorithm reproduces 277.8 with a 9/9/7-ms clock sequence that actually averages 300. Alpha.17 preserves Web MIDI source timestamps through the shared broker/access wrapper, uses a bounded rolling clock-index/time fit, and separates tempo/status and animation-frame playback markers from full sequencer rendering. No device setting, outgoing clock, transport command or STORE was changed. The displayed BPM still does not drive playback positions.
+
+Full baseline SHA, reader/model availability, source and outside-Git capture provenance, optional metadata contract delta, tests, performance measurements and physical Firefox acceptance limits are recorded in [BCR103-07](work-items/2026-10-28-high-tempo-clock.md). This corrects the software path; physical alignment at 300 BPM still needs the owner's acceptance after reload and a fresh hardware Start. Previous alpha.16 qualification limits and unresolved outgoing Play/Stop/Space remain unchanged.
+
 ## Alpha.16 — passive clock-qualified playback cursors
 
 Read/implementation review: Codex primary agent, 2026-10-28 17:00–17:27 CET, full baseline commit `afaf47e8dd770537e60bbd8793043817571b17cf`, branch `work/firmware-103-sequencer`, plus initially uncommitted module codec/hook/view/CSS/tests/translations/version/docs. Exact model ID and effort are not exposed, so that provenance remains incomplete. Outside-Git inputs are the same native binary/dossier plus `transport-persistent-1655.json` and the independently read timing capture. No main/remote changes.
