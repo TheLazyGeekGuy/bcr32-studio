@@ -44,7 +44,10 @@ export function sysexToTx(text:string):TxTemplate{
   }).join(' ')
   const result=parseTx(line);if(result.conversionStatus!=='exact')throw Error('The simple SysEx editor requires F0…F7 and supported value tokens');return result
 }
-export const txToSysex=(template:TxTemplate)=>template.tokens.map(t=>t.kind==='byte'?t.value.toString(16).toUpperCase().padStart(2,'0'):`{${t.raw}}`).join(' ')
+export const txToSysex=(template:TxTemplate)=>{
+  if(template.conversionStatus!=='exact')throw Error('Advanced BCL cannot be represented as a simple SysEx template')
+  return template.tokens.map(t=>t.kind==='byte'?t.value.toString(16).toUpperCase().padStart(2,'0'):`{${t.raw}}`).join(' ')
+}
 export function evaluateTx(template:TxTemplate,value:number):number[]{
   if(template.conversionStatus!=='exact')throw Error('Unsupported tokens: simulation unavailable; original BCL retained')
   if(!Number.isInteger(value)||value<0||value>16383)throw Error('Value must be an integer from 0 to 16383')

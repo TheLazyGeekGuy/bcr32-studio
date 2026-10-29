@@ -45,7 +45,7 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
   useEffect(()=>{if(p)setForm({minimum:String(p.range[0]),maximum:String(p.range[1]),defaultValue:p.defaultValue===null?'off':String(p.defaultValue)})},[p])
   const unsupportedDefault=target.kind!=='encoders'&&/^\s*\.default\b/m.test(source)
   const editable=!!p&&p.conversionStatus==='exact'&&p.messages.length===1
-  const shownHex=hexDraft??(p?.messages[0]?txToSysex(p.messages[0]):'')
+  const shownHex=hexDraft??(editable&&p?.messages[0]?txToSysex(p.messages[0]):'')
   const value=p?Math.max(p.range[0],Math.min(p.range[1],preview)):preview
   const output=useMemo(()=>{if(!p)return '';try{return evaluateAssignment(p,value).map(hex).join('\n')}catch(e){return e instanceof Error?e.message:String(e)}},[p,value])
   const edit=(next:string,separate=false,live=true)=>{history.record('text',next,performance.now(),separate);setSource(next);setImportFailed(false);refresh(n=>n+1);if(live)setEditRevision(n=>n+1)}
@@ -69,8 +69,8 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
     if(!file)return
     try{if(file.size>1024*1024)throw Error('Control file exceeds 1 MiB');const bytes=new Uint8Array(await file.arrayBuffer());setOriginal({text:'',raw:bytes});const result=importControlProgram(bytes,target);setOriginal({text:result.original,raw:bytes});edit(result.program.sourceBcl,false,false);setHexDraft(null);setNotice('Control imported locally.');setMode('bcl');onRepresentation?.('bcl')}catch(e){setImportFailed(true);setMode('raw');setNotice('Import not applied; original bytes retained read-only. '+(e instanceof Error?e.message:String(e)))}
   }
-  const changeMode=(next:typeof mode)=>{if(hexDraft!==null&&!hexValid){setNotice('Fix the SysEx draft before changing modes.');return false}setMode(next);setHexDraft(null);if(!importFailed)setNotice('');return true}
-  useEffect(()=>{setMode(representation)},[representation])
+  const changeMode=(next:typeof mode)=>{if(hexDraft!==null&&!hexValid){setNotice('Fix the SysEx draft before changing modes.');return false}if(next==='sysex'&&!editable){setNotice('This program needs BCL. The simplified SysEx view is unavailable.');return false}setMode(next);setHexDraft(null);if(!importFailed)setNotice('');return true}
+  useEffect(()=>{if(representation==='sysex'&&p&&!editable){setMode('bcl');onRepresentation?.('bcl')}else setMode(representation)},[representation,editable])
   useEffect(()=>{if(!actions)return;const api:CustomProgramActions={draft:()=>hexValid&&!importFailed&&!unsupportedDefault?p:null,activate:()=>setEditRevision(n=>n+1),chooseRepresentation:next=>changeMode(next)};actions.current=api;return()=>{if(actions.current===api)actions.current=null}},[actions,hexDraft,hexValid,importFailed,unsupportedDefault,p])
   // Only direct edits or explicit Type activation schedule a live write. Opening/importing/reading/restoring a draft is inert.
   // Consume each revision once; re-enabling, rebinding or showing the view cannot replay old edits.
@@ -95,8 +95,8 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
     {!selector?<p role="status">This system control has no qualified programmable BCL selector.</p>:<fieldset disabled={locked||hardwareBusy}>
       <header className="custom-editor-header">
         <h3>{representation==='sysex'?'SysEx template':'BCL program'}</h3>
-        <span className="custom-edit-state">{autoSend?'Live editing':'Local draft'}</span>
-        <HelpHint label="Editing help" text={autoSend?'Valid direct edits are applied after a short pause. When the hardware is available, the control is backed up, sent and independently read back. STORE remains a separate action.':'Edits apply to the local draft. Enable Assignments → BCR32 to send subsequent direct edits to the controller. STORE remains a separate action.'}/>
+        <span className="custom-edit-state">{p?.conversionStatus!=='exact'?'File only':autoSend&&source===config.customAssignment?.sourceBcl?'Live editing':'Local draft'}</span>
+        <HelpHint label="Editing help" text={p?.conversionStatus!=='exact'?'Advanced tokens are not qualified for hardware transfer. Edit or export the BCL locally; loading this draft does not replace the installed hardware program.':autoSend?'Valid direct edits are applied after a short pause. When the hardware is available, the control is backed up, sent and independently read back. STORE remains a separate action.':'Edits apply to the local draft. Enable Assignments → BCR32 to send subsequent direct edits to the controller. STORE remains a separate action.'}/>
       </header>
       <div className="custom-source-tools">
         <button className="custom-catalog-open" aria-haspopup="dialog" aria-label="Synth SysEx catalogue" aria-expanded={catalogOpen} onClick={()=>setCatalogOpen(open=>!open)}><Icon name="book"/>Catalogue</button>
@@ -106,7 +106,7 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
         edit(next,true,false);setHexDraft(null);setPreview(value);setOriginal(null)
         const nextMode=needsBcl?'bcl':representation;setMode(nextMode);onRepresentation?.(nextMode)
         setCatalogOpen(false)
-        setNotice('Template loaded locally · nothing sent.')
+        setNotice(needsBcl?'File-only draft loaded.':'Template loaded locally · nothing sent.')
       }}/></Suspense>}
       {mode==='sysex'&&<label className="custom-source-label"><span className="sr-only">SysEx template</span><textarea ref={input} rows={4} spellCheck={false} aria-label="SysEx template" value={shownHex} readOnly={!editable} onChange={e=>editHex(e.target.value)}/></label>}
       {mode==='bcl'&&<div className="bcl-editor"><ol className="bcl-gutter" aria-hidden="true">{source.split(/\r\n|\r|\n/).map((_,i)=><li key={i}>{i+1}</li>)}</ol><textarea ref={input} aria-label="Custom BCL control body" rows={9} spellCheck={false} value={source} onChange={e=>{setHexDraft(null);edit(e.target.value)}}/></div>}
@@ -118,6 +118,7 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
       </div>
       {unsupportedDefault&&<p role="alert">Remove .default in BCL before sending: the BCR32 does not export this encoder-only directive for pushes/buttons.</p>}
       {(!p||!hexValid)&&<p className="custom-warning" role="alert">{!hexValid?'Invalid SysEx draft':checked.error}</p>}
+      {p&&p.conversionStatus!=='exact'&&<p className="custom-warning" role="status">Native transfer unavailable for this program. The controller may still use its previous assignment.</p>}
       {notice&&<p className="custom-sync" role="status" aria-label="Custom program synchronization">{notice}</p>}
       <details className="custom-preview"><summary>Preview <HelpHint label="Preview help" text="Simulation calculates MIDI bytes locally. Moving this slider never sends MIDI or moves hardware."/></summary>
         {p&&<label>Simulation value · {value}<input type="range" aria-label="SysEx simulation value" min={p.range[0]} max={p.range[1]} value={value} onChange={e=>setPreview(Number(e.target.value))}/></label>}

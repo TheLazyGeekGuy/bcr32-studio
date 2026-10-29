@@ -39,7 +39,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs')
   await page.getByRole('group',{name:'History',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();await pane.waitFor();assert.equal(await type.inputValue(),'bcl');assert.equal(await text.inputValue(),source,'Undo restores a custom program replaced through Type')
   const opaque=source+'\n.vendor-extension val0\n.tx $F0 $7D cks-1 2 $F7'
   await text.fill(opaque);await page.getByRole('button',{name:'Apply custom program locally'}).click()
-  await type.selectOption('sysex');assert.equal(await template.evaluate(n=>n.readOnly),true)
+  await type.selectOption('sysex');assert.equal(await type.inputValue(),'bcl');await page.getByText('This program needs BCL. The simplified SysEx view is unavailable.',{exact:true}).waitFor()
   await type.selectOption('bcl');assert.equal(await text.inputValue(),opaque)
   await group.getByRole('button',{name:'File bytes',exact:true}).click();assert.match(await page.getByRole('textbox',{name:'Raw BCL file bytes'}).inputValue(),/^F0 00 20 32 7F 64 20/)
   const wrong='$rev BCR32\n$encoder 2\n.tx $F0 $7D val $F7\n$end'

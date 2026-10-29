@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-Version **0.46.0-alpha.14**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
+Version **0.46.0-alpha.15**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
 
 Read scope: existing root BCL/profile/forms/text components, BCR32 profile/read/write/CC transport/preset/store/Workbench, generic parameter state/history and actual host interfaces, build and browser fixtures. This standalone checkout lacks the upstream core-contract/onboarding documents listed by the integration skill; the checked source interfaces are authoritative, not historical SDK sketches. The initial alpha1 slice changed no permissions. Alpha2 reuses the same host SDK and grants, adding only a qualified selected-control fragment and addressed Type OFF operation on exact firmware1.0.2/1.0.3; existing preset/global/STORE gates remain unchanged. See the transfer ticket for the additive module policy.
 
@@ -116,3 +116,12 @@ The folder button groups SXM import/export, built-in restore and schema download
 Undo/Redo/Copy use icons with localized accessible names and titles. Advanced inspector groups distinguish Local draft, BCL/SYX files and Hardware backup. Manual read/send/restore/download actions remain available as icons with tooltips; the underlying automatic edit, backup/read-back and explicit STORE workflows are unchanged.
 
 Trace and acceptance: [catalogue navigation work item](work-items/2026-10-29-catalogue-navigation.md).
+
+
+## File-only checksum drafts versus installed programs — alpha.15
+
+A catalogue load populates the text draft; it does not replace the installed hardware program. In particular, the current native transfer path refuses advanced checksum tokens such as `cks-2`. Their source remains editable/exportable in BCL, but the previous hardware assignment can continue emitting MIDI. The file-only label and persistent native-transfer-unavailable notice now make this distinction explicit. A locally loaded simple draft also does not inherit the Live editing badge merely because the global assignment switch is on.
+
+The checksum argument in `.tx … cks-2 5 $F7` is a BCL operand, not a literal data byte to append. The simple SysEx view no longer prints unsupported operands as pseudo-hex placeholders; such programs remain in BCL. Existing application gates are unchanged. This correction does not implement native checksum execution. Follow [issue41](https://github.com/TheLazyGeekGuy/bcr32-studio/issues/41) for typed operand handling, software conformance and physical emitted-byte qualification.
+
+Source/review/verification trace: [file-only draft work item](work-items/2026-10-29-file-only-checksum-drafts.md).

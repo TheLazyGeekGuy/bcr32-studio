@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.15] — 2026-10-29
+
+- Explicitly label unsupported checksum/advanced BCL drafts as file-only rather than live editing. Show that native transfer is unavailable and a previously installed hardware assignment may remain active.
+- Name checksum loading as Load file-only draft, and keep locally loaded definitions distinct from the applied control state.
+- Refuse a misleading simple SysEx view of advanced BCL operands; retain the original BCL and all export/history paths. Do not present a checksum operand as a transmitted payload byte.
+- Keep native checksum gates unchanged. Software preview and catalogue coverage do not establish firmware execution; track operand-aware native checksum implementation/qualification separately in#41.
+
 ## [0.46.0-alpha.14] — 2026-10-29
 
 - Sort catalogue instruments alphabetically by manufacturer, then naturally by model name, without changing definitions or the selected instrument.

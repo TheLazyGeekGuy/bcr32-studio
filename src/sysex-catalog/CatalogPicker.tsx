@@ -88,7 +88,7 @@ export default function CatalogPicker({load,download,storage,close}:{close?:()=>
           </>}
         </div>
       </div>
-      <footer className="catalog-footer"><p>Loads this control’s local draft. No MIDI sent.</p><button className="catalog-load" disabled={!built||!!built.error||!!built.adapterError} onClick={()=>{if(built&&!built.error&&!built.adapterError&&command)load(built.source,previewValue,command.parameter.messages.some(m=>m.bytes.some(t=>typeof t!=='number'&&'checksum'in t)))}}><Icon name="import"/>Load into current control draft</button></footer>
+      <footer className="catalog-footer"><p>Loads this control’s local draft. No MIDI sent.</p><button className="catalog-load" disabled={!built||!!built.error||!!built.adapterError} onClick={()=>{if(built&&!built.error&&!built.adapterError&&command)load(built.source,previewValue,command.parameter.messages.some(m=>m.bytes.some(t=>typeof t!=='number'&&'checksum'in t)))}}><Icon name="import"/>{command?.checksum?'Load file-only draft':'Load into current control draft'}</button></footer>
     </section>
   </dialog>,language)
 }

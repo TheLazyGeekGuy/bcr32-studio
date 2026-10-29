@@ -16,7 +16,7 @@ for(const text of ['F0 7D 80 F7','F0 F7','F0 7D {bad} F7','B0 07 40','F0 7D {val
 for(const text of ['.minmax 64 0\n.tx $F0 $7D val $F7','.minmax 0 63\n.default 64\n.tx $F0 $7D val $F7','.tx $F0 $7D $100 $F7','.tx $F0 $7D val14.15 $F7','$store 1','.tx $F0 $7D val $F7\n$end\n$encoder 2'])assert.throws(()=>m.parseCustomAssignment(text),text)
 for(const token of ['val0','rel2s','reloffs','relsign','cks-1','cks-2','cks-3','ifp','ifn','ntimes','vendor-token','val2.6']){
  const source=`; unknown retained\n.tx $F0 $7D ${token} $F7\n.vendor-mode 42`,program=m.parseCustomAssignment(source)
- assert.equal(program.kind,'opaque-bcl');assert.equal(program.sourceBcl,source);assert.ok(program.messages[0].tokens.some(t=>t.kind==='unsupported'));assert.throws(()=>m.evaluateAssignment(program,32))
+ assert.equal(program.kind,'opaque-bcl');assert.equal(program.sourceBcl,source);assert.ok(program.messages[0].tokens.some(t=>t.kind==='unsupported'));assert.throws(()=>m.evaluateAssignment(program,32));assert.throws(()=>m.txToSysex(program.messages[0]),/Advanced BCL/)
 }
 assert.equal(m.parseCustomAssignment('.tx $B0 $07 val').kind,'opaque-bcl','non-SysEx BCL is preserved, not reinterpreted')
 const mixed=m.parseCustomAssignment('.easypar CC 1 16 0 127 absolute\n.tx $F0 $7D val $F7');assert.equal(mixed.kind,'opaque-bcl');assert.ok(mixed.diagnostics.some(s=>s.includes('rejects')))
