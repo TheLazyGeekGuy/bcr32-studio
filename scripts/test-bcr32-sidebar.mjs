@@ -28,9 +28,9 @@ assert.match(workbench,/<\/fieldset><\/div>\s*<footer className="sidebar-meta si
 // Toolbar above the front panel.
 const toolbar=slice('<div className="editor-toolbar" role="toolbar"','<FrontPanel ')
 for(const part of ["moveHistory('undo')","moveHistory('redo')",'className={`cc-toggle tb-switch ','CC → BCR32</button>','assignment-toggle','Assignments → BCR32</button>','{floatingScreenSupported() && <button className="floating-toggle" aria-pressed={videoFloating}','className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen}','<span className="tb-spacer" />','className="bcr32-tools-toggle"'])assert.ok(toolbar.includes(part),`toolbar holds ${part}`)
-assert.match(toolbar,/disabled=\{locked\|\|!historyCounts\.undo\}[^]*disabled=\{locked\|\|!historyCounts\.redo\}/,'undo and redo stay locked with the host')
+assert.match(toolbar,/disabled=\{locked\|\|presetBusy\|\|!historyCounts\.undo\}[^]*disabled=\{locked\|\|presetBusy\|\|!historyCounts\.redo\}/,'undo and redo stay locked with the host')
 assert.match(toolbar,/aria-pressed=\{assignmentLive\} disabled=\{locked\}/,'assignment switch locked with the host')
-assert.match(toolbar,/<div className="display-menu" role="dialog"[^>]*>.*?<fieldset className="host-lock-fields" disabled=\{locked\}>/s,'Display menu keeps the host lock')
+assert.match(toolbar,/<div className="display-menu" role="dialog"[^>]*>.*?<fieldset className="host-lock-fields" disabled=\{locked\|\|presetBusy\}>/s,'Display menu keeps the host lock')
 assert.match(toolbar,/<label className="mock-field">Display style<select/,'display style as a list')
 assert.match(toolbar,/checked=\{inheritsPresentation\}[^]*?presentationStore\.reset\(\)/,'inherit the global presentation as a checkbox')
 assert.match(toolbar,/<PresentationTools preferences=\{presentation\} screens=\{sharedScreens\} inline zoom=\{false\} floating=\{false\}\/>/,'host presentation tools without a second zoom nor a second floating button')

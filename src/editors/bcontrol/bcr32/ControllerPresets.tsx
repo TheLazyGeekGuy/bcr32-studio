@@ -1,5 +1,8 @@
 import type {EditorStorage} from '../../../editor-environment'
 import { Icon } from './Icon'
+import {createTargetReader} from './firmware-codec'
+import {controllerTargets} from './controller-read'
+import {controlFromWorking,sendControlProgram,restoreControlProgram,type ProgramTools,type ProgramBackup} from './custom-program-transfer'
 import { applyControllerTracks, type ControllerTracks } from './controller-tracks'
 import { useEffect, useId, useRef, useState, type MutableRefObject } from 'react'
 import { createPresetReader, type PresetRead, type PresetReadResult } from './controller-presets'
@@ -8,8 +11,8 @@ import { bclFile } from './bcl'
 import { defaultPresetBcl } from './default-preset'
 import { createBclSender, presetStorageValidated, storeHardwarePreset, type HardwarePresetStorePlan } from './preset-store'
 
-type Props = { onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string; auto?: boolean }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
-export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
+type Props = { onProgramChanged?:()=>void; programAccess?:MutableRefObject<ProgramTools|null>; programAvailable?:boolean; firmware?:string|null; setProgramTypeOff?:(index:number)=>void; onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string; auto?: boolean }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
+export function ControllerPresets({ onProgramChanged, programAccess, programAvailable=false, firmware, setProgramTypeOff, onCurrent, storeRequest, storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
   const [menu,setMenu]=useState<'read'|'export'|null>(null),[saveOpen,setSaveOpen]=useState(false),[rawOpen,setRawOpen]=useState(false)
   const toolbar=useRef<HTMLDivElement>(null),menuId=useId()
@@ -25,23 +28,54 @@ export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeT
   sendRef.current = send
   const [trackDraft,setTrackDraft]=useState<ControllerTracks['presets']>([1,2,3,4])
   useEffect(()=>{if(tracks)setTrackDraft([...tracks.presets])},[tracks?.presets.join(':')])
+  const programRunning=useRef(false),programBackup=useRef<ProgramBackup|null>(null),retainedProgramBackup=useRef<ProgramBackup|null>(null)
+  useEffect(()=>{try{const text=storage.getItem('bcr32-studio.before-custom-program.v1');if(!text||text.length>8*1024*1024)return;const b=JSON.parse(text);if(b?.version===1&&typeof b.working==='string'&&typeof b.body==='string'&&typeof b.proposed==='string')retainedProgramBackup.current=b}catch{/* Invalid originals remain in storage; never used as a restoration plan. */}},[storage])
+  const targetReader=useRef<ReturnType<typeof createTargetReader>|null>(null)
   const quiet=useRef(false), quietFailures=useRef(0)
   const attempted = useRef(false)
   const globalAttempt = useRef<number | null>(null), globalsRef = useRef(onGlobals); globalsRef.current = onGlobals
   useEffect(() => {
-    attempted.current = false; globalAttempt.current = null; quiet.current=false; quietFailures.current=0; setMenu(null);setSaveOpen(false);setRawOpen(false); setNames({}); setSnapshot(null); setSource('working'); setName(''); setDestination(null); setBusy(false); setStoreBusy(false); setStoreError(''); setNotice(''); setCount(0)
+    programBackup.current=null; attempted.current = false; globalAttempt.current = null; quiet.current=false; quietFailures.current=0; setMenu(null);setSaveOpen(false);setRawOpen(false); setNames({}); setSnapshot(null); setSource('working'); setName(''); setDestination(null); setBusy(false); setStoreBusy(false); setStoreError(''); setNotice(''); setCount(0)
     if (device === null || device === 127) return
     const transport = createPresetReader(bytes => sendRef.current(bytes), device, 3000, count => { if(!quiet.current)setCount(count) })
     const sender = createBclSender(bytes => writeRef.current(bytes), device,1500,15,authorizeTransfer); writer.current = sender
-    reader.current = transport; receive.current = bytes => { transport.receive(bytes); sender.receive(bytes) }
-    return () => { sender.close(); writer.current = null; transport.close(); if (reader.current === transport) reader.current = null; receive.current = () => {} }
+    const target=createTargetReader(bytes=>sendRef.current(bytes),1200,device);targetReader.current=target
+    reader.current = transport; receive.current = bytes => { transport.receive(bytes); sender.receive(bytes);target.receive(bytes) }
+    return () => { sender.close(); writer.current = null; target.close();targetReader.current=null; transport.close(); if (reader.current === transport) reader.current = null; receive.current = () => {} }
   }, [connectionKey, device, receive])
   useEffect(() => { onBusy(busy || storeBusy) }, [busy, storeBusy, onBusy])
-  useEffect(() => { if (!available && !watchAvailable) reader.current?.cancel() }, [available,watchAvailable])
+  useEffect(() => { if (!available && !watchAvailable && !programAvailable) reader.current?.cancel() }, [available,watchAvailable,programAvailable])
+  useEffect(()=>{
+    if(!programAccess)return
+    const run=async<T,>(action:(transport:NonNullable<typeof reader.current>,sender:NonNullable<typeof writer.current>,check:()=>void)=>Promise<T>)=>{
+      const transport=reader.current,sender=writer.current
+      if(!programAvailable||!transport||!sender||busy||storeBusy||programRunning.current)throw Error('BCR32 is unavailable or another operation is active')
+      if(quiet.current){transport.cancel();quiet.current=false}
+      programRunning.current=true;setStoreBusy(true);setCount(0)
+      const check=()=>{if(reader.current!==transport||writer.current!==sender)throw Error('BCR32 connection changed; backup retained')}
+      try{return await action(transport,sender,check)}finally{programRunning.current=false;if(reader.current===transport)setStoreBusy(false)}
+    }
+    const api:ProgramTools={
+      backup:()=>programBackup.current??retainedProgramBackup.current,
+      canRestore:target=>!!programBackup.current&&programBackup.current.device===device&&programBackup.current.firmware===firmware&&JSON.stringify(programBackup.current.target)===JSON.stringify(target),
+      read:target=>run(async(transport,_sender,check)=>{const r=await transport.read({kind:'working'});check();if(r.status!=='complete')throw Error('Complete current preset read required');return controlFromWorking(r.text,target)}),
+      write:(target,program)=>run(async(transport,sender,check)=>{
+        if(device===null||!firmware||!setProgramTypeOff||!targetReader.current)throw Error('Live BCR32 identity required')
+        const indexed=controllerTargets.find(t=>t.kind===target.kind&&t.id===target.id),targetTransport=targetReader.current
+        if(!indexed)throw Error('Unknown physical control')
+        await sendControlProgram({target,program,read:()=>transport.read({kind:'working'}),transfer:lines=>sender.transfer(lines,setCount),check,
+          backup:(working,body,proposed)=>{const b:ProgramBackup={version:1,at:new Date().toISOString(),firmware,device,target,working,body,proposed};const json=JSON.stringify(b),key='bcr32-studio.before-custom-program.v1';storage.setItem(key,json);if(storage.getItem(key)!==json)throw Error('Backup unavailable; nothing written');programBackup.current=b;retainedProgramBackup.current=b;onProgramChanged?.()},
+          setOff:async()=>{check();const original=await targetTransport.read(indexed.index,'type');check();if(original.status!=='value'||!original.value||original.value.sentinel)throw Error('Native Type could not be read; nothing written');if(original.value.raw!==0){setProgramTypeOff(indexed.index);await new Promise(r=>setTimeout(r,160));check();const after=await targetTransport.read(indexed.index,'type');check();if(after.value?.raw!==0)throw Error('Type OFF read-back failed; backup retained')}},
+        })
+      }),
+      restore:target=>run(async(transport,sender,check)=>{const b=programBackup.current;if(!b||b.device!==device||b.firmware!==firmware||JSON.stringify(b.target)!==JSON.stringify(target))throw Error('No matching backup from this connection');onProgramChanged?.();await restoreControlProgram({target,body:b.body,read:()=>transport.read({kind:'working'}),transfer:lines=>sender.transfer(lines,setCount),check})}),
+    }
+    programAccess.current=api;return()=>{if(programAccess.current===api)programAccess.current=null}
+  },[programAccess,programAvailable,connectionKey,device,firmware,busy,storeBusy,setProgramTypeOff,storage,tracks,onProgramChanged])
   async function read(request: PresetRead) {
     const transport = reader.current
     if(quiet.current) {transport?.cancel();quiet.current=false}
-    if (!transport || busy || storeBusy || !available) return
+    if (!transport || busy || storeBusy || programRunning.current || !available) return
     setBusy(true); setCount(0); setNotice('Reading BCR32 presets…')
     try {
       const result = await transport.read(request)
@@ -71,7 +105,7 @@ export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeT
   },[watchAvailable,autoGlobals,!!tracks,!!onGlobals,busy,storeBusy,connectionKey])
   async function changeTracks(selected?:number) {
     const transport=reader.current,sender=writer.current
-    if(!watchAvailable||busy||storeBusy||!transport||!sender||!tracks)return
+    if(!watchAvailable||busy||storeBusy||programRunning.current||!transport||!sender||!tracks)return
     if(quiet.current){transport.cancel();quiet.current=false}
     setStoreBusy(true);setStoreError('');setNotice('Updating controller shortcuts…')
     try{
@@ -87,7 +121,7 @@ export function ControllerPresets({ onCurrent, storeRequest, storage, authorizeT
   async function store() {
     const transport = reader.current, sender = writer.current
     if(quiet.current){transport?.cancel();quiet.current=false}
-    if (!presetStorageValidated || destination === null || !available || busy || storeBusy || !transport || !sender) return
+    if (!presetStorageValidated || destination === null || !available || busy || storeBusy || programRunning.current || !transport || !sender) return
     setStoreBusy(true); setStoreError(''); setNotice('Saving complete controller preset…'); setCount(0)
     let acknowledged: HardwarePresetStorePlan | undefined
     try {

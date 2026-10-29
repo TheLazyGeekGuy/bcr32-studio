@@ -7,7 +7,8 @@ import {usePresentationSettings} from '../../../editor-host/PresentationTools'
 import {createMonitor} from '../../../midi-monitor'
 import {parseControllerState} from './presets'
 import {automaticPorts,isControllerPort} from './auto-midi'
-import {isFrame,isFirmwareRead} from './firmware-codec'
+import {isFrame,isFirmwareRead,midiFrame,integer} from './firmware-codec'
+import {supportsCustomProgram} from './custom-program-transfer'
 import {parseFirmwareReply} from './web-midi'
 import {plannedOperation,validateEditBuffer,validateQuery} from './host-policy'
 import {isZaqHostQuery,isZaqHostWrite,isHostPage,supportsZaqHost} from './zaq-host'
@@ -19,7 +20,7 @@ export function createWorkbenchBridge(context:EditorViewContext){
  let disposed=false,locked=false
  let identity:{firmware:string;device:number}|null=null
  const monitor=createMonitor()
- let prepared:{frames:number[][];cursor:number;grant:MidiAuthorization;generation:number}|null=null
+ let prepared:{frames:number[][];cursor:number;grant:MidiAuthorization;generation:number;program:boolean}|null=null
  const grants=new Map<MidiOperation,MidiAuthorization>()
  const revokePrepared=()=>{if(prepared)context.broker.revoke(prepared.grant);prepared=null}
  const offState=context.lease.onState(()=>{identity=null;revokePrepared();for(const grant of grants.values())context.broker.revoke(grant);grants.clear()})
@@ -35,7 +36,7 @@ export function createWorkbenchBridge(context:EditorViewContext){
     if(supportsZaqHost(identity?.firmware)&&isHostPage(bytes)){if(locked)throw Error('BCR32 page change refused while locked');operation='edit-buffer'}
     else if(validateQuery(bytes)){if(isFirmwareRead(bytes)&&(!identity||!['1.0.2','1.0.3'].includes(identity.firmware)))throw Error('Live firmware 1.0.2/1.0.3 required for indexed/preset reads');if(isZaqHostQuery(bytes)&&!supportsZaqHost(identity?.firmware))throw Error('Live firmware 1.0.3 required for sequencer reads');operation='query'}
     else if(isFrame(bytes)&&bytes[6]===32){
-     if(!identity||identity.firmware!=='1.0.2'||bytes[4]!==identity.device||locked||!prepared||state.generation!==prepared.generation||JSON.stringify(bytes)!==JSON.stringify(prepared.frames[prepared.cursor]))throw Error('BCR32 BCL job is not prepared or is stale')
+     if(!identity||!prepared||(prepared.program?!supportsCustomProgram(identity.firmware):identity.firmware!=='1.0.2')||bytes[4]!==identity.device||locked||state.generation!==prepared.generation||JSON.stringify(bytes)!==JSON.stringify(prepared.frames[prepared.cursor]))throw Error('BCR32 BCL job is not prepared or is stale')
      operation=prepared.grant.operation;grant=prepared.grant
     }else if(!locked&&supportsZaqHost(identity?.firmware)&&isZaqHostWrite(bytes))operation='edit-buffer'
     else if(!locked&&identity?.firmware==='1.0.2'&&bytes[4]===identity.device&&validateEditBuffer(bytes))operation='edit-buffer'
@@ -53,11 +54,18 @@ export function createWorkbenchBridge(context:EditorViewContext){
   async request(){const result=await context.request();if(disposed)throw Error('BCR32 view disposed');midi.refresh();const pair=automaticPorts(midi.access);if(pair.input&&pair.output)midi.bind(pair.input.id,pair.output.id);return {access:midi.access,sysexError:result.sysexError}},
   bind(input:string,output:string){midi.bind(input,output)},
   refresh:midi.refresh,
+  setProgramTypeOff(index:number){
+   if(disposed||locked||!identity||!supportsCustomProgram(identity.firmware)||prepared)throw Error('Custom program Type OFF unavailable')
+   integer(index,0,81)
+   const bytes=midiFrame(0x31,[index,0],identity.device),grant=context.broker.authorize(context.id,'edit-buffer')
+   try{context.lease.send([bytes],grant);monitor.push('out',bytes)}finally{context.broker.revoke(grant)}
+  },
   authorizeTransfer(frames:number[][]){
-   if(disposed||locked||prepared||identity?.firmware!=='1.0.2')throw Error('BCR32 transfer unavailable')
+   const program=!!frames[1]&&/^\$(encoder|button) /.test(String.fromCharCode(...frames[1].slice(9,-1)))
+   if(disposed||locked||prepared||!identity||(program?!supportsCustomProgram(identity.firmware):identity.firmware!=='1.0.2'))throw Error('BCR32 transfer unavailable')
    if(frames.some(b=>b[4]!==identity!.device))throw Error('Transfer device ID differs from the live controller')
    const operation=plannedOperation(frames),generation=context.lease.getState().generation
-   const job={frames:frames.map(b=>[...b]),cursor:0,grant:context.broker.authorize(context.id,operation),generation};prepared=job
+   const job={frames:frames.map(b=>[...b]),cursor:0,grant:context.broker.authorize(context.id,operation),generation,program};prepared=job
    return ()=>{context.broker.revoke(job.grant);if(prepared===job)prepared=null}
   },
   dispose(){if(disposed)return;disposed=true;help=undefined;midiSettings=undefined;revokePrepared();offRx();offState();midi.close();grants.forEach(g=>context.broker.revoke(g));grants.clear();monitor.dispose()},
@@ -71,7 +79,7 @@ function MountedWorkbench({context,bridge,storage,initial,...props}:EditorViewPr
    requestAccess={bridge.request} bindPair={bridge.bind} onSnapshot={props.checkpoint}
    themeOverride={props.appearance.theme} displayOverride={props.appearance.displayStyle} onAppearance={props.onAppearance}
    autoZoomOverride={inherited.settings.activeZoom} onAutoZoom={value=>props.presentation?.set({activeZoom:value})}
-   parameters={context.parameters} presetsExchange={context.presets} signal={context.lifecycle?.signal} presentation={props.presentation} onHelpReady={bridge.setHelp} onMidiSettingsReady={bridge.setMidiSettings} monitor={bridge.monitor} authorizeTransfer={bridge.authorizeTransfer}/>
+   parameters={context.parameters} presetsExchange={context.presets} signal={context.lifecycle?.signal} presentation={props.presentation} onHelpReady={bridge.setHelp} onMidiSettingsReady={bridge.setMidiSettings} monitor={bridge.monitor} authorizeTransfer={bridge.authorizeTransfer} setProgramTypeOff={bridge.setProgramTypeOff}/>
  </div>
 }
 export const bcr32View:EditorViewRegistration={

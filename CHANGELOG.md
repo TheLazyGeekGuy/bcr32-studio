@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.46.0-alpha.2] — 2026-10-29
+
+- Add explicit selected-control BCL reads and custom SysEx uploads from the Control inspector on firmware1.0.2/1.0.3.
+- Back up the current hardware preset before the announced Type OFF transition; independently verify the resulting BCL and other controls.
+- Add explicit original-control restoration and backup download. Unknown/advanced programs remain file-only; no automatic upload or STORE is added.
+- Preserve existing1.0.2 preset-store gates;1.0.3 permits only qualified single-control fragments, not complete preset/global jobs.
+- A temporary encoder32 upload/read-back/restoration passed on real firmware1.0.3 with the full original preset restored; emitted custom MIDI and persistent storage remain unverified.
+- Recognize the known ring modes returned by native custom exports while retaining alpha1 opaque draft compatibility.
+
 ## [0.46.0-alpha.1] — 2026-10-29
 
 - Local BCL/SysEx programming in Control: structured templates, hex↔BCL, bounded value/slice simulation, min/max/default, original imported bytes, targeted BCL/SYX files, text history and existing preset/history integration. Unknown/advanced constructs stay opaque; no custom hardware sender is enabled.

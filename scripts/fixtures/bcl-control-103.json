@@ -1,0 +1,77 @@
+{
+  "capturedAt": "2026-10-29T06:27:28.185Z",
+  "firmware": "1.0.3",
+  "device": 0,
+  "target": {
+    "kind": "encoders",
+    "id": 32
+  },
+  "scope": "Physical selected-control upload/read-back/restoration; preset name and unrelated control contents omitted from this fixture, complete originals retained locally. No emitted custom MIDI or persistent STORE qualification.",
+  "beforeType": 2,
+  "beforeBody": "  .easypar CC 1 104 0 127 absolute\n  .showvalue on\n  .mode 1dot\n  .default 0",
+  "proposedBody": ".minmax 0 127\n.default 0\n.tx $F0 $7D val $F7\n.showvalue on",
+  "observedBody": "  .minmax 0 127\n  .tx $F0 $7D val $F7\n  .showvalue on\n  .mode 1dot\n  .default 0",
+  "restoredBody": "  .easypar CC 1 104 0 127 absolute\n  .showvalue on\n  .mode 1dot\n  .default 0",
+  "ackStatuses": [
+    {
+      "line": 0,
+      "status": 0
+    },
+    {
+      "line": 1,
+      "status": 0
+    },
+    {
+      "line": 2,
+      "status": 0
+    },
+    {
+      "line": 3,
+      "status": 0
+    },
+    {
+      "line": 4,
+      "status": 0
+    },
+    {
+      "line": 5,
+      "status": 0
+    },
+    {
+      "line": 6,
+      "status": 0
+    },
+    {
+      "line": 0,
+      "status": 0
+    },
+    {
+      "line": 1,
+      "status": 0
+    },
+    {
+      "line": 2,
+      "status": 0
+    },
+    {
+      "line": 3,
+      "status": 0
+    },
+    {
+      "line": 4,
+      "status": 0
+    },
+    {
+      "line": 5,
+      "status": 0
+    },
+    {
+      "line": 6,
+      "status": 0
+    }
+  ],
+  "beforePresetSha256": "8b333eb3dc42e67c7b6160893f4b2f3553a9bfd77ccf5f141b233e093d842b0c",
+  "restoredPresetSha256": "8b333eb3dc42e67c7b6160893f4b2f3553a9bfd77ccf5f141b233e093d842b0c",
+  "fullPresetRestored": true,
+  "storeSent": false
+}

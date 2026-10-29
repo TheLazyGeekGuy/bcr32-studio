@@ -2,9 +2,9 @@
 
 Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support, **1.0.3 sequencer step editing**, and the shared MIDI Studio editor tools.
 
-Current version: **0.46.0-alpha.1** · [Changelog](CHANGELOG.md)
+Current version: **0.46.0-alpha.2** · [Changelog](CHANGELOG.md)
 
-Custom programming: open **Control → Custom SysEx / BCL** for local templates, simulation and targeted files. Programs are retained in JSON presets; custom hardware transmission is not enabled. See the [BCL/SysEx guide and safety limits](docs/BCL-SYSEX-EDITOR.md).
+Custom programming: open **Control → Custom SysEx / BCL** for local templates, simulation and targeted files. Programs are retained in JSON presets. Explicit selected-control reads and backup/Type-OFF/upload/read-back/restoration are available on firmware1.0.2/1.0.3; advanced tokens remain file-only. A bounded real1.0.3 upload/read-back/restoration passed, without STORE; emitted SysEx still needs physical acceptance. See the [BCL/SysEx guide and safety limits](docs/BCL-SYSEX-EDITOR.md).
 
 The product presentation is at `/`; choose **Open editor** to enter `/editor/`. Existing local presets remain on the same origin. The presentation page never requests MIDI access.
 
@@ -23,7 +23,7 @@ Firmware **1.0.3**: entering Sequencer sends the hardware page command, automati
 
 The common Studio host provides themes, language, screen/zoom settings, local history, monitor, preset library and instance-scoped storage. Documentation opens the BCR32 guide inside the editor. This repository distributes the BCR32 module only; the other MIDI Studio modules remain in their own development or release repositories.
 
-Use a current Chromium browser with Web MIDI and SysEx permission, over HTTPS or localhost. Select the controller/CTRL port, not ZAQ. Controller operations require a fresh firmware 1.0.2 identity. No account or server-side preset storage is used.
+Use a current Chromium browser with Web MIDI and SysEx permission, over HTTPS or localhost. Select the controller/CTRL port, not ZAQ. Controller operations require a fresh live identity: existing preset STORE/indexed edits retain their1.0.2 gates; qualified custom control fragments additionally support1.0.3. No account or server-side preset storage is used.
 
 ## Local development
 

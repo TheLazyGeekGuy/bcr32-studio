@@ -42,6 +42,7 @@ import { ControlSearch } from './ControlSearch'
 import { LibraryList } from './LibraryList'
 import { SequencerView } from './SequencerView'
 import {CustomProgramEditor} from './CustomProgramEditor'
+import {supportsCustomProgram,type ProgramTools} from './custom-program-transfer'
 import {hostPage,supportsZaqHost} from './zaq-host'
 import { createBrightnessTransport } from './led-brightness'
 import { applySelectionChange, selectControls, selectedControls, selectionKey, sharedField, type SelectionGesture, type ControlChange } from './multi-selection'
@@ -86,9 +87,9 @@ export interface WorkbenchProps {
  autoZoomOverride:boolean; onAutoZoom:(on:boolean)=>void; active:boolean; locked:boolean
  instanceId:string; presetsExchange?:PresetExchange; signal?:AbortSignal; monitor:Monitor
  parameters?:import('../../../translator/parameters').ParameterBus; presentation?:PresentationInstance; onHelpReady:(open:(()=>void)|undefined)=>void; onMidiSettingsReady?:(open:(()=>void)|undefined)=>void
- authorizeTransfer:(frames:number[][])=>(()=>void)
+ authorizeTransfer:(frames:number[][])=>(()=>void); setProgramTypeOff?:(index:number)=>void
 }
-function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,presentation,onHelpReady,onMidiSettingsReady,parameters}:WorkbenchProps) {
+function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,setProgramTypeOff,presentation,onHelpReady,onMidiSettingsReady,parameters}:WorkbenchProps) {
   const lockedRef=useRef(locked);lockedRef.current=locked
 function loadProfile(): Bcr32Profile {
   try {
@@ -295,6 +296,7 @@ function loadWorkspace() {
   const [editorMode, setEditorMode] = useState<'controller' | 'sequencer'>(() => { try { return storage.getItem('bcr32-studio.editor-mode') === 'sequencer' ? 'sequencer' : 'controller' } catch { return 'controller' } })
   useEffect(() => { try { storage.setItem('bcr32-studio.editor-mode', editorMode) } catch { /* Optional preference. */ } }, [editorMode])
   const [presetBusy, setPresetBusy] = useState(false)
+  const programAccess=useRef<ProgramTools|null>(null)
   const presetReceive = useRef<(bytes: number[]) => void>(() => {})
   const controllerReader = useRef<ReturnType<typeof createControllerReader> | null>(null)
   const [controllerRead, setControllerRead] = useState(emptyControllerRead)
@@ -337,6 +339,7 @@ function loadWorkspace() {
   },[editorMode,liveFirmware,liveDeviceId,locked,output])
   const brightnessEnabled = !!access?.sysexEnabled && isBcrOutput(output) && isControllerPort(output) && inputs.some(p=>p.id===inputId && isControllerPort(p))
   const chooseEditorMode=(mode:'controller'|'sequencer')=>{
+    if(presetBusy||lockedRef.current)return
     if(mode!==editorMode){setEditorMode(mode);return}
     // Reassert the requested page even when the view is already selected (the hardware may have changed).
     // Do not reread/replace a local draft just because the active tab was clicked again.
@@ -1052,14 +1055,14 @@ function loadWorkspace() {
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
         <div className="editor-toolbar" role="toolbar" aria-label="Editor toolbar">
-          <div className="mock-seg editor-mode" role="group" aria-label="Editor view"><button aria-pressed={editorMode === 'controller'} onClick={() => chooseEditorMode('controller')}>Controller</button><button aria-pressed={editorMode === 'sequencer'} onClick={() => chooseEditorMode('sequencer')}>Sequencer</button></div>
+          <div className="mock-seg editor-mode" role="group" aria-label="Editor view"><button disabled={locked||presetBusy} aria-pressed={editorMode === 'controller'} onClick={() => chooseEditorMode('controller')}>Controller</button><button disabled={locked||presetBusy} aria-pressed={editorMode === 'sequencer'} onClick={() => chooseEditorMode('sequencer')}>Sequencer</button></div>
           {editorMode === 'controller' && <>
           <span className="tb-sep" aria-hidden="true" />
           {renaming !== null ? <input className="preset-chip-input" autoFocus aria-label="Preset name" maxLength={24} value={renaming} onChange={e=>setRenaming(e.target.value.replace(/[^\x20-\x7e]|'/g,''))} onKeyDown={e=>{if(e.key==='Enter'&&renaming.trim())requestStore(renaming.trim(),true);if(e.key==='Escape'){e.stopPropagation();setRenaming(null)}}} onBlur={()=>setRenaming(null)} />
-            : <span className="preset-chip" title="Double-click to rename" onDoubleClick={()=>{if(currentPreset&&!locked)setRenaming(currentPreset.name??'')}}>{currentPreset ? <><span data-i18n-skip>{currentPreset.slot} · </span>{currentPreset.name ? <strong data-i18n-skip>{currentPreset.name}</strong> : <small>{currentPreset.name === null ? 'Name not read' : 'Unnamed preset'}</small>}</> : <small>No BCR32 preset</small>}</span>}
-          <button className="preset-store" disabled={!currentPreset||locked} title="Rename and store this preset on the BCR32 (backup, write, read-back)" onClick={()=>requestStore(renaming??currentPreset?.name??'')}>Store…</button>
+            : <span className="preset-chip" title="Double-click to rename" onDoubleClick={()=>{if(currentPreset&&!locked&&!presetBusy)setRenaming(currentPreset.name??'')}}>{currentPreset ? <><span data-i18n-skip>{currentPreset.slot} · </span>{currentPreset.name ? <strong data-i18n-skip>{currentPreset.name}</strong> : <small>{currentPreset.name === null ? 'Name not read' : 'Unnamed preset'}</small>}</> : <small>No BCR32 preset</small>}</span>}
+          <button className="preset-store" disabled={!currentPreset||locked||presetBusy} title="Rename and store this preset on the BCR32 (backup, write, read-back)" onClick={()=>requestStore(renaming??currentPreset?.name??'')}>Store…</button>
           <span className="tb-sep" aria-hidden="true" />
-          <div className="editor-history-tools" role="group" aria-label="History"><button aria-label="Undo" title="Undo" disabled={locked||!historyCounts.undo} onClick={()=>moveHistory('undo')}><span aria-hidden="true" data-i18n-skip>↶</span></button><button aria-label="Redo" title="Redo" disabled={locked||!historyCounts.redo} onClick={()=>moveHistory('redo')}><span aria-hidden="true" data-i18n-skip>↷</span></button></div>
+          <div className="editor-history-tools" role="group" aria-label="History"><button aria-label="Undo" title="Undo" disabled={locked||presetBusy||!historyCounts.undo} onClick={()=>moveHistory('undo')}><span aria-hidden="true" data-i18n-skip>↶</span></button><button aria-label="Redo" title="Redo" disabled={locked||presetBusy||!historyCounts.redo} onClick={()=>moveHistory('redo')}><span aria-hidden="true" data-i18n-skip>↷</span></button></div>
           <span className="tb-sep" aria-hidden="true" />
           <button className={`cc-toggle tb-switch ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} title="Send CC to BCR32" onClick={toggleSend} disabled={!isBcrOutput(output)}><span className="switch" aria-hidden="true" />CC → BCR32</button>
           <button className={`cc-toggle tb-switch assignment-toggle ${assignmentLive ? 'enabled' : ''}`} aria-pressed={assignmentLive} disabled={locked} title="Send assignment edits immediately" onClick={() => setAssignmentLive(on => !on)}><span className="switch" aria-hidden="true" />Assignments → BCR32</button>
@@ -1067,7 +1070,7 @@ function loadWorkspace() {
           {floatingScreenSupported() && <button className="floating-toggle" aria-pressed={videoFloating} title="Borderless always-on-top screen, like a video player" onClick={() => { void toggleVideoFloating() }}><span aria-hidden="true" data-i18n-skip>▣ </span>{videoFloating ? 'Close floating display' : 'Floating display'}</button>}
           <div className="display-menu-anchor" ref={displayMenu}>
             <button className="display-menu-toggle" aria-haspopup="dialog" aria-expanded={displayOpen} onClick={()=>setDisplayOpen(open=>!open)}>Display<span aria-hidden="true" data-i18n-skip> ▾</span></button>
-            <div className="display-menu" role="dialog" aria-label="Display" hidden={!displayOpen}><header className="display-menu-head"><strong>Display</strong><button className="midi-settings-close" aria-label="Close" title="Close" onClick={()=>setDisplayOpen(false)}><Icon name="close" /></button></header><fieldset className="host-lock-fields" disabled={locked}>
+            <div className="display-menu" role="dialog" aria-label="Display" hidden={!displayOpen}><header className="display-menu-head"><strong>Display</strong><button className="midi-settings-close" aria-label="Close" title="Close" onClick={()=>setDisplayOpen(false)}><Icon name="close" /></button></header><fieldset className="host-lock-fields" disabled={locked||presetBusy}>
               <p className="mock-caption">Theme of this editor</p>
               <div className="theme-swatches" role="group" aria-label="Controller and interface theme">{themes.map(t => <button key={t.id} className={`theme-swatch swatch-${t.id}`} aria-label={`Theme ${t.name}`} aria-pressed={theme === t.id} title={t.name} onClick={() => setTheme(parseTheme(t.id))}><span className="sr-only">{t.name}</span><span className="swatch-tooltip" aria-hidden="true">{t.name}</span></button>)}</div>
               <label className="mock-field">Display style<select aria-label="Display style" value={displayStyle} onChange={event => setDisplayStyle(event.target.value as DisplayStyle)}>{displayStyles.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
@@ -1091,7 +1094,7 @@ function loadWorkspace() {
         {pipWindow && createPortal(<FloatingDisplay theme={theme} displayStyle={displayStyle} control={screenControl} config={profile[screenControl.kind].find(e => e.id === screenControl.id)!} label={controlLabel(screenControl.kind, screenControl.id, customLabels)} value={screenValue.value} source={screenValue.source} inspect={() => selectUi(screenControl, {}, true)} setValue={setScreenValue} />, pipWindow.document.body)}
         <nav className="tool-tabs" aria-label="Editor tools">{(['control', 'presets', 'device', 'files', 'log'] as const).map((item, i) => <button key={item} aria-pressed={view === item} title={['Control', 'Presets', 'Device', 'Files', 'Log'][i]} onClick={() => {setTab(item);setHelpOpen(false)}}>{['Control', 'Presets', 'Device', 'Files', 'Log'][i]}</button>)}</nav>
         {!access?.sysexEnabled && <p className="mock-warn sidebar-midi-warning">{access ? 'SysEx not granted' : 'automatic connection'} <button className="mock-link" onClick={() => connect()} disabled={!supportsWebMidi()}>Retry MIDI + SysEx</button> <button className="mock-link" aria-haspopup="dialog" onClick={()=>setMidiSettingsOpen(true)}>MIDI connection…</button></p>}
-        <div className="sidebar-content"><fieldset className="host-lock-fields" disabled={locked}>
+        <div className="sidebar-content"><fieldset className="host-lock-fields" disabled={locked||presetBusy}>
         <section className="profile-actions preset-panel" hidden={view !== 'presets'} aria-label="Preset management">
           <h2 className="sr-only">Presets{dirty ? ' *' : ''}</h2>
           <div className="preset-location-tabs" role="group" aria-label="Preset location">
@@ -1100,11 +1103,11 @@ function loadWorkspace() {
           </div>
           <div className="hardware-presets" hidden={presetLocation!=='hardware'}>
           <ControllerReadPanel cacheEnabled={presetCacheEnabled} setCacheEnabled={setPresetCacheEnabled} fromCache={fromPresetCache} groups={readGroups} setGroups={setReadGroups} canRead={brightnessEnabled && firmwareOne(liveFirmware)} state={controllerRead} read={() => { void readControllerAssignments() }} cancel={cancelControllerRead} />
-          <ControllerPresets onCurrent={setCurrentPreset} storeRequest={storeRequest} storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && brightnessEnabled && !deviceSettingsBusy && liveFirmware === '1.0.2' && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
-            if (lockedRef.current || !presetStorageValidated || !brightnessEnabled || !output?.send || liveFirmware !== '1.0.2' || liveDeviceId === null || !isBclWrite(bytes, liveDeviceId)) throw Error('Preset write unavailable')
+          <ControllerPresets onProgramChanged={()=>presetCache.current.clear()} programAccess={programAccess} programAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status))} firmware={liveFirmware} setProgramTypeOff={setProgramTypeOff} onCurrent={setCurrentPreset} storeRequest={storeRequest} storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && brightnessEnabled && !deviceSettingsBusy && liveFirmware === '1.0.2' && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
+            if (lockedRef.current || !presetStorageValidated || !brightnessEnabled || !output?.send || !supportsCustomProgram(liveFirmware) || liveDeviceId === null || !isBclWrite(bytes, liveDeviceId)) throw Error('Preset write unavailable')
             output.send(bytes)
           }} onBusy={setPresetBusy} active={tab === 'presets' && presetLocation === 'hardware'} available={!locked && brightnessEnabled && !deviceSettingsBusy && liveFirmware === '1.0.2' && controllerRead.status !== 'reading' && !['pending','writing'].includes(assignmentWrite.status)} connectionKey={`${inputId}:${outputId}:${portVersion}:${!!access}:${liveFirmware}`} device={liveDeviceId} receive={presetReceive} send={bytes => {
-            if (!brightnessEnabled || !output?.send || liveFirmware !== '1.0.2' || !(isFirmwareRead(bytes) || isControllerPageRequest(bytes))) throw Error('Preset read unavailable')
+            if (!brightnessEnabled || !output?.send || !supportsCustomProgram(liveFirmware) || !(isFirmwareRead(bytes) || isControllerPageRequest(bytes))) throw Error('Preset read unavailable')
             output.send(bytes)
           }} download={download} />
           </div>
@@ -1156,7 +1159,7 @@ function loadWorkspace() {
         {mouseMulti&&<p className="surface-help">Drag on the background: rectangle selection.</p>}
         {activeControls.length>0&&<ol className="activity-strip" aria-label="Active controls">{activeControls.slice(0,4).map(a=>{const value=a.control.kind==='encoders'?values[a.control.id]?.value:auxValues[a.control.kind][controlIndex(a.control.kind,a.control.id)];const source=a.control.kind==='encoders'?values[a.control.id]?.source:auxSources[`${a.control.kind}:${a.control.id}`];const percent=Math.round(a.share*100);return <li key={selectionKey(a.control)}><button aria-pressed={selectionKey(a.control)===selectionKey(selection)} onClick={()=>selectUi(a.control,{},true)}><span>{controlName(a.control)}</span><output>{value??'—'}</output><small>{source==='relative'?'relative estimate':source==='midi'?'MIDI received':'local preview'}</small><span className="activity-share" title={`${percent}% of pulses`}><span style={{width:`${percent}%`}} /></span></button></li>})}</ol>}
         {unsupportedRead && <p role="alert">Controller assignment cannot be represented. The fields below remain the local draft; inspect the raw replies.</p>}
-        {!multiple&&<CustomProgramEditor key={`${selection.kind}:${selection.id}`} target={selection} config={selected} firmware={liveFirmware} locked={locked} download={download} apply={control=>{
+        {!multiple&&<CustomProgramEditor key={`${selection.kind}:${selection.id}`} target={selection} config={selected} firmware={liveFirmware} locked={locked} hardware={{tools:programAccess,available:!locked&&!presetBusy&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status)),begin:()=>{stopEmission();cancelLearn()}}} download={download} apply={control=>{
           if(lockedRef.current)return
           stopEmission();disarmLearn()
           const next=parseProfile({...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?control:e)})

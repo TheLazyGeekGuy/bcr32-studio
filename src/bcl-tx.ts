@@ -56,7 +56,7 @@ export function evaluateTx(template:TxTemplate,value:number):number[]{
   })
   return bytes
 }
-export function parseCustomAssignment(sourceBcl:string):CustomAssignment{
+function parseAssignment(sourceBcl:string,knownRingModes:boolean):CustomAssignment{
   if(typeof sourceBcl!=='string'||sourceBcl.length>budget.source||/[^\x09\x0a\x0d\x20-\x7e]/.test(sourceBcl))throw Error('BCL requires bounded ASCII text')
   const lines=sourceBcl.split(/\r\n|\r|\n/);if(lines.length>budget.lines)throw Error('Too many control lines')
   if(!lines.some(l=>l.split(';')[0].trim()))throw Error('The control body contains no instruction')
@@ -71,6 +71,9 @@ export function parseCustomAssignment(sourceBcl:string):CustomAssignment{
     }
     if(/^\.default\b/.test(line)){const w=line.split(/\s+/);defaultValue=w[1]==='off'?null:number(w[1]??'');if(w.length!==2||defaultValue!==null&&!Number.isInteger(defaultValue))throw Error('Invalid .default');continue}
     if(/^\.showvalue (on|off)$/.test(line))continue
+    // Known B-Control ring directives are source-preserved and do not alter the simulated MIDI payload.
+    // BCR32 1.0.3 includes .mode in a custom control's independent export (physical fixture).
+    if(knownRingModes&&/^\.mode (off|1dot|1dot\/off|12dot|12dot\/off|bar|bar\/off|spread|pan|qual|cut|damp)$/.test(line))continue
     diagnostics.push(`Statement preserved without simplified editing: ${line.split(/\s+/)[0]}`)
   }
   if(defaultValue!==null&&(defaultValue<range[0]||defaultValue>range[1]))throw Error('Default value outside .minmax')
@@ -79,11 +82,16 @@ export function parseCustomAssignment(sourceBcl:string):CustomAssignment{
   const exact=messages.length>0&&messages.every(m=>m.conversionStatus==='exact')&&!diagnostics.length
   return {kind:exact?'custom-sysex':'opaque-bcl',sourceBcl,messages,range,defaultValue,conversionStatus:exact?'exact':messages.length?'partial':'unsupported',diagnostics,hardwareValidated:false}
 }
+export const parseCustomAssignment=(sourceBcl:string):CustomAssignment=>parseAssignment(sourceBcl,true)
 export function evaluateAssignment(program:CustomAssignment,value:number){
   if(value<program.range[0]||value>program.range[1])throw Error('Preview value outside .minmax')
   if(program.conversionStatus!=='exact')throw Error('Opaque BCL cannot be simulated safely')
   return program.messages.map(tx=>evaluateTx(tx,value))
 }
 export function validCustomAssignment(value:unknown):value is CustomAssignment{
-  try{if(!value||typeof value!=='object')return false;const v=value as CustomAssignment,p=parseCustomAssignment(v.sourceBcl);return Object.keys(p).every(k=>JSON.stringify(p[k as keyof CustomAssignment])===JSON.stringify(v[k as keyof CustomAssignment]))}catch{return false}
+  try{if(!value||typeof value!=='object')return false;const v=value as CustomAssignment
+    // Alpha1 drafts classified known .mode lines as opaque. Retain those exact old descriptors;
+    // an explicit local apply regenerates the new classification without discarding source.
+    return [true,false].some(known=>{const p=parseAssignment(v.sourceBcl,known);return Object.keys(p).every(k=>JSON.stringify(p[k as keyof CustomAssignment])===JSON.stringify(v[k as keyof CustomAssignment]))})
+  }catch{return false}
 }

@@ -4,6 +4,7 @@ import {isEncoderAssignmentWrite} from './controller-write'
 import {isBclWrite,presetStorePlan} from './preset-store'
 import {controllerTracksFromBcl} from './controller-tracks'
 import {isZaqHostQuery,isZaqHostWrite,isHostPage} from './zaq-host'
+import {programFragment} from './custom-program-transfer'
 
 /** Model-specific framing. These validators add no grant or automatic device operation. */
 export function validateQuery(bytes:readonly number[]) {
@@ -16,7 +17,7 @@ export function validateBclPacket(bytes:readonly number[],persistent:boolean) {
  if(!isBclWrite(bytes,bytes[4]))return false
  const line=String.fromCharCode(...bytes.slice(9,-1)).trim()
  if(line.startsWith('$'))return ['$rev BCR32','$preset','$end',...(!persistent?['$global']:[])].includes(line)||/^\$encoder (?:[1-9]|[12]\d|3[0-2])$/.test(line)||/^\$button (?:[1-9]|[1-4]\d|50)$/.test(line)||persistent&&/^\$store (?:[1-9]|[1-5]\d|6[0-4])$/.test(line)
- return /^\.(?:name|snapshot|request|init|easypar|showvalue|mode|default|tx)(?:\s|$)/.test(line)||!persistent&&/^\.tracks(?: \d+){5}$/.test(line)
+ return /^\.(?:name|snapshot|request|init|easypar|showvalue|mode|default|tx)(?:\s|$)/.test(line)||!persistent&&(/^\.(?:minmax|resolution)(?:\s|$)/.test(line)||!line||line.startsWith(';')||/^\.tracks(?: \d+){5}$/.test(line))
 }
 export function validateEditBuffer(bytes:readonly number[]) {return isHostPage(bytes)||isZaqHostWrite(bytes)||isEncoderAssignmentWrite(bytes,bytes[4])||validateBclPacket(bytes,false)}
 export function validatePresetStore(bytes:readonly number[]) {return validateBclPacket(bytes,true)}
@@ -27,6 +28,7 @@ export function plannedOperation(frames:readonly (readonly number[])[]) {
  const device=frames[0][4]
  if(frames.some((b,i)=>!isBclWrite(b,device)||b[7]*128+b[8]!==i))throw Error('BCR32 transfer address or sequence differs')
  const lines=frames.map(b=>String.fromCharCode(...b.slice(9,-1)))
+ if(/^\$(encoder|button) /.test(lines[1]??'')){programFragment(lines);return 'edit-buffer' as const}
  if(lines[1]==='$global'){
   if(lines.length!==4||!controllerTracksFromBcl(lines.join('\n'))||!lines[2].trim().startsWith('.tracks '))throw Error('Only four-line shortcut globals may be written')
   return 'edit-buffer' as const
