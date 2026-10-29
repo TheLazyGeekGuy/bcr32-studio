@@ -1,0 +1,30 @@
+# BCL-11 — publish alpha3 site and editor
+
+## Authorization and source
+
+Owner explicitly requested updating both site/editor and pushing to GitHub on2026-10-29 after the native SysEx STORE/change/recall test and a fresh device-identity reply. This authorizes publication to the existing GitHub Pages production routes; optional Cloudflare services remain disabled. No further hardware mutation is needed.
+
+Codex primary,2026-10-29 09:19 onward; exact model/effort unavailable, so that part of review provenance is incomplete. Checkout `bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full HEAD **`abb0fde0f8d9a9cc5bcfc95b2bd75cab7c8385a5`**. Remote main initially **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`**, an ancestor with no remote-only commits. Read scope: deployment workflows, publication/privacy records, native test evidence, site EN/FR catalog/HTML fallback and version test. Release changes add current BCL/SysEx features and measured acceptance/limitations to the existing presentation, fix outdated no-JavaScript version labels, and clarify one technical comment without changing its code.
+
+## Publication contract
+
+- Version remains **0.46.0-alpha.3**. Product presentation at `/bcr32-studio/`, editor at `/bcr32-studio/editor/` from the same complete Pages build.
+- Native scope: rotation/push custom assignment STORE/change/recall and complete bank/global/working rollback passed on1.0.3. Actual emitted SysEx, advanced tokens and power-cycle persistence remain unvalidated and are stated on the site. Existing outgoing web sequencer transport restrictions remain unchanged.
+- Final candidate is checked in an isolated release checkout with declared dependencies. Local main and unrelated worktrees are not checked out/reset. Publish by ordinary fast-forward push only; recheck remote main before sending. The owner account is an administrator and the existing protection does not enforce administrator review requirements; use the existing maintainer publication path without disabling protection or forging a review.
+- Verify Pages workflow success and actual served release/asset identity at both routes. Push alone is not deployment proof.
+
+## Privacy disposition
+
+Generic gate passed the implementation scope. Full private scan in the shared development repository reports five contextual file findings and five unrelated-branch historical findings. Each historical commit was independently checked with `git merge-base --is-ancestor` and is absent from this release's ancestry. The isolated release graph is checked separately before publication.
+
+File findings concern public manufacturer URLs (including the public source ledger in the new BCL dossier) and an ordinary technical substring already reviewed in BCR103-08. The new source-comment occurrence of that classifier was rephrased without changing semantics. No secret, personal path, full native capture, private denylist or unrelated preset name is included in the release. Public fixtures contain only targeted technical bodies and hashes/counts; complete64-slot backups stay ignored locally.
+
+The owner's earlier explicit waiver for nonconfidential public manufacturer documentation remains applicable to these reviewed contextual findings. The private scanner is not weakened and its nonzero result is not reported as an automated pass. If a command-local pre-push-hook exception is required, it applies only to this reviewed publication; no global/repository hook or denylist configuration is changed. Any new/unexplained finding must be reviewed rather than covered by this disposition.
+
+## Acceptance
+
+- [ ] Isolated full tests/typecheck/build, browser application/EN-FR landing/offline checks.
+- [ ] Isolated privacy/whitespace review, no unexpected data in the publication graph.
+- [ ] GitHub main fast-forward push, successful Pages run and served version0.46.0-alpha.3 at both routes.
+
+Delivery evidence is recorded below when available. No screenshot is needed for the text-only site update; browser checks use fake/disabled MIDI and never acquire physical ports.

@@ -12,6 +12,10 @@ assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pk
 assert.equal(pkg.name,'bcr32-studio')
 assert.ok(read('CHANGELOG.md').split('\n').some(line=>line.startsWith(`## [${pkg.version}]`)),'CHANGELOG.md has a heading starting with ## [version]')
 assert.ok(read('README.md').split('\n').includes(`Current version: **${pkg.version}** · [Changelog](CHANGELOG.md)`),'README.md has the exact current-version line')
+for(const key of ['hero_eyebrow','controller_window_note','rm_lead','rm_badge_ready']){
+  const fallback=new RegExp(`data-i18n="${key}">([^<]+)`).exec(read('index.html'))?.[1]
+  assert.ok(fallback?.includes(pkg.version),`Landing ${key} fallback must not advertise an old editor version`)
+}
 const native=createRequire(import.meta.url),cache=new Map()
 function load(name){
   if(!name.startsWith('.'))return native(name)

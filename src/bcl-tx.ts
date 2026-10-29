@@ -91,7 +91,7 @@ export function evaluateAssignment(program:CustomAssignment,value:number){
 export function validCustomAssignment(value:unknown):value is CustomAssignment{
   try{if(!value||typeof value!=='object')return false;const v=value as CustomAssignment
     // Alpha1 drafts classified known .mode lines as opaque. Retain those exact old descriptors;
-    // an explicit local apply regenerates the new classification without discarding source.
+    // an explicit local apply rebuilds the classification without discarding source.
     return [true,false].some(known=>{const p=parseAssignment(v.sourceBcl,known);return Object.keys(p).every(k=>JSON.stringify(p[k as keyof CustomAssignment])===JSON.stringify(v[k as keyof CustomAssignment]))})
   }catch{return false}
 }

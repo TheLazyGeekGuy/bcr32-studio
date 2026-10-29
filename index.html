@@ -41,7 +41,7 @@
 <main id="main-content">
 <section class="hero section">
   <div class="hero-heading">
-    <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> <span data-i18n="hero_eyebrow">MIDI Studio · active project v0.45.0-alpha.13</span></p>
+    <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> <span data-i18n="hero_eyebrow">MIDI Studio · active project v0.46.0-alpha.3</span></p>
     <h1>BCR32<span>Studio <i>&amp;</i> Sequencer</span></h1>
     <p class="hero-copy" data-i18n-html="hero_copy">Your 32 encoders. Your 4-track polyphonic sequencer. Your overlays.<br>A visual editor to inspect controls, sculpt grooves, and drive synths safely.</p>
     <div class="hero-actions">
@@ -82,7 +82,7 @@
       <div class="window-top">
         <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
         <span data-i18n="controller_window_title">BCR32 Studio — Controller View · 32 Encoders &amp; LED Rings</span>
-        <span class="window-note" data-i18n="controller_window_note">Live v0.45.0-alpha.13</span>
+        <span class="window-note" data-i18n="controller_window_note">Live v0.46.0-alpha.3</span>
       </div>
       <img src="./site/assets/bcr32-controller.png" alt="Actual BCR32 Studio Controller interface showing 32 rotary push-encoders, parameter inspector sidebar, live MIDI activity strip, and tabs" data-i18n-alt="controller_img_alt" width="1440" height="900" loading="lazy">
     </div>
@@ -93,7 +93,7 @@
       <ul class="plain-list">
         <li data-i18n="controller_li_1">32 rotary push-encoders with dual independent targets: rotation &amp; central push button</li>
         <li data-i18n="controller_li_2">15-LED halo ring feedback modes: Single dot, Bar graph, Boost/Cut Pan, Spread, and Off</li>
-        <li data-i18n="controller_li_3">CC, 14-bit high-resolution NRPN, Pitch Bend, Aftertouch, Note, MMC, and Program Change</li>
+        <li data-i18n="controller_li_3">CC, 14-bit NRPN, Pitch Bend, Aftertouch, Note, MMC, Program Change and custom BCL/SysEx</li>
         <li data-i18n="controller_li_4">Printable A4 PDF overlay generator: print custom paper masks tailored to your knob names</li>
       </ul>
       <div class="panel-links">
@@ -215,9 +215,9 @@
     <article class="feature reveal">
       <span class="feature-number">06</span>
       <div>
-        <h3 data-i18n="feat_6_title">Safe SysEx &amp; Dump Reader.</h3>
-        <p data-i18n="feat_6_desc">Parses 8-frame preset dumps (04 0C) and sequencer pattern blocks (04 0B) exported from hardware with 16-bit checksum validation. Strictly avoids blind memory writes that could freeze the controller.</p>
-        <span class="feature-tag" data-i18n="feat_6_tag">Non-Destructive &amp; Checksum Verified</span>
+        <h3 data-i18n="feat_6_title">BCL &amp; custom SysEx.</h3>
+        <p data-i18n="feat_6_desc">Edit and preview SysEx templates for rotation and push. Back up, upload, read back and explicitly STORE controller presets; existing dump readers remain available.</p>
+        <span class="feature-tag" data-i18n="feat_6_tag">BCL · SysEx · Verified preset recall</span>
       </div>
       <svg class="feature-glyph" viewBox="0 0 64 64" fill="none" aria-hidden="true">
         <circle cx="32" cy="32" r="20" stroke="currentColor" stroke-width="2.5" stroke-dasharray="4 6"/>
@@ -280,31 +280,31 @@
   <div class="section-heading reveal">
     <p class="eyebrow" data-i18n="rm_eyebrow">04 / Ongoing roadmap</p>
     <h2 data-i18n-html="rm_title">What’s here now.<br><span>What’s coming next.</span></h2>
-    <p data-i18n="rm_lead">Current features in v0.45.0-alpha.13 alpha and upcoming milestones actively in progress.</p>
+    <p data-i18n="rm_lead">Current features in v0.46.0-alpha.3 alpha and upcoming milestones actively in progress.</p>
   </div>
   <div class="roadmap-columns">
     <div class="reveal">
-      <span class="badge-available" data-i18n="rm_badge_ready">Available in v0.45.0-alpha.13 alpha</span>
+      <span class="badge-available" data-i18n="rm_badge_ready">Available in v0.46.0-alpha.3 alpha</span>
       <ul class="roadmap-list">
         <li data-i18n="rm_ready_1">Interactive front panel with 32 push-encoders and 20 functional keys</li>
         <li data-i18n="rm_ready_2">Live bidirectional MIDI follow with OLED multiplexing and activity strip</li>
-        <li data-i18n="rm_ready_3">Per-control inspector: CC, 14-bit NRPN, Notes, MMC, Program Change, modes</li>
+        <li data-i18n="rm_ready_3">Per-control inspector with standard MIDI and custom BCL/SysEx templates</li>
         <li data-i18n="rm_ready_4">MIDI Learn for quick hardware knob-to-parameter binding</li>
         <li data-i18n="rm_ready_5">Floating always-on-top OLED display window for DAW integration</li>
         <li data-i18n="rm_ready_6">Printable A4 PDF overlay generator with custom labels</li>
         <li data-i18n="rm_ready_7">Cubase 12+ MIDI Remote JavaScript script export</li>
         <li data-i18n="rm_ready_8">8 languages supported: EN, FR, IT, DE, JA, ES, RU, ZH</li>
       </ul>
-      <p class="roadmap-note" data-i18n-html="rm_ready_note">Hosted live on GitHub Pages: <a href="./editor/">https://thelazygeekguy.github.io/bcr32-studio/</a></p>
+      <p class="roadmap-note" data-i18n-html="rm_ready_note">Firmware 1.0.3: rotation/push STORE and preset recall tested, with complete bank restoration. <a href="./editor/" target="_blank" rel="noopener">Open editor</a></p>
     </div>
     <div class="reveal">
       <span class="badge-planned" data-i18n="rm_badge_planned">Under active development (In progress)</span>
       <ul class="roadmap-list">
-        <li data-i18n="rm_plan_1">Complete sequencer track/global controls and persistent slot transfer validation.</li>
+        <li data-i18n="rm_plan_1">Complete sequencer track/global controls and qualify persistent pattern storage.</li>
         <li data-i18n="rm_plan_2">Optional desktop companion and virtual MIDI routing: separate from this browser build.</li>
         <li data-i18n="rm_plan_3">Further display and hardware-feedback validation.</li>
         <li data-i18n="rm_plan_4">Other controllers are separate modules; this distribution contains BCR32 only.</li>
-        <li data-i18n="rm_plan_5">Extend firmware 1.0.3 support beyond verified step editing; do not assume compatibility for every write.</li>
+        <li data-i18n="rm_plan_5">Custom SysEx emission on physical gestures, advanced tokens and power-cycle persistence still need validation.</li>
       </ul>
       <div class="roadmap-hw-box">
         <strong data-i18n="rm_hw_title">Official Behringer Firmware &amp; Resources</strong>
@@ -324,7 +324,7 @@
   <div class="faq-list">
     <details>
       <summary><span data-i18n="faq_q1">Does BCR32 Studio risk corrupting my hardware presets?</span><span aria-hidden="true">+</span></summary>
-      <p data-i18n="faq_a1">This is alpha software, not a risk-free guarantee. Sequencer live edits require an explicit switch and affect the current edit buffer. Persistent saving is separate; back up presets before hardware changes.</p>
+      <p data-i18n="faq_a1">Hardware changes are explicit and controller STORE is separate from editing. The firmware 1.0.3 rotation/push STORE and preset-recall test restored all 64 slots, globals and working contents. This alpha result is not a guarantee for every program; retain backups.</p>
     </details>
     <details>
       <summary><span data-i18n="faq_q_fw">Where can I download the official Behringer firmware update?</span><span aria-hidden="true">+</span></summary>
@@ -336,7 +336,7 @@
     </details>
     <details>
       <summary><span data-i18n="faq_q3">Can I use BCR32 Studio without a BCR-32 plugged in?</span><span aria-hidden="true">+</span></summary>
-      <p data-i18n="faq_a3">Yes. You can edit assignments, configure custom labels, generate printable A4 PDF overlays, export Cubase MIDI Remote scripts, and program polyphonic sequences completely offline in your browser.</p>
+      <p data-i18n="faq_a3">Yes. Edit assignments and BCL/SysEx templates, simulate messages, customize labels, generate PDF overlays, export Cubase scripts and compose sequences without hardware.</p>
     </details>
     <details>
       <summary><span data-i18n="faq_q4">How does the Cubase MIDI Remote export work?</span><span aria-hidden="true">+</span></summary>
