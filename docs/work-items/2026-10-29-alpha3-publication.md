@@ -23,8 +23,16 @@ The owner's earlier explicit waiver for nonconfidential public manufacturer docu
 
 ## Acceptance
 
-- [ ] Isolated full tests/typecheck/build, browser application/EN-FR landing/offline checks.
-- [ ] Isolated privacy/whitespace review, no unexpected data in the publication graph.
+- [x] Isolated full tests/typecheck/build, browser application/EN-FR landing/offline checks.
+- [x] Isolated privacy/whitespace review, no unexpected data in the publication graph.
 - [ ] GitHub main fast-forward push, successful Pages run and served version0.46.0-alpha.3 at both routes.
 
 Delivery evidence is recorded below when available. No screenshot is needed for the text-only site update; browser checks use fake/disabled MIDI and never acquire physical ports.
+
+## Candidate verification — 2026-10-29 09:24–09:26 CET
+
+Isolated clean source **`b1fa899ea18cdb697ac9579a8bf4a938ec5c5090`**, declared React/ReactDOM19.3.1 dependencies: **51/51 tests**, TypeScript and production build/distribution passed. Browser checks passed for explicit custom-program/preset STORE, sequencer regression, EN/FR landing content/version/limitations without MIDI acquisition, and shared-scope root/editor offline navigation under the production subpath. Existing large-chunk build warnings remain.
+
+Generic privacy gate: **390 files /90 reachable commits**, pass. Full private scan: five manually reviewed contextual file findings, no historical/identity finding in the isolated publication graph. They match the public manufacturer-source links and already reviewed technical documentation substring; there is no new unexplained finding. No hook configuration is set in this isolated release checkout; the full scan was run explicitly and its nonzero result is retained above rather than mislabeled as a pass. No hook/denylist/protection setting was changed.
+
+Reader: Codex primary; exact model/effort unavailable. This candidate record is a subsequent documentation-only change. Remote main was rechecked as the original ancestor before publication preparation; no forced push or unrelated-branch merge is needed.
