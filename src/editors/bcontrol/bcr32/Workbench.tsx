@@ -1,3 +1,4 @@
+import {createPageFollower,type EditorPage} from './page-follow'
 import {assertWorkingPrograms} from './custom-program-transfer'
 import {createLiveControlQueue} from './live-control-queue'
 import {publicAsset} from '../../../deployment-base'
@@ -333,18 +334,27 @@ function loadWorkspace() {
   const inputs = useMemo(() => access ? Array.from(access.inputs.values()) : [], [access, portVersion])
   const outputs = useMemo(() => access ? Array.from(access.outputs.values()) : [], [access, portVersion])
   const output = outputs.find(port => port.id === outputId)
-  useEffect(()=>{
-    if(editorMode!=='controller'||!supportsZaqHost(liveFirmware)||liveDeviceId===null||locked||!output?.send)return
-    try{output.send(hostPage('controller'))}catch(e){setNotice(`Controller mode: ${String(e)}`)}
-  },[editorMode,liveFirmware,liveDeviceId,locked,output])
   const brightnessEnabled = !!access?.sysexEnabled && isBcrOutput(output) && isControllerPort(output) && inputs.some(p=>p.id===inputId && isControllerPort(p))
-  const chooseEditorMode=(mode:'controller'|'sequencer')=>{
+  const pageFollower=useRef<ReturnType<typeof createPageFollower>|null>(null)
+  const pageReady=useRef(false)
+  pageReady.current=brightnessEnabled&&supportsZaqHost(liveFirmware)&&liveDeviceId!==null&&liveDeviceId!==127&&!presetBusy&&!deviceSettingsBusy&&!['pending','writing'].includes(assignmentWrite.status)
+  useEffect(()=>{
+    if(!brightnessEnabled||!supportsZaqHost(liveFirmware)||liveDeviceId===null||liveDeviceId===127||!output?.send)return
+    const follower=createPageFollower({ready:()=>pageReady.current,send:bytes=>output.send!(bytes),changed:mode=>{
+      // Hardware observation changes navigation only. Readers must not reselect a page.
+      setEditorMode(mode)
+    }})
+    pageFollower.current=follower
+    return()=>{follower.close();if(pageFollower.current===follower)pageFollower.current=null}
+  },[brightnessEnabled,inputId,outputId,portVersion,liveFirmware,liveDeviceId])
+  const chooseEditorMode=(mode:EditorPage)=>{
     if(presetBusy||lockedRef.current)return
-    if(mode!==editorMode){setEditorMode(mode);return}
-    // Reassert the requested page even when the view is already selected (the hardware may have changed).
-    // Do not reread/replace a local draft just because the active tab was clicked again.
-    if(locked||!brightnessEnabled||!supportsZaqHost(liveFirmware)||liveDeviceId===null)return
-    try{output?.send?.(hostPage(mode))}catch(e){setNotice(`Hardware mode: ${String(e)}`)}
+    if(brightnessEnabled&&supportsZaqHost(liveFirmware)&&liveDeviceId!==null){
+      pageFollower.current?.requested(mode)
+      try{output?.send?.(hostPage(mode))}catch(e){setNotice(`Hardware mode: ${String(e)}`);return}
+    }
+    // Explicit UI navigation selects hardware once; the receive path never calls this action.
+    setEditorMode(mode)
   }
   const selected = profile[selection.kind].find((encoder) => encoder.id === selection.id)!
   const selectedItems = selectedControls(profile,selections)
@@ -587,6 +597,7 @@ function loadWorkspace() {
     setValues(current => Object.fromEntries(Object.entries(current).map(([id, v]) => [id, { value: v.value, source: v.source }])))
     input.onmidimessage = (event) => {
       const data = Array.from(event.data)
+      if(pageFollower.current?.receive(data))return
       // Preserve arrival time and keep clock/transport off unrelated assignment/learn/render paths.
       if(data.length===1&&[248,250,251,252,254].includes(data[0])){sequencerReceive.current(data,event.timeStamp);return}
       // Clock (F8) and active sensing (FE) touch no React state: no activity pulse, no log line, no App render.
@@ -757,7 +768,7 @@ function loadWorkspace() {
   }, [access, inputId, inputs, output, portVersion, probeRevision])
 
   const standardContext=useRef({ready:false,api:null as ProgramTools|null})
-  standardContext.current={ready:!locked&&assignmentLive&&liveFirmware==='1.0.3'&&brightnessEnabled&&!presetBusy&&!deviceSettingsBusy&&controllerRead.status==='complete',api:programAccess.current}
+  standardContext.current={ready:editorMode==='controller'&&!locked&&assignmentLive&&liveFirmware==='1.0.3'&&brightnessEnabled&&!presetBusy&&!deviceSettingsBusy&&controllerRead.status==='complete',api:programAccess.current}
   const standardQueue=useRef<ReturnType<typeof createLiveControlQueue>|null>(null)
   useEffect(()=>{
     const queue=createLiveControlQueue({ready:()=>standardContext.current.ready,write:async(target,control)=>{
@@ -766,7 +777,7 @@ function loadWorkspace() {
     },changed:(status,target,error)=>{setAssignmentWrite({status,queued:status==='pending'?1:0,index:target?controllerTargets.find(t=>t.kind===target.kind&&t.id===target.id)?.index:undefined});if(error)setNotice(error);else if(status==='confirmed')setNotice('Assignment independently read back on BCR32; working memory only, no STORE.')}})
     standardQueue.current=queue
     return()=>{queue.close();if(standardQueue.current===queue)standardQueue.current=null}
-  },[inputId,outputId,portVersion,liveFirmware,locked,controllerTracks?.selected,controllerTracks?.presets.join(':')])
+  },[editorMode,inputId,outputId,portVersion,liveFirmware,locked,controllerTracks?.selected,controllerTracks?.presets.join(':')])
   useEffect(()=>{if(!assignmentLive)standardQueue.current?.cancel()},[assignmentLive])
 
   // Single validation path for the inspector and MIDI Learn: applySelectionChange, then clamp live values of the targets.
@@ -1142,7 +1153,7 @@ function loadWorkspace() {
           </>}
           {editorMode === 'controller' && <button className="bcr32-tools-toggle" aria-label={toolsCollapsed?'Show editing tools':'Collapse editing tools'} aria-expanded={!toolsCollapsed} title={toolsCollapsed?'Show editing tools':'Collapse editing tools'} onClick={()=>setToolsCollapsed(on=>!on)}><span aria-hidden="true" data-i18n-skip>{toolsCollapsed?'◂':'▸'}</span></button>}
         </div>
-        {editorMode === 'sequencer' ? <SequencerView storage={storage} noteInput={noteInput} noteInputName={noteInputs.find(p => p.id === notePort)?.name ?? ''} openMidiSettings={() => setMidiSettingsOpen(true)} receive={sequencerReceive} download={download} locked={locked} transport={sequencerTransport} connection={{firmware:liveFirmware,device:liveDeviceId,key:`${inputId}:${outputId}:${portVersion}:${liveFirmware}:${liveDeviceId}`,available:brightnessEnabled&&!!output?.send&&!presetBusy&&controllerRead.status!=='reading',send:bytes=>{if(!output?.send)throw Error('BCR32 disconnected');output.send(bytes)}}} /> : <FrontPanel onModeKey={() => chooseEditorMode('sequencer')} move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
+        {editorMode === 'sequencer' ? <SequencerView storage={storage} noteInput={noteInput} noteInputName={noteInputs.find(p => p.id === notePort)?.name ?? ''} openMidiSettings={() => setMidiSettingsOpen(true)} receive={sequencerReceive} download={download} locked={locked} transport={sequencerTransport} connection={{selectPageOnRead:false,firmware:liveFirmware,device:liveDeviceId,key:`${inputId}:${outputId}:${portVersion}:${liveFirmware}:${liveDeviceId}`,available:brightnessEnabled&&!!output?.send&&!presetBusy&&controllerRead.status!=='reading',send:bytes=>{if(!output?.send)throw Error('BCR32 disconnected');output.send(bytes)}}} /> : <FrontPanel onModeKey={() => chooseEditorMode('sequencer')} move={locked?undefined:moveControls} trackFeedback={{tracks:controllerTracks}} onTrackSelect={track=>{if(lockedRef.current||tab==='files'||!trackSelect.current||controllerTracks?.selected===track||presetBusy||['pending','writing'].includes(assignmentWrite.status))return;cancelControllerRead();trackSelect.current(track)}} buttonFeedback={receivedAux} indicators={indicators} auxValues={auxValues} auxSources={auxSources} brightness={brightness} selectMany={selectMany} mouseMulti={mouseMulti} autoZoom={autoZoom} showNumbers={showNumbers} nameScreen={nameScreen} displayStyle={displayStyle} profile={profile} screenControl={screenControl} screenValue={screenValue} setScreenValue={setScreenValue} activity={activity} customLabels={customLabels} rename={(control, name) => {if(lockedRef.current)return;setCustomLabels(current => ({ ...current, [control.kind]: current[control.kind].map((label, i) => i === controlIndex(control.kind, control.id) ? name : label) }))}} selection={selection} selections={selections} select={selectUi} action={setNotice} values={values} setValue={setPreviewValue} ringMode={ringMode} compact />}
       </section>
 
       <aside className="sidebar" aria-label="Editing and MIDI tools">

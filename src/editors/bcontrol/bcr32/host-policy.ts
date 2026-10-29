@@ -11,7 +11,7 @@ export function validateQuery(bytes:readonly number[]) {
  if(!isFrame(bytes)||bytes[4]!==127)return false
  if(isZaqHostQuery(bytes))return true
  if(isFirmwareRead(bytes))return true
- return bytes.length===8&&([0,12,80,81,82].includes(bytes[6])||deviceGlobals.some(g=>g.cmd===bytes[6]))
+ return bytes.length===8&&([0,8,12,80,81,82].includes(bytes[6])||deviceGlobals.some(g=>g.cmd===bytes[6]))
 }
 export function validateBclPacket(bytes:readonly number[],persistent:boolean) {
  if(!isBclWrite(bytes,bytes[4]))return false

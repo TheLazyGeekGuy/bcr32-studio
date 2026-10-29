@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { applyHostLane, changedHostSteps, createZaqHost, isZaqHostWrite, sameHostPatternContext, supportsZaqHost } from './zaq-host'
 import {decodeTrackTiming,type TrackTiming} from './sequencer-follow'
 
-export type SequencerConnection = { firmware: string | null; device: number | null; key: string; available: boolean; send: (bytes: number[]) => void }
+export type SequencerConnection = { firmware: string | null; device: number | null; key: string; available: boolean; selectPageOnRead?:boolean; send: (bytes: number[]) => void }
 type Snapshot = { data: number[]; frames: number[][]; state: number[]; timing:TrackTiming[]; timingError?:string; capturedAt: string }
 /** View-local lifecycle; reuses the host's lease and never opens another MIDI connection. */
 export function useSequencerHost(connection: SequencerConnection | undefined, locked: boolean, onRead: (s: Snapshot) => void) {

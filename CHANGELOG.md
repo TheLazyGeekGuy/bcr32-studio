@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.10] — 2026-10-29
+
+- Unify the on-screen ZQR/CTRL key and the top Controller/Sequencer buttons through the same explicit hardware-page action.
+- Follow physical CTRL/ZQR changes on firmware1.0.3 using bounded read08 exports and checked04/0C or04/0B headers. The physical key emitted no spontaneous MIDI in the captured test.
+- Pause mode polling during preset/assignment operations, invalidate stale observations after a UI page request, and dispose the reader with its connection.
+- Prevent received hardware mode changes and automatic BCL/pattern reads from reselecting a page. No mode-command echo, preset STORE or data adoption from the mode probe.
+
 ## [0.46.0-alpha.9] — 2026-10-29
 
 - Restore live standard assignment editing on BCR32 firmware1.0.3 through checked, targeted BCL transactions; preserve the1.0.2 indexed-write gate. OFF clears custom output. Native PC bank serialization remains refused.

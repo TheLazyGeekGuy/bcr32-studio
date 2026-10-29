@@ -3,7 +3,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_CORE||'playwright-core')
 const assert=require('node:assert/strict')
 function fakeMidi({sync=false,timingMissing=false}={}){
  localStorage.setItem('bcr32_site_lang','en');localStorage.setItem('bcr32-studio.language.v1','en');localStorage.setItem('bcr32-studio.controller-autoread','false')
- window.__requests=0;window.__sent=[];window.__note=60;window.__running=0;window.__preset=0
+ window.__page='controller';window.__requests=0;window.__sent=[];window.__note=60;window.__running=0;window.__preset=0
  const input={id:'bcr-in',name:'BCR-32 SIM',state:'connected',type:'input',onmidimessage:null}
  const reply=(b,timeStamp)=>{const emit=()=>input.onmidimessage?.({data:new Uint8Array(b),timeStamp:timeStamp??performance.now()});return sync?emit():setTimeout(emit,2)},prefix=[240,0,32,50,0,100]
  window.__emit=reply
@@ -11,6 +11,9 @@ function fakeMidi({sync=false,timingMissing=false}={}){
  const output={id:'bcr-out',name:'BCR-32 SIM',state:'connected',type:'output',send(bytes){
   const b=Array.from(bytes);window.__sent.push(b);const cmd=b[6]
   if(cmd===0)return reply([...prefix,0,1,0,0,1,0,3,247])
+  if(cmd===0x0b||cmd===0x0c){window.__page=cmd===0x0b?'sequencer':'controller';return}
+  if(cmd===8&&b.length===8){const head=[240,0,32,50,127,100,4,window.__page==='sequencer'?11:12,2,0,0,0,...Array(256).fill(0)],sum=head.reduce((n,v)=>n+v,0)&65535;return reply([...head,...[12,8,4,0].map(shift=>sum>>shift&15),247])}
+
   if(cmd===0x48&&b.length===9)return reply([...prefix,0x48,0,0,...pack([window.__running,window.__preset,2,0,0]),247])
   if(cmd===0x45){const raw=Array.from({length:32},(_,s)=>b[9]===0?(b[8]===0&&s===0?window.__note:60):b[9]===1?100:b[9]===4?2:[5,6].includes(b[9])?-1:0).flatMap(v=>[v>>8&255,v&255]);return reply([...prefix,cmd,1,b[8],b[9],0,...pack(raw),247])}
   if(cmd===0x46){if(timingMissing)return;const value=[1,32,0,4,0,0,0][b[9]];return reply([...prefix,cmd,1,b[8],b[9],0,...pack([0,value]),247])}
@@ -37,6 +40,14 @@ if(require.main===module)(async()=>{const browser=await chromium.launch({headles
  await page.getByRole('button',{name:'Controller',exact:true}).click()
  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.studio')).some(e=>e.dataset.mode==='controller'))
  await page.waitForFunction(()=>window.__sent.some(b=>b.length===8&&b[6]===0x0c))
+ const beforePhysicalPages=await page.evaluate(()=>window.__sent.filter(b=>b.length===8&&[11,12].includes(b[6])).length)
+ await page.evaluate(()=>window.__page='sequencer')
+ await page.waitForFunction(()=>document.querySelector('.studio[data-mode="sequencer"]'))
+ await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b.length===8&&[11,12].includes(b[6])).length),beforePhysicalPages,'physical ZQR observation changes view without a page write')
+ await page.evaluate(()=>window.__page='controller')
+ await page.waitForFunction(()=>document.querySelector('.studio[data-mode="controller"]'))
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b.length===8&&[11,12].includes(b[6])).length),beforePhysicalPages,'physical CTRL observation and automatic BCL reads never echo/reselect a page')
  // Begin the existing sequencer scenario with a fresh simulated trace.
  await page.evaluate(()=>window.__sent.length=0)
  await page.getByRole('button',{name:'Sequencer',exact:true}).click()

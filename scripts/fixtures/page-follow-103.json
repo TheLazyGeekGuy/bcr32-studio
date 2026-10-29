@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-29",
+  "firmware": "1.0.3",
+  "nativeBinaryVersion": "ControlTribe 1.12.4",
+  "nativeFunction": "BCR32::ExportCurrentPage @ 0x1005b8e70",
+  "request": [
+    240,
+    0,
+    32,
+    50,
+    127,
+    100,
+    8,
+    247
+  ],
+  "observations": [
+    {
+      "ownerConfirmedMode": "controller",
+      "replyHeader": [
+        240,
+        0,
+        32,
+        50,
+        127,
+        100,
+        4,
+        12,
+        2,
+        0,
+        0,
+        1
+      ],
+      "length": 273,
+      "checksumValid": true,
+      "sha256": "8884ee766f026cc826c5f43385cf5c7c2f9617ffe52f380e1b272a142838895d"
+    },
+    {
+      "ownerConfirmedMode": "sequencer",
+      "replyHeader": [
+        240,
+        0,
+        32,
+        50,
+        127,
+        100,
+        4,
+        11,
+        2,
+        0,
+        0,
+        2
+      ],
+      "length": 273,
+      "checksumValid": true,
+      "sha256": "340916d1405b84be0d824051ab67578c1d415c9160ed737cdd51ac4f5f635b6c"
+    }
+  ],
+  "repeatedSequencerRequests": 10,
+  "repeatedSequencerReplies": 10,
+  "pollIntervalMs": 1000,
+  "unsolicitedModeEventObserved": false,
+  "rawPayloadOmitted": "Unrelated device content retained in ignored local output/hw only",
+  "limits": "Two owner-confirmed modes and ten repeated reads; export cursor advances; no STORE or hardware page command used in this comparison",
+  "cursorCycleProbe": {
+    "nativeRequests": 130,
+    "receivedSequencerPackets": 134,
+    "concurrentStudioPolling": true,
+    "cursorWrapObserved": true,
+    "pageOrStoreCommandSentByProbe": false,
+    "scope": "Bounded read-only continuity check; not an isolated timing benchmark"
+  }
+}

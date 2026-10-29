@@ -1,6 +1,6 @@
 # Unify controller/sequencer page switching
 
-Status: local UI correction verified; physical-button receive integration pending a captured event.
+Status: implemented locally in0.46.0-alpha.10; software checks and two physical mode reads pass. Final physical UI acceptance pending.
 
 ## Traceability
 
@@ -27,3 +27,15 @@ A fresh indefinite listener was active before the owner confirmed physical ZQR�
 ControlTribe1.12.4 binary SHA256 `8715b0703ad62a923822deb8b4f3c8eb5943d865f30f70b71940b3c3a44e5d6e`, function `BCR32::ExportCurrentPage` at0x1005b8e70, constructs exactly `F0 00 20 32 7F 64 08 F7`. A bounded read in owner-confirmed CTRL returned a273-byte04/0C kind2 packet; a separate full capture passed the16-bit nibble checksum (2368), block1. Consecutive requests returned blocks0 then1, so this may be a stateful export continuation rather than an independent current-mode query. **Do not yet wire this request to periodic automatic mode detection.** Need the same comparison after owner-confirmed ZQR, with no forced page selection, before claiming its mode meaning.
 
 Raw local evidence: ignored `output/hw/2026-10-29T18-50-07-198Z-all.log` and `mode-ctrl-08.syx`. A physical ZQR step is pending. Existing UI→hardware unification remains software-tested; hardware→UI synchronization remains incomplete.
+
+## Qualified mode read and local follow implementation — 19:59–20:06 CET
+
+Codex primary, exact model/effort unavailable, baseline `aca7584f7669e889b5426f0de53fe2efa9cc278a`, plus uncommitted page-follow, Workbench, ControllerPresets, SequencerView/useSequencerHost, host-policy, fixture and test changes. The owner confirmed ZQR without an app page command. The same08 read produced a273-byte04/0B kind2 packet, compared to04/0C in owner-confirmed CTRL. Both full packets pass checksum validation. Ten further native reads at1Hz returned ten valid ZQR responses across block7→next page/block0. Thus the export cursor advances, but the compared header follows the actual hardware mode. The raw payload is not imported or published; the filtered fixture records headers/checksums/hashes only in `scripts/fixtures/page-follow-103.json`.
+
+Implementation: a per-view, single-flight follower on the existing selected MIDI pair sends only the exact8-byte read08, at most once per second while the editor is idle. It validates full273-byte kind2 framing, checksum and the known CTRL/ZAQ codecs before changing view. A received mode invokes navigation only; explicit panel/toolbar clicks invoke the hardware command. Automatic pattern reads opt out of selecting the sequencer page; automatic BCL reads opt out of forcing CTRL. Recent UI requests invalidate old pending observations. The follower pauses for preset/device/assignment writes, consumes its own response without filling the manual-export/value paths and closes all timers with the connection. Standard queued assignments are confined to the Controller view. Background-browser throttling can extend the observation delay.
+
+Validation: strict parser/query/pending/timeout/pause/disposal tests pass; all57 unit scripts and TypeScript pass; production build passes. The real-browser simulated-MIDI scenario now changes the hardware mode variable without emitting an event, waits for read08 detection in both directions, and verifies zero additional0B/0C commands from received changes or automatic reads. It also retains panel/toolbar, automatic pattern reads, edits, playback/follow and selective-import coverage.
+
+A real local Firefox session began sequencer pattern reads after observing the owner's ZQR state. Explicit visual acceptance of the final physical CTRL transition was requested and remains pending at this checkpoint. This is not a blanket firmware qualification or a claim of preserving another application's simultaneous legacy export cursor. Mode reads advance that cursor; exclusive port ownership and pauses during Studio transfers remain relevant.
+
+At20:08 CET, an additional bounded native probe sent130 known read08 requests at100ms intervals while the Studio follower remained active. It observed134 sequencer responses including concurrent Studio reads, and a complete export-cursor wrap. No page, assignment or STORE command was sent by this probe. This establishes continued replies across the cursor boundary for the captured1.0.3 case, not an isolated latency benchmark. The application remains limited to at most1Hz idle polling. Final57/57 tests/typecheck and the alpha.10 build pass; the extended browser follow scenario passes in both directions without page-command echo. User confirmation of the visible physical CTRL transition is still pending.

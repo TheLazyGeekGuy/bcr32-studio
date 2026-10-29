@@ -112,7 +112,7 @@ export function SequencerView({ storage, noteInput, noteInputName, openMidiSetti
     setCurrent(Number.MAX_SAFE_INTEGER);setUndo([]);setRedo([])
   })
   const hostReceive=useRef(host.receive);hostReceive.current=host.receive
-  useEffect(()=>{if(host.enabled&&!locked)void host.read(emptyPattern().data)},[connection?.key,host.enabled,host.read,locked])
+  useEffect(()=>{if(host.enabled&&!locked)void host.read(emptyPattern().data,connection?.selectPageOnRead??true)},[connection?.key,host.enabled,host.read,locked])
   const liveEntry=entry.host===connection?.key&&entry.host!==undefined&&entry.hostAt===host.snapshot.current?.capturedAt
   const root=useRef<HTMLElement>(null),clockStatus=useMemo(createClockStatus,[])
   const cursor=useRef({heads:[null,null,null,null] as (number|null)[],painted:[null,null,null,null] as (number|null)[],nodes:new Map<string,HTMLElement[]>(),enabled:false,frame:0})
