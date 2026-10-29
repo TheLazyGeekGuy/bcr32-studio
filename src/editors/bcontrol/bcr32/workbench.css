@@ -1045,3 +1045,57 @@
 .bcr32-workbench .custom-help [role=tooltip]{position:absolute;z-index:20;left:0;right:0;margin-top:32px;padding:10px 12px;border:1px solid var(--theme-line);border-radius:5px;background:var(--theme-surface,#202124);color:var(--theme-text);font:400 12px/1.6 system-ui,sans-serif;text-align:left;white-space:normal;box-shadow:0 6px 18px #0005}
 @media(max-width:420px){.bcr32-workbench .custom-value-fields {gap:6px}.bcr32-workbench .custom-editor-header {flex-wrap:wrap}.bcr32-workbench .custom-editor-header h3 {min-width:40%}}
 @media(max-width:760px){.bcr32-workbench .custom-program {padding-bottom:48px}}
+
+/* Catalogue is the primary action; utility controls use the shared icon vocabulary. */
+.bcr32-workbench .studio.compact .custom-program .custom-catalog-open{display:flex;align-items:center;justify-content:center;gap:8px;flex:1 0 100%;min-height:38px;padding:8px 12px;background:var(--theme-accent,#dfa347);border:1px solid var(--theme-accent,#dfa347);color:#171714;font-size:13px;font-weight:600;border-radius:5px}
+.bcr32-workbench .custom-catalog-open .ui-icon{width:20px;height:20px}
+.bcr32-workbench .custom-source-tools .mock-actions{margin-left:auto}
+.bcr32-workbench .custom-source-tools .mock-actions button,.bcr32-workbench .custom-local-tools button,.bcr32-workbench .custom-hardware .mock-actions button{display:inline-flex;justify-content:center;align-items:center;width:32px;min-height:32px;padding:6px}
+.bcr32-workbench .custom-program .ui-icon{width:16px;height:16px;flex:none}
+.bcr32-workbench .custom-advanced>summary{display:flex;align-items:center;gap:7px}
+.bcr32-workbench .custom-advanced>summary::before{content:'▸';font-size:10px}
+.bcr32-workbench .custom-advanced[open]>summary::before{content:'▾'}
+.bcr32-workbench .custom-advanced>summary::-webkit-details-marker{display:none}
+.bcr32-workbench .custom-advanced h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--theme-muted);margin:8px 0}
+.bcr32-workbench .custom-draft-tools,.bcr32-workbench .custom-file-tools{border-bottom:1px solid var(--theme-line);padding-bottom:10px}
+.bcr32-workbench .sysex-catalog-dialog{padding:0;margin:auto;width:min(920px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 48px);border:1px solid var(--theme-line,#45474b);border-radius:8px;background:var(--theme-surface,#191a1d);color:var(--theme-text,#e6e3dc)}
+.bcr32-workbench .sysex-catalog-dialog::backdrop{background:#0009}
+.bcr32-workbench .synth-sysex-catalog{display:flex;flex-direction:column;max-height:calc(100dvh - 48px);min-width:0}
+.bcr32-workbench .catalog-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--theme-line);flex:none}
+.bcr32-workbench .catalog-header h3{display:flex;align-items:center;gap:8px;margin:0;font-size:18px;color:var(--theme-accent)}
+.bcr32-workbench .catalog-header h3 .ui-icon{width:22px;height:22px}
+.bcr32-workbench .catalog-header p{font-size:11px;color:var(--theme-muted);margin:5px 0 0}
+.bcr32-workbench .catalog-header-actions{display:flex;align-items:center;gap:6px;flex:none}
+.bcr32-workbench .catalog-header-actions button,.bcr32-workbench .catalog-files>summary{display:grid;place-items:center;box-sizing:border-box;width:32px;height:32px;padding:6px;border:1px solid var(--theme-line);border-radius:4px;background:transparent;cursor:pointer;list-style:none}
+.bcr32-workbench .catalog-header-actions .ui-icon{width:18px;height:18px}
+.bcr32-workbench .catalog-files{position:relative}
+.bcr32-workbench .catalog-files>summary::-webkit-details-marker{display:none}
+.bcr32-workbench .catalog-file-menu{position:absolute;right:0;top:38px;z-index:30;width:260px;max-width:calc(100vw - 64px);padding:6px;border:1px solid var(--theme-line);border-radius:5px;background:var(--theme-surface,#191a1d);box-shadow:0 8px 20px #0005}
+.bcr32-workbench .catalog-file-menu :is(button,.file){display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;height:auto;box-sizing:border-box;border:0;padding:8px;font-size:12px;text-align:left;white-space:normal;background:transparent;color:inherit;cursor:pointer}
+.bcr32-workbench .catalog-file-menu :is(button,.file):hover{background:var(--theme-selected,#ffffff0b)}
+.bcr32-workbench .catalog-file-menu input[type=file]{display:none}
+.bcr32-workbench .catalog-search{padding:12px 20px 0;flex:none}
+.bcr32-workbench .catalog-search label,.bcr32-workbench .catalog-body label{display:block;font-size:12px;margin:0}
+.bcr32-workbench .catalog-search input{margin-top:5px;width:100%;box-sizing:border-box}
+.bcr32-workbench .catalog-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.85fr);gap:20px;padding:16px 20px;overflow:auto;min-height:0}
+.bcr32-workbench .catalog-browser,.bcr32-workbench .catalog-definition{display:grid;align-content:start;gap:12px;min-width:0}
+.bcr32-workbench .catalog-body :is(select,input,textarea){box-sizing:border-box;width:100%;min-width:0;margin-top:5px}
+.bcr32-workbench .catalog-parameter-list select{height:300px;background-image:none;font-size:12px;padding:4px;white-space:normal}
+.bcr32-workbench .catalog-parameter-list option{padding:4px 6px}
+.bcr32-workbench .catalog-parameter-list optgroup{font-size:11px}
+.bcr32-workbench .catalog-definition{border-left:1px solid var(--theme-line);padding-left:20px}
+.bcr32-workbench .catalog-definition h4{margin:0;font-size:16px}
+.bcr32-workbench .catalog-definition .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.bcr32-workbench .catalog-definition textarea{font:12px/1.5 ui-monospace,Menlo,monospace;resize:vertical}
+.bcr32-workbench .catalog-result-count,.bcr32-workbench .catalog-reference{font-size:11px;color:var(--theme-muted);margin:0}
+.bcr32-workbench .catalog-notice{font-size:12px;padding:8px 20px;margin:0;color:var(--theme-accent)}
+.bcr32-workbench .catalog-limit,.bcr32-workbench .catalog-error{font-size:12px;line-height:1.5;margin:0;color:var(--theme-accent);overflow-wrap:anywhere}
+.bcr32-workbench .catalog-reference summary{font-size:12px;cursor:pointer}
+.bcr32-workbench .catalog-reference p{line-height:1.5;overflow-wrap:anywhere}
+.bcr32-workbench .catalog-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;padding:12px 20px;border-top:1px solid var(--theme-line)}
+.bcr32-workbench .catalog-footer p{font-size:11px;color:var(--theme-muted);margin:0;max-width:230px}
+.bcr32-workbench .catalog-footer .catalog-load{display:flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:8px 12px;border:1px solid var(--theme-accent);border-radius:4px;background:var(--theme-accent);color:#171714;font-size:12px;font-weight:600}
+.bcr32-workbench .catalog-load:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:700px){.bcr32-workbench .catalog-body{grid-template-columns:minmax(0,1fr);gap:16px}.bcr32-workbench .catalog-definition{border-left:0;border-top:1px solid var(--theme-line);padding:14px 0 0}.bcr32-workbench .catalog-parameter-list select{height:180px}.bcr32-workbench .catalog-footer{flex-direction:column;align-items:stretch}.bcr32-workbench .catalog-footer p{max-width:none}.bcr32-workbench .catalog-header,.bcr32-workbench .catalog-search,.bcr32-workbench .catalog-body,.bcr32-workbench .catalog-footer{padding-left:12px;padding-right:12px}}
+
+.bcr32-workbench .studio.compact .sidebar .sysex-catalog-dialog .catalog-header h3{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-size:18px;font-weight:600;line-height:1.4;text-transform:none;letter-spacing:normal;color:var(--theme-accent)}

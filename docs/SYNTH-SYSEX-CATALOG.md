@@ -2,7 +2,7 @@
 
 The built-in catalogue contains **22 model entries and 3,122 definitions**. The original20 models are retained; the MicrowaveII and XT variants are separated, and the Roland JV-2080 is added. This is coverage of the scopes below, **not a claim that every MIDI feature or bulk format of each instrument is implemented**.
 
-Definitions can be searched by instrument, parameter and section, then previewed, exported as SXM or loaded into an encoder rotation/push draft when the BCL adapter supports them. Import, preview, browsing and export never send MIDI. Native BCR32 execution and physical synth qualification remain separate.
+The accent Catalogue button opens a responsive modal. One search filters instruments, parameter names and exact section names; the instrument selector and visible parameter list lead directly to addressing and preview. Definitions can be exported as SXM or loaded into an encoder rotation/push draft when the BCL adapter supports them. File operations share one folder menu; sources and coverage share one reference disclosure. Import, preview, browsing and export never send MIDI. Native BCR32 execution and physical synth qualification remain separate.
 
 ## Coverage
 

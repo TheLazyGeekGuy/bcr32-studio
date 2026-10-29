@@ -1,5 +1,9 @@
-export type IconName = 'folder' | 'save' | 'copy' | 'import' | 'export' | 'print' | 'palette' | 'sliders' | 'midi' | 'log' | 'expand' | 'collapse' | 'send' | 'power' | 'rotate' | 'push' | 'close' | 'language' | 'gear' | 'help' | 'din'
+export type IconName = 'folder' | 'save' | 'copy' | 'import' | 'export' | 'print' | 'palette' | 'sliders' | 'midi' | 'log' | 'expand' | 'collapse' | 'send' | 'power' | 'rotate' | 'push' | 'close' | 'language' | 'gear' | 'help' | 'din' | 'book' | 'undo' | 'redo' | 'file'
 const paths: Record<IconName, string[]> = {
+  book: ['M12 5v16','M12 5C9 3 5 3 2 4v15c3-1 7-1 10 2 3-3 7-3 10-2V4c-3-1-7-1-10 1Z'],
+  undo: ['M3 10h11a6 6 0 0 1 0 12','m8 5-5 5 5 5'],
+  redo: ['M21 10H10a6 6 0 0 0 0 12','m16 5 5 5-5 5'],
+  file: ['M14 2H5v20h14V7l-5-5Z','M14 2v6h5','M8 12h8M8 16h6'],
   gear: ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z','M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z'],
   help: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z','M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3','M12 17h.01'],
   folder: ['M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z'],

@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-Version **0.46.0-alpha.13**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
+Version **0.46.0-alpha.14**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
 
 Read scope: existing root BCL/profile/forms/text components, BCR32 profile/read/write/CC transport/preset/store/Workbench, generic parameter state/history and actual host interfaces, build and browser fixtures. This standalone checkout lacks the upstream core-contract/onboarding documents listed by the integration skill; the checked source interfaces are authoritative, not historical SDK sketches. The initial alpha1 slice changed no permissions. Alpha2 reuses the same host SDK and grants, adding only a qualified selected-control fragment and addressed Type OFF operation on exact firmware1.0.2/1.0.3; existing preset/global/STORE gates remain unchanged. See the transfer ticket for the additive module policy.
 
@@ -105,3 +105,14 @@ The normal view shows the source, Minimum/Maximum/Initial value and a compact li
 Removing the unsupported-standard-read banner for recognized custom descriptors does not certify a local draft as fresh hardware data. Existing read-back/synchronization status remains authoritative. The generic banner is still present for genuinely unrepresented standard assignments. No protocol, STORE policy, transport or auto-send scheduling is changed by this presentation work.
 
 Review provenance, source baseline and browser proof: [inspector work item](work-items/2026-10-29-sysex-bcl-inspector.md).
+
+
+## Catalogue and utility icons — alpha.14
+
+The accent **Catalogue** button with a book icon opens a native modal rather than nesting another form inside the inspector. It has one combined search, an instrument selector and a directly visible parameter list. Search can combine instrument/parameter terms; entering an exact section name such as `Tone 1` selects that section's scope. Parameter names and section identifiers remain manufacturer data. Addressing and the software byte preview sit beside the list on desktop and below it on narrow screens. Load still replaces only the local text draft, without transmission. Escape/close restores focus to the opening button.
+
+The folder button groups SXM import/export, built-in restore and schema download. A single Reference and compatibility disclosure retains sources and scope limits. Unsupported native BCL definitions and checksums keep concise file-only status plus explanatory tooltips.
+
+Undo/Redo/Copy use icons with localized accessible names and titles. Advanced inspector groups distinguish Local draft, BCL/SYX files and Hardware backup. Manual read/send/restore/download actions remain available as icons with tooltips; the underlying automatic edit, backup/read-back and explicit STORE workflows are unchanged.
+
+Trace and acceptance: [catalogue navigation work item](work-items/2026-10-29-catalogue-navigation.md).

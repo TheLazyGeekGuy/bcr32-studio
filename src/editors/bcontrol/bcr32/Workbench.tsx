@@ -1243,7 +1243,7 @@ function loadWorkspace() {
           stopValueEmission();disarmLearn()
           const next=parseProfile({...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?control:e)})
           profileRef.current=next;setProfile(next)
-          setNotice('Custom program updated. See custom synchronization status for hardware read-back; STORE remains separate.')
+          setNotice('Custom draft updated.')
         }}/>}
         <fieldset className="standard-assignment" hidden={!multiple&&!!customView} disabled={selectedItems.some(x=>!!x.control.customAssignment)}>
         <label>Mode<select disabled={!commonModes.length} value={batchMode} onChange={(event) => updateSelected({ mode: event.target.value as EncoderMode })}>

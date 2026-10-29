@@ -6,7 +6,7 @@ const {fakeMidi}=require('./e2e-zaq-host.cjs'),assert=require('node:assert/stric
  await page.addInitScript(fakeMidi,{sync:true});await page.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort())
  await page.goto((process.argv[2]??'http://127.0.0.1:5193')+'/editor/?native=0')
  const type=page.getByRole('combobox',{name:'MIDI message type',exact:true});await type.selectOption('bcl')
- const open=async()=>{await page.getByRole('button',{name:'Synth SysEx catalogue',exact:true}).click();await page.getByRole('region',{name:'Synth SysEx catalogue',exact:true}).waitFor()};await open()
+ const open=async()=>{await page.getByRole('button',{name:'Synth SysEx catalogue',exact:true}).click();await page.getByRole('region',{name:'Synth SysEx catalogue',exact:true}).waitFor();await page.locator('.catalog-files > summary').click()};await open()
  const picker=page.getByRole('region',{name:'Synth SysEx catalogue',exact:true}),file=picker.getByLabel('Import SysEx Map')
  await picker.waitFor();await file.setInputFiles('docs/formats/sysex-map-v1/tx81z.sxm.json')
  await picker.getByText('SXM catalogue loaded locally. No MIDI sent.',{exact:true}).waitFor()
@@ -31,7 +31,7 @@ const {fakeMidi}=require('./e2e-zaq-host.cjs'),assert=require('node:assert/stric
  assert.equal((await dl('Export SXM catalogue')).devices[0].parameters.length,10)
  const risky=JSON.parse(JSON.stringify(encoding));risky.devices[0].parameters[0].value={minimum:0,maximum:127};risky.devices[0].parameters[0].effect='persistent-write'
  await file.setInputFiles({name:'write-definition.sxm.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(risky))})
- await picker.getByText(/BCL loading is unavailable for effect persistent-write/).waitFor();assert.equal(await picker.getByRole('button',{name:'Load into current control draft'}).isEnabled(),false)
+ await picker.getByText('File-only definition',{exact:true}).waitFor();assert.match(await picker.getByText('File-only definition',{exact:true}).getAttribute('title'),/effect persistent-write/);assert.equal(await picker.getByRole('button',{name:'Load into current control draft'}).isEnabled(),false)
  await picker.getByRole('button',{name:'Built-in catalogue',exact:true}).click();assert.equal(await picker.getByRole('combobox',{name:'Synth',exact:true}).locator('option').count(),22)
  const writes=await page.evaluate(()=>window.__sent.filter(b=>b[0]!==240||b[1]!==0||b[2]!==32||b[3]!==50||b[6]===32||b[6]===114||b[6]===119||b[6]>=49&&b[6]<=56&&b.length>8))
  assert.deepEqual(writes,[]);assert.deepEqual(errors,[])

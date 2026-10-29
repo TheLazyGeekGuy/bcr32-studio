@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.46.0-alpha.14] — 2026-10-29
+
+- Promote the SysEx catalogue with a full-width accent button and book icon. Use icon-only Undo/Redo/Copy and secondary draft/hardware actions with translated accessible names and tooltips.
+- Separate local-draft tools, BCL/SYX files and hardware backup actions inside the advanced inspector. Preserve existing operations and automatic-edit/STORE policy.
+- Open the catalogue in a responsive native modal: one combined search, instrument selector, directly visible grouped parameter list and adjacent preview/addressing. Move file operations into one menu and references into one disclosure.
+- Restore focus after Escape/close; support exact section searches and combined instrument/parameter terms. Keep unsupported/checksum definitions visibly file-only with detailed tooltip explanations.
+- Preserve SXM import/export budgets, local-only template loading, source data, encodings and MIDI grants. Add browser coverage for icons, modal focus, search, narrow layout and zero writes.
+
 ## [0.46.0-alpha.13] — 2026-10-29
 
 - Simplify the SysEx/BCL inspector: retain source/range editing and compact live/local state; move simulation to Preview and file/manual-transfer/recovery tools to a collapsed section.
