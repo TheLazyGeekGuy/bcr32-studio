@@ -1,0 +1,94 @@
+{
+  "format": "SysEx Map",
+  "version": "1.0",
+  "id": "microwave-example",
+  "name": "Microwave I SXM example",
+  "description": "Curated selection, not a sales or popularity ranking. No physical synth qualification is claimed.",
+  "sources": {
+    "microwave": {
+      "url": "https://downloads.waldorfmusic.com/cloud/index.php/s/weTqE3SkZzocxYe/download",
+      "sha256": "08dde6bc05f8cfa5273ebd20e4786303a52211cfd7e86c739f9e70c6f7874e77",
+      "bytes": 13235334,
+      "retrieved": "2026-10-29",
+      "title": "Waldorf Microwave I - manufacturer MIDI documentation"
+    }
+  },
+  "devices": [
+    {
+      "id": "microwave",
+      "manufacturer": "Waldorf",
+      "name": "Microwave I",
+      "notes": "OS 2.00. Single/Poly ignores Part; Multi selects Part 1-8. Requires additive checksum. Native BCL checksum execution is unqualified: file-only in this editor.",
+      "documentation": {
+        "sources": [
+          "microwave"
+        ],
+        "section": "SysEx 2.00 rev00 (1994-03-01): RTBP 60h, BPRD table, BYTE encoding and CHKSUM"
+      },
+      "parameters": [
+        {
+          "id": "cutoff",
+          "name": "Filter cutoff",
+          "value": {
+            "minimum": 0,
+            "maximum": 127
+          },
+          "fields": {
+            "device": {
+              "name": "Device ID",
+              "minimum": 0,
+              "maximum": 126,
+              "default": 0
+            },
+            "part": {
+              "name": "Part",
+              "minimum": 1,
+              "maximum": 8,
+              "default": 1
+            }
+          },
+          "messages": [
+            {
+              "bytes": [
+                240,
+                62,
+                0,
+                {
+                  "field": "device",
+                  "add": 0
+                },
+                96,
+                {
+                  "field": "part",
+                  "add": -1
+                },
+                4,
+                1,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                {
+                  "checksum": {
+                    "algorithm": "sum7",
+                    "from": 5,
+                    "to": 8
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "manufacturer-documented"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "example.note": "Retain this optional metadata on import/export."
+  }
+}

@@ -10,7 +10,7 @@ export type CustomProgramActions={chooseRepresentation:(mode:'sysex'|'bcl')=>boo
 const SynthCatalog=lazy(()=>import('../../../sysex-catalog/CatalogPicker'))
 const example='.minmax 0 127\n.default 0\n.tx $F0 $7D val $F7\n.showvalue on'
 const hex=(bytes:ArrayLike<number>)=>Array.from(bytes,b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')
-export function CustomProgramEditor({target,config,locked,firmware,hardware,representation='sysex',visible=true,actions,onRepresentation,apply,download}:{representation?:'sysex'|'bcl';visible?:boolean;actions?:MutableRefObject<CustomProgramActions|null>;onRepresentation?:(mode:'sysex'|'bcl')=>void;hardware?:{tools:MutableRefObject<ProgramTools|null>;available:boolean;begin:()=>void};target:ProgramTarget;config:Encoder;locked:boolean;firmware:string|null;apply:(config:Encoder)=>void;download:(content:BlobPart,name:string,type?:string)=>void}){
+export function CustomProgramEditor({target,config,locked,firmware,hardware,representation='sysex',visible=true,actions,onRepresentation,apply,download,catalogStorage}:{catalogStorage?:{getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void};representation?:'sysex'|'bcl';visible?:boolean;actions?:MutableRefObject<CustomProgramActions|null>;onRepresentation?:(mode:'sysex'|'bcl')=>void;hardware?:{tools:MutableRefObject<ProgramTools|null>;available:boolean;begin:()=>void};target:ProgramTarget;config:Encoder;locked:boolean;firmware:string|null;apply:(config:Encoder)=>void;download:(content:BlobPart,name:string,type?:string)=>void}){
   const controlExample=target.kind==='encoders'?example:example.replace('.default 0\n','')
   const [mode,setMode]=useState<'sysex'|'bcl'|'raw'>(representation),[source,setSource]=useState(config.customAssignment?.sourceBcl??controlExample)
   const [hexDraft,setHexDraft]=useState<string|null>(null),[preview,setPreview]=useState(32),[notice,setNotice]=useState('')
@@ -65,7 +65,7 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,repr
       <p><code>{selector}</code> · Local editing and simulation. Firmware {firmware??'unknown'}: custom output not hardware-validated.</p>
       <div className="mock-seg" role="group" aria-label="Custom program representation"><button aria-pressed={mode==='raw'} onClick={()=>changeMode(mode==='raw'?representation:'raw')}>{mode==='raw'?`Back to ${representation==='sysex'?'SysEx':'BCL'}`:'Raw'}</button></div>
       <button aria-expanded={catalogOpen} onClick={()=>setCatalogOpen(open=>!open)}>Synth SysEx catalogue</button>
-      {catalogOpen&&<Suspense fallback={<p role="status">Loading offline catalogue…</p>}><SynthCatalog load={(next,value,needsBcl)=>{
+      {catalogOpen&&<Suspense fallback={<p role="status">Loading offline catalogue…</p>}><SynthCatalog download={download} storage={catalogStorage} load={(next,value,needsBcl)=>{
         edit(next,true);setHexDraft(null);setPreview(value);setOriginal(null)
         const nextMode=needsBcl?'bcl':representation;setMode(nextMode);onRepresentation?.(nextMode)
         setCatalogOpen(false)

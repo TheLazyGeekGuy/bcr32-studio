@@ -1,6 +1,6 @@
 # Synth SysEx starter catalogue
 
-Version: **0.46.0-alpha.5**. Twenty curated hardware models, 46 templates. This is an editorial selection of familiar synths, not a measured popularity ranking or a full editor for each instrument.
+Version: **0.46.0-alpha.6**. Twenty curated hardware models, 46 templates. This is an editorial selection of familiar synths, not a measured popularity ranking or a full editor for each instrument.
 
 ## Use in the editor
 
@@ -197,7 +197,7 @@ Access date: 2026-10-29. Manufacturer PDFs/archives and extracted/OCR reference 
 
 ## Architecture and extension
 
-`src/sysex-catalog/catalog.json` contains versioned, declarative model/command/source data. `catalog.ts` is a pure, browser-independent formatter/validator with no ports, storage, timers or sender. It renders independently calculated catalogue previews and bounded destination addresses, then emits a control-body string consumed by the existing BCL parser. `CatalogPicker.tsx` is loaded dynamically on first catalogue opening and gives its host a local source callback. It owns no MIDI permission. The BCR32 adapter supplies its selected control; the same picker can be composed by another host without importing a BCR32 session.
+`src/sysex-catalog/starter.sxm.json` is the sole shipped definition source. The former alpha5 authoring file is retained only as a regression fixture. `catalog.ts` is a compatibility projection; wire generation delegates to the independent SXM engine in `src/sysex-map/`. The capability adapter in `bcl-adapter.ts` converts only supported definitions to the existing BCL parser. `CatalogPicker.tsx` is loaded dynamically on first catalogue opening and gives its host a local source callback. It owns no MIDI permission. The BCR32 adapter supplies its selected control; the same picker can be composed by another host without importing a BCR32 session.
 
 Do not add bulk writes, STORE, reset, bootloader or firmware messages to this starter set. A new model/parameter needs exact manufacturer scope, byte layout, ranges, addressing, side effects and independent expected-byte fixtures. Family similarity is not protocol evidence. Do not mark a checksum supported by native hardware merely because catalogue preview computes it.
 
@@ -206,3 +206,7 @@ The optional fourth `createHistory.record` argument forces one discrete local Un
 ## Validation
 
 See the [work item](work-items/2026-10-29-synth-sysex-catalog.md) for the source revision, tests, browser workload, size and delivery boundary.
+
+## Portable SXM files
+
+Use **Import SXM** to replace the displayed catalogue after complete validation. It remains local and survives selection/reload through the editor's scoped storage when available. **Built-in catalogue** restores the shipped definitions. Export the entire catalogue, one synth, one parameter, or the JSON Schema. Preview values are explicitly marked as user/preset/observed data; changing a saved field/value produces user data, never a new hardware observation. Unsupported BCL definitions remain previewable/exportable in SXM. See the [format specification](formats/sysex-map-v1/SPECIFICATION.md) and [architecture](formats/sysex-map-v1/ARCHITECTURE.md).

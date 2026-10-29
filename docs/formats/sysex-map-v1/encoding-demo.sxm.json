@@ -1,0 +1,290 @@
+{
+  "format": "SysEx Map",
+  "version": "1.0",
+  "id": "encoding-demo",
+  "name": "Synthetic encoding vectors",
+  "sources": {},
+  "devices": [
+    {
+      "id": "demo",
+      "manufacturer": "Non-commercial example",
+      "name": "No hardware target",
+      "notes": "Synthetic data only.",
+      "documentation": {
+        "sources": [],
+        "section": "SXM syntax tests"
+      },
+      "parameters": [
+        {
+          "id": "signed",
+          "name": "signed",
+          "value": {
+            "minimum": -64,
+            "maximum": 63
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        },
+        {
+          "id": "offset",
+          "name": "offset",
+          "value": {
+            "minimum": -64,
+            "maximum": 63
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 64
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        },
+        {
+          "id": "14le",
+          "name": "14le",
+          "value": {
+            "minimum": 0,
+            "maximum": 16383
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                {
+                  "value": {
+                    "shift": 7,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        },
+        {
+          "id": "nibbles",
+          "name": "nibbles",
+          "value": {
+            "minimum": 0,
+            "maximum": 255
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                {
+                  "value": {
+                    "shift": 4,
+                    "bits": 4,
+                    "add": 0
+                  }
+                },
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 4,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        },
+        {
+          "id": "sum",
+          "name": "sum",
+          "value": {
+            "minimum": 0,
+            "maximum": 127
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                1,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                {
+                  "checksum": {
+                    "algorithm": "sum7",
+                    "from": 2,
+                    "to": 3
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        },
+        {
+          "id": "complement",
+          "name": "complement",
+          "value": {
+            "minimum": 0,
+            "maximum": 127
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                1,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                {
+                  "checksum": {
+                    "algorithm": "complement7",
+                    "from": 2,
+                    "to": 3
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        },
+        {
+          "id": "xor",
+          "name": "xor",
+          "value": {
+            "minimum": 0,
+            "maximum": 127
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                1,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                {
+                  "checksum": {
+                    "algorithm": "xor7",
+                    "from": 2,
+                    "to": 3
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        },
+        {
+          "id": "two-messages",
+          "name": "two-messages",
+          "value": {
+            "minimum": 0,
+            "maximum": 127
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            },
+            {
+              "bytes": [
+                240,
+                125,
+                1,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified"
+        }
+      ]
+    }
+  ]
+}

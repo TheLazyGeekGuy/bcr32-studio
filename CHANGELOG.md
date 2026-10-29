@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.6] — 2026-10-29
+
+- Specify the open SysEx Map (SXM) 1.0 draft: portable parameter definitions, destination fields, value slices, checksums, optional saved values/origins, source evidence and extension metadata in `.sxm.json`.
+- Ship a JSON Schema, independent TypeScript/Python renderers and conformance vectors. No transport or executable code is embedded in the format.
+- Migrate the 20-model/46-parameter catalogue to a single SXM definition source. Preserve existing BCL/SysEx behavior through a capability adapter.
+- Import/export full catalogues, synths or individual parameters with preview values from the existing UI; export the schema. Validate before replacement and retain imported catalogues through the editor's injected storage. No hardware sends on import/export.
+
 ## [0.46.0-alpha.5] — 2026-10-29
 
 - Add an offline, searchable SysEx catalogue for 20 synth models and 46 parameter/request templates, including Microwave I/II, Blofeld, TX81Z, DX7, AN200, FS1R, Juno and DW models.

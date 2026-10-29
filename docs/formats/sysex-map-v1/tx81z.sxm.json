@@ -1,0 +1,86 @@
+{
+  "format": "SysEx Map",
+  "version": "1.0",
+  "id": "tx81z-example",
+  "name": "TX81Z SXM example",
+  "description": "Curated selection, not a sales or popularity ranking. No physical synth qualification is claimed.",
+  "sources": {
+    "tx81z": {
+      "url": "https://usa.yamaha.com/files/download/other_assets/9/316769/TX81ZE.pdf",
+      "sha256": "a054ce349f0c59046baf955cfb1194195ff9e66d23fa2ad332509915f4ea67c0",
+      "bytes": 3814856,
+      "retrieved": "2026-10-29",
+      "title": "Yamaha TX81Z - manufacturer MIDI documentation"
+    }
+  },
+  "devices": [
+    {
+      "id": "tx81z",
+      "manufacturer": "Yamaha",
+      "name": "TX81Z",
+      "notes": "Enable exclusive reception; match Basic Receive Channel. VCED group 12h edits the current voice, without STORE.",
+      "documentation": {
+        "sources": [
+          "tx81z"
+        ],
+        "section": "Owner Manual printed pp.67,71 / PDF pp.68,72: Parameter Change / VCED"
+      },
+      "parameters": [
+        {
+          "id": "algorithm",
+          "name": "Algorithm",
+          "value": {
+            "minimum": 0,
+            "maximum": 7
+          },
+          "fields": {
+            "channel": {
+              "name": "MIDI channel",
+              "minimum": 1,
+              "maximum": 16,
+              "default": 1
+            }
+          },
+          "messages": [
+            {
+              "bytes": [
+                240,
+                67,
+                {
+                  "field": "channel",
+                  "add": 15
+                },
+                18,
+                52,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "manufacturer-documented"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "example.note": "Retain this optional metadata on import/export."
+  },
+  "values": [
+    {
+      "device": "tx81z",
+      "parameter": "algorithm",
+      "value": 3,
+      "fields": {
+        "channel": 8
+      },
+      "origin": "preset"
+    }
+  ]
+}

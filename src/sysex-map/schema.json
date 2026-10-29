@@ -1,0 +1,487 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sysex-map:schema:1.0",
+  "title": "SysEx Map 1.0 (open draft)",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "SysEx Map"
+    },
+    "version": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+      "maxLength": 128
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 8000
+    },
+    "sources": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+        "maxLength": 128
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/source"
+      },
+      "maxProperties": 4096
+    },
+    "devices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/device"
+      },
+      "minItems": 1,
+      "maxItems": 256
+    },
+    "values": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/savedValue"
+      },
+      "minItems": 0,
+      "maxItems": 8192
+    },
+    "extensions": {
+      "type": "object"
+    },
+    "requiredExtensions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+        "maxLength": 128
+      },
+      "minItems": 0,
+      "maxItems": 128
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "id",
+    "name",
+    "sources",
+    "devices"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "field": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "minimum": {
+          "type": "integer",
+          "minimum": -16384,
+          "maximum": 16383
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": -16384,
+          "maximum": 16383
+        },
+        "default": {
+          "type": "integer",
+          "minimum": -16384,
+          "maximum": 16383
+        }
+      },
+      "required": [
+        "name",
+        "minimum",
+        "maximum",
+        "default"
+      ],
+      "additionalProperties": false
+    },
+    "token": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+              "maxLength": 128
+            },
+            "add": {
+              "type": "integer",
+              "minimum": -16384,
+              "maximum": 16383
+            }
+          },
+          "required": [
+            "field",
+            "add"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "shift": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                },
+                "bits": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 7
+                },
+                "add": {
+                  "type": "integer",
+                  "minimum": -16384,
+                  "maximum": 16383
+                }
+              },
+              "required": [
+                "shift",
+                "bits",
+                "add"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "checksum": {
+              "type": "object",
+              "properties": {
+                "algorithm": {
+                  "enum": [
+                    "sum7",
+                    "complement7",
+                    "xor7"
+                  ]
+                },
+                "from": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1023
+                },
+                "to": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1023
+                }
+              },
+              "required": [
+                "algorithm",
+                "from",
+                "to"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "checksum"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "range": {
+      "type": "object",
+      "properties": {
+        "minimum": {
+          "type": "integer",
+          "minimum": -16384,
+          "maximum": 16383
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": -16384,
+          "maximum": 16383
+        },
+        "default": {
+          "type": "integer",
+          "minimum": -16384,
+          "maximum": 16383
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "maxProperties": 32768
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum"
+      ],
+      "additionalProperties": false
+    },
+    "parameter": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "value": {
+          "$ref": "#/$defs/range"
+        },
+        "fields": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+            "maxLength": 128
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/field"
+          },
+          "maxProperties": 32
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "bytes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/token"
+                },
+                "minItems": 3,
+                "maxItems": 1024
+              }
+            },
+            "required": [
+              "bytes"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "effect": {
+          "enum": [
+            "edit-buffer",
+            "request",
+            "global-change",
+            "persistent-write",
+            "reset",
+            "firmware"
+          ]
+        },
+        "evidence": {
+          "enum": [
+            "manufacturer-documented",
+            "local-observation",
+            "unverified"
+          ]
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "value",
+        "fields",
+        "messages",
+        "effect",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "device": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+          "maxLength": 128
+        },
+        "manufacturer": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 8000
+        },
+        "documentation": {
+          "type": "object",
+          "properties": {
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+                "maxLength": 128
+              },
+              "minItems": 0,
+              "maxItems": 128
+            },
+            "section": {
+              "type": "string",
+              "maxLength": 4000
+            }
+          },
+          "required": [
+            "sources",
+            "section"
+          ],
+          "additionalProperties": false
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/parameter"
+          },
+          "minItems": 1,
+          "maxItems": 8192
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "manufacturer",
+        "name",
+        "notes",
+        "documentation",
+        "parameters"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://",
+          "maxLength": 2048
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "retrieved": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "maxLength": 10
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "retrieval": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      },
+      "required": [
+        "title",
+        "url",
+        "sha256",
+        "retrieved"
+      ],
+      "additionalProperties": false
+    },
+    "savedValue": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+          "maxLength": 128
+        },
+        "parameter": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+          "maxLength": 128
+        },
+        "value": {
+          "type": "integer",
+          "minimum": -16384,
+          "maximum": 16383
+        },
+        "fields": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,128}$",
+            "maxLength": 128
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": -16384,
+            "maximum": 16383
+          },
+          "maxProperties": 32
+        },
+        "origin": {
+          "enum": [
+            "user",
+            "preset",
+            "observed"
+          ]
+        }
+      },
+      "required": [
+        "device",
+        "parameter",
+        "value",
+        "fields",
+        "origin"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
