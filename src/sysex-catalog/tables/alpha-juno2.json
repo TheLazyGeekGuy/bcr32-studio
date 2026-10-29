@@ -1,0 +1,221 @@
+{
+  "scope": "MIDI Implementation 3.2 IPR, PDF48; tone parameters0..35 (chord-memory parameter48 separately scoped)",
+  "rows": [
+    {
+      "index": 0,
+      "name": "DCO Envelope Mode",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 1,
+      "name": "Filter Envelope Mode",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 2,
+      "name": "VCA Envelope Mode",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 3,
+      "name": "DCO Pulse Waveform",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 4,
+      "name": "DCO Saw Waveform",
+      "minimum": 0,
+      "maximum": 5
+    },
+    {
+      "index": 5,
+      "name": "DCO Sub Waveform",
+      "minimum": 0,
+      "maximum": 5
+    },
+    {
+      "index": 6,
+      "name": "DCO Range",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 7,
+      "name": "DCO Sub Level",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 8,
+      "name": "DCO Noise Level",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 9,
+      "name": "HPF Cutoff",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 10,
+      "name": "Chorus Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 11,
+      "name": "DCO LFO Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 12,
+      "name": "DCO Envelope Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 13,
+      "name": "DCO Aftertouch Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 14,
+      "name": "DCO PWM Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 15,
+      "name": "DCO PWM Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 16,
+      "name": "Filter Cutoff",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 17,
+      "name": "Filter Resonance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 18,
+      "name": "Filter LFO Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 19,
+      "name": "Filter Envelope Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 20,
+      "name": "Filter Key Follow",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 21,
+      "name": "Filter Aftertouch Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 22,
+      "name": "VCA Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 23,
+      "name": "VCA Aftertouch Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 24,
+      "name": "LFO Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 25,
+      "name": "LFO Delay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 26,
+      "name": "Envelope Time 1",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 27,
+      "name": "Envelope Level 1",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 28,
+      "name": "Envelope Time 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 29,
+      "name": "Envelope Level 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 30,
+      "name": "Envelope Time 3",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 31,
+      "name": "Envelope Level 3",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 32,
+      "name": "Envelope Time 4",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 33,
+      "name": "Envelope Key Follow",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 34,
+      "name": "Chorus Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 35,
+      "name": "Bend Range",
+      "minimum": 0,
+      "maximum": 12
+    }
+  ]
+}

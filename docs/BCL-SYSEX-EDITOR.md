@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-Version **0.46.0-alpha.11**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
+Version **0.46.0-alpha.12**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
 
 Read scope: existing root BCL/profile/forms/text components, BCR32 profile/read/write/CC transport/preset/store/Workbench, generic parameter state/history and actual host interfaces, build and browser fixtures. This standalone checkout lacks the upstream core-contract/onboarding documents listed by the integration skill; the checked source interfaces are authoritative, not historical SDK sketches. The initial alpha1 slice changed no permissions. Alpha2 reuses the same host SDK and grants, adding only a qualified selected-control fragment and addressed Type OFF operation on exact firmware1.0.2/1.0.3; existing preset/global/STORE gates remain unchanged. See the transfer ticket for the additive module policy.
 
@@ -75,7 +75,7 @@ In the current development correction, explicitly selecting SysEx or BCL activat
 
 Select Type SysEx or BCL and open **Synth SysEx catalogue**. Search by manufacturer, model or parameter, select a command and configure its destination addressing. **Load into current control draft** replaces only the text for the selected rotation/push; Undo text restores the previous draft even if loading immediately followed typing. Loading remains local. Subsequent direct edits participate in the live assignment workflow; local Apply and manual transfer are available as fallbacks. The catalogue does not change the BCR32 connection or automatically decode instrument replies.
 
-See [catalogue reference](SYNTH-SYSEX-CATALOG.md) for all 20 models, 46 commands, primary documents and checksum limitations. The original Microwave checksum templates select the BCL view and remain file-only. Browsing and previews work offline after the application has been cached.
+See [catalogue reference](SYNTH-SYSEX-CATALOG.md) for 22 model entries,3,122 scoped definitions, primary documents and checksum limitations. The original Microwave checksum templates select the BCL view and remain file-only. Browsing and previews work offline after the application has been cached.
 
 ## Interchange between editors
 

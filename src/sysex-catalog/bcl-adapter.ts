@@ -1,9 +1,10 @@
-import {renderParameter,type SxmDevice,type SxmParameter} from '../sysex-map'
+import {renderParameter,valueDomain,type SxmDevice,type SxmParameter} from '../sysex-map'
 
 /** Local capability adapter only. Rendering a file never grants native execution. */
 export function parameterBcl(device:SxmDevice,p:SxmParameter,fields:Readonly<Record<string,number>>={}):string{
  if(!['edit-buffer','request'].includes(p.effect))throw Error(`BCL loading is unavailable for effect ${p.effect}; export the SXM definition instead`)
  if(p.value.minimum<0)throw Error('Signed logical ranges are not supported by this BCL adapter')
+ if(valueDomain(p))throw Error('Discrete raw values require a qualified BCL mapping; export SXM instead')
  renderParameter(p,p.value.minimum,fields)
  const lines=p.messages.map(message=>{
   const values=message.bytes.filter(t=>typeof t!=='number'&&'value'in t).length

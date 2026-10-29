@@ -33,11 +33,18 @@ def bounded(value, lo, hi):
 
 
 def render(doc, device_id, parameter_id, value, fields):
-    if doc["format"] != "SysEx Map" or doc["version"] != "1.0" or doc.get("requiredExtensions"):
+    extension = "org.midistudio.value-domain.v1"
+    if doc["format"] != "SysEx Map" or doc["version"] != "1.0" or any(e != extension for e in doc.get("requiredExtensions", [])):
         raise ValueError("unsupported SXM format or required extension")
     device = next(d for d in doc["devices"] if d["id"] == device_id)
     p = next(p for p in device["parameters"] if p["id"] == parameter_id)
     bounded(value, p["value"]["minimum"], p["value"]["maximum"])
+    domain = p.get("extensions", {}).get(extension)
+    if domain is not None:
+        if extension not in doc.get("requiredExtensions", []):
+            raise ValueError("value domain must be a required extension")
+        if ("step" in domain and (value - p["value"]["minimum"]) % domain["step"]) or ("allowed" in domain and value not in domain["allowed"]):
+            raise ValueError("value outside discrete domain")
     if set(fields) - set(p["fields"]):
         raise ValueError("unknown field")
     resolved = {key: bounded(fields.get(key, f["default"]), f["minimum"], f["maximum"])

@@ -28,11 +28,11 @@ const {fakeMidi}=require('./e2e-zaq-host.cjs'),assert=require('node:assert/stric
  await file.setInputFiles({name:'encoding.sxm.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(encoding))})
  await picker.getByText('SXM catalogue loaded locally. No MIDI sent.',{exact:true}).waitFor()
  assert.equal(await picker.getByRole('button',{name:'Load into current control draft'}).isEnabled(),false,'unsupported signed BCL range remains exportable as SXM')
- assert.equal((await dl('Export SXM catalogue')).devices[0].parameters.length,8)
+ assert.equal((await dl('Export SXM catalogue')).devices[0].parameters.length,10)
  const risky=JSON.parse(JSON.stringify(encoding));risky.devices[0].parameters[0].value={minimum:0,maximum:127};risky.devices[0].parameters[0].effect='persistent-write'
  await file.setInputFiles({name:'write-definition.sxm.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(risky))})
  await picker.getByText(/BCL loading is unavailable for effect persistent-write/).waitFor();assert.equal(await picker.getByRole('button',{name:'Load into current control draft'}).isEnabled(),false)
- await picker.getByRole('button',{name:'Built-in catalogue',exact:true}).click();assert.equal(await picker.getByRole('combobox',{name:'Synth',exact:true}).locator('option').count(),20)
+ await picker.getByRole('button',{name:'Built-in catalogue',exact:true}).click();assert.equal(await picker.getByRole('combobox',{name:'Synth',exact:true}).locator('option').count(),22)
  const writes=await page.evaluate(()=>window.__sent.filter(b=>b[0]!==240||b[1]!==0||b[2]!==32||b[3]!==50||b[6]===32||b[6]===114||b[6]===119||b[6]>=49&&b[6]<=56&&b.length>8))
  assert.deepEqual(writes,[]);assert.deepEqual(errors,[])
  console.log('PASS browser SXM: import/export parameter/synth/catalogue/schema, saved addressing/value/origin/extensions, invalid import retention, persistence/reload, unsupported BCL/effect refusals, built-in restore and zero hardware writes')

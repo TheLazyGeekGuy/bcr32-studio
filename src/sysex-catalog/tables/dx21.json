@@ -1,0 +1,563 @@
+{
+  "scope": "DX21 MIDI Data Format 5-2 VCED / PDF55; operator wire order4,2,3,1",
+  "rows": [
+    {
+      "index": 0,
+      "name": "Operator 4 Attack Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 1,
+      "name": "Operator 4 Decay 1 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 2,
+      "name": "Operator 4 Decay 2 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 3,
+      "name": "Operator 4 Release Rate",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 4,
+      "name": "Operator 4 Decay 1 Level",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 5,
+      "name": "Operator 4 Level Scaling",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 6,
+      "name": "Operator 4 Rate Scaling",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 7,
+      "name": "Operator 4 EG Bias Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 8,
+      "name": "Operator 4 Amplitude Mod Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 9,
+      "name": "Operator 4 Key Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 10,
+      "name": "Operator 4 Output Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 11,
+      "name": "Operator 4 Frequency Coarse",
+      "minimum": 0,
+      "maximum": 63
+    },
+    {
+      "index": 12,
+      "name": "Operator 4 Detune",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 13,
+      "name": "Operator 2 Attack Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 14,
+      "name": "Operator 2 Decay 1 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 15,
+      "name": "Operator 2 Decay 2 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 16,
+      "name": "Operator 2 Release Rate",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 17,
+      "name": "Operator 2 Decay 1 Level",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 18,
+      "name": "Operator 2 Level Scaling",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 19,
+      "name": "Operator 2 Rate Scaling",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 20,
+      "name": "Operator 2 EG Bias Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 21,
+      "name": "Operator 2 Amplitude Mod Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 22,
+      "name": "Operator 2 Key Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 23,
+      "name": "Operator 2 Output Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 24,
+      "name": "Operator 2 Frequency Coarse",
+      "minimum": 0,
+      "maximum": 63
+    },
+    {
+      "index": 25,
+      "name": "Operator 2 Detune",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 26,
+      "name": "Operator 3 Attack Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 27,
+      "name": "Operator 3 Decay 1 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 28,
+      "name": "Operator 3 Decay 2 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 29,
+      "name": "Operator 3 Release Rate",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 30,
+      "name": "Operator 3 Decay 1 Level",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 31,
+      "name": "Operator 3 Level Scaling",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 32,
+      "name": "Operator 3 Rate Scaling",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 33,
+      "name": "Operator 3 EG Bias Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 34,
+      "name": "Operator 3 Amplitude Mod Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 35,
+      "name": "Operator 3 Key Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 36,
+      "name": "Operator 3 Output Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 37,
+      "name": "Operator 3 Frequency Coarse",
+      "minimum": 0,
+      "maximum": 63
+    },
+    {
+      "index": 38,
+      "name": "Operator 3 Detune",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 39,
+      "name": "Operator 1 Attack Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 40,
+      "name": "Operator 1 Decay 1 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 41,
+      "name": "Operator 1 Decay 2 Rate",
+      "minimum": 0,
+      "maximum": 31
+    },
+    {
+      "index": 42,
+      "name": "Operator 1 Release Rate",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 43,
+      "name": "Operator 1 Decay 1 Level",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 44,
+      "name": "Operator 1 Level Scaling",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 45,
+      "name": "Operator 1 Rate Scaling",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 46,
+      "name": "Operator 1 EG Bias Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 47,
+      "name": "Operator 1 Amplitude Mod Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 48,
+      "name": "Operator 1 Key Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 49,
+      "name": "Operator 1 Output Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 50,
+      "name": "Operator 1 Frequency Coarse",
+      "minimum": 0,
+      "maximum": 63
+    },
+    {
+      "index": 51,
+      "name": "Operator 1 Detune",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 52,
+      "name": "Algorithm",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 53,
+      "name": "Feedback",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 54,
+      "name": "LFO Speed",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 55,
+      "name": "LFO Delay",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 56,
+      "name": "Pitch Mod Depth",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 57,
+      "name": "Amplitude Mod Depth",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 58,
+      "name": "LFO Sync",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 59,
+      "name": "LFO Wave",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 60,
+      "name": "Pitch Mod Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 61,
+      "name": "Amplitude Mod Sensitivity",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 62,
+      "name": "Transpose",
+      "minimum": 0,
+      "maximum": 48
+    },
+    {
+      "index": 63,
+      "name": "Mono / Poly",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 64,
+      "name": "Pitch Bend Range",
+      "minimum": 0,
+      "maximum": 12
+    },
+    {
+      "index": 65,
+      "name": "Portamento Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 66,
+      "name": "Portamento Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 67,
+      "name": "Foot Volume",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 68,
+      "name": "Sustain",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 69,
+      "name": "Portamento Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 71,
+      "name": "Modulation Wheel Pitch",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 72,
+      "name": "Modulation Wheel Amplitude",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 73,
+      "name": "Breath Controller Pitch",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 74,
+      "name": "Breath Controller Amplitude",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 75,
+      "name": "Breath Controller Pitch Bias",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 76,
+      "name": "Breath Controller EG Bias",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 77,
+      "name": "Name Character 1",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 78,
+      "name": "Name Character 2",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 79,
+      "name": "Name Character 3",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 80,
+      "name": "Name Character 4",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 81,
+      "name": "Name Character 5",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 82,
+      "name": "Name Character 6",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 83,
+      "name": "Name Character 7",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 84,
+      "name": "Name Character 8",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 85,
+      "name": "Name Character 9",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 86,
+      "name": "Name Character 10",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 70,
+      "name": "Chorus Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 87,
+      "name": "Pitch Envelope Rate 1",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 88,
+      "name": "Pitch Envelope Rate 2",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 89,
+      "name": "Pitch Envelope Rate 3",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 90,
+      "name": "Pitch Envelope Level 1",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 91,
+      "name": "Pitch Envelope Level 2",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 92,
+      "name": "Pitch Envelope Level 3",
+      "minimum": 0,
+      "maximum": 99
+    }
+  ]
+}

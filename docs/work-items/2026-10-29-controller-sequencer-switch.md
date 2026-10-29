@@ -1,6 +1,6 @@
 # Unify controller/sequencer page switching
 
-Status: automatic export-based follow withdrawn in0.46.0-alpha.11 after failed physical acceptance. Explicit UI page switching retained; physical-key-to-UI following remains unresolved.
+Status: export-based follow remains withdrawn. A replacement48/00 observer is implemented locally in0.46.0-alpha.12 and software-tested; paired physical mode replies are recorded. Physical return-to-CTRL and sustained key acceptance are still pending.
 
 ## Traceability
 
@@ -49,3 +49,37 @@ The automatic follower implementation is removed, not merely hidden behind an op
 Lesson: an operation that leaves presets unchanged can still monopolize a transfer/UI state or advance a cursor. A background read requires physical acceptance with the device mode key and ordinary controls exercised during sustained monitoring, as well as data integrity, bounded traffic and disposal checks. Repeat this gate across transfer boundaries and with the app idle/backgrounded. Never substitute valid replies or a software-only test for front-panel availability.
 
 Withdrawal completion at20:15 CET: all57 unit suites and TypeScript, production build, browser Controller/Sequencer/manual-panel/step/follow/import regression scenario, explicit zero automatic08 assertion, generic leak scan and whitespace checks pass. The alpha.10 Pages run is confirmed completed/cancelled, not just requested. The passive native recorder was closed after acceptance evidence was retained; no diagnostic output writer remains active. The owner confirmed recovery of the physical key after stopping exports. Physical-key-to-UI follow is not delivered by this correction.
+
+## Reopened physical-to-UI defect — 20:24–20:26 CET
+
+Owner report: the physical ZQR/CTRL key no longer changes the Controller/Sequencer view. Status remains **open**, not fixed by alpha.11. The withdrawal recovered the physical key's availability but deliberately removed automatic UI following; these are separate acceptance gates.
+
+Read by Codex primary agent on 2026-10-29, 20:24–20:26 CET, repository `bcr-studio-firmware-103`, full commit `e9c85468f8f3c6f275c7d870f88d8f809e1e62dd`, branch `work/sxm-full-catalog`, initially clean tracked worktree. Exact model identifier and effort are unavailable in the runtime, so that part of provenance is incomplete. Read scope: Workbench page-selection action, inert page-follow parser, ZAQ host state codec, this work item and protocol ledgers. Outside Git: installed ControlTribe1.12.4 binary, SHA256 `8715b0703ad62a923822deb8b4f3c8eb5943d865f30f70b71940b3c3a44e5d6e`; focused static extracts under ignored `output/research/mode-follow/`.
+
+The native receive dispatcher `BCR32DeviceImpl::processIncomingMidi` at `0x1005d54d0` was inspected, including its command jump table at `0x100d29443`. Commands0B/0C branch to the generic device-status path at `0x1005d5648`, rather than a dedicated current-page notification handler. Command04 routes native exports to controller/ZAQ consumers. `BCR32ParamSync::tickDeviceStatusCheck` at `0x1005e8db4` checks bootloader transfer status74; it is not evidence of a safe current-page request. This bounded static review does **not** prove absence of every possible firmware event or query. No alternative mode packet is qualified by it.
+
+The passive recorder currently selects the last matching BCR-32 input. A read-only port inventory found exactly one matching native input in this session, so the previous silence cannot presently be explained by an unmonitored second BCR input. No input listener, output writer, hardware query, STORE or firmware action was started during this re-review. No application code was changed or deployed.
+
+Remaining proof gate: identify and capture a nonblocking current-page event/status exchange, then add receive-only navigation with zero echoed page commands and physical-key acceptance during sustained monitoring. Do not infer the page from running state, a refused sequencer request, startup preferences or successful controller/ZAQ parameter reads. Do not reintroduce export08 polling to make the UI appear synchronized.
+
+## Narrow state-read comparison — 20:47–21:09 CET
+
+Tracking: [GitHub #36](https://github.com/TheLazyGeekGuy/bcr32-studio/issues/36). Read by Codex primary agent, exact model identifier/effort unavailable, repository `bcr-studio-firmware-103`, baseline full commit `e9c85468f8f3c6f275c7d870f88d8f809e1e62dd`, with uncommitted catalogue/documentation changes. Outside Git: the guarded local helper and captures under ignored `output/research/mode-follow/`.
+
+The owner confirmed physical CTRL. A fresh product identity confirmed firmware1.0.3 before a single existing ZAQ state request48/00. That request returned refusal status02. Repeated bounded reads in the unchanged session gave the same status; these repetitions are not independent physical transitions. The helper permits only product identification and48/00, closes both native ports in `finally`, and sends no page selection, export, STORE or firmware command. Its latest capture is `state-ctrl-2109.json`.
+
+A paired owner-confirmed ZQR observation is still pending. Status02 alone is not a qualified mode event and has not been wired into the application. No physical-to-UI fix or physical acceptance is claimed. Export08 remains disabled.
+
+## Paired state evidence and replacement implementation — 22:47–22:53 CET
+
+Codex primary, exact model identifier/effort unavailable. Repository and full baseline remain `bcr-studio-firmware-103` at `e9c85468f8f3c6f275c7d870f88d8f809e1e62dd`; page-state, ZAQ host/hook, Workbench, fixtures/tests and catalogue changes are uncommitted. Outside-Git paired captures: `state-confirmed-ctrl.json`, `state-confirmed-zqr-2247.json` in ignored `output/research/mode-follow/`. Their hashes and sanitized replies are tracked in `scripts/fixtures/page-state-103.json`.
+
+The owner confirmed ZQR. A fresh1.0.3 identity followed by48/00 returned a valid five-byte state, contrasted with exact status02 in owner-confirmed CTRL. No export, page change or write was used for these paired observations. This narrower, firmware-specific evidence supersedes the earlier prohibition against any inference from a refused sequencer request: only exact48/00 status02 versus a valid state is admitted, and other refusals/timeouts never choose a page.
+
+`page-state.ts` coordinates one shared state exchange and two separated observations. Workbench uses the existing MIDI lease/input; useSequencerHost optionally delegates its state requests to the same coordinator and reports read/edit busy periods synchronously. Standalone hook callers retain their existing private state exchange. Manual navigation invalidates earlier observations. Automatic receive-driven navigation only sets the view and never reasserts the hardware page. Background export08 remains unavailable.
+
+Verification: all57 test scripts, TypeScript and production build pass. The owned-browser simulated-MIDI scenario now covers physical-mode changes both ways without page-command echo, plus pattern read/edit/follow, paused draft retention, clock cursor and selective import. The first added browser assertion incorrectly selected the outer `.studio` rather than the inner element carrying `data-mode`; the selector was corrected and the scenario passed. The SXM browser import/export scenario also passes. No fake-MIDI test opens native ports.
+
+Firefox at `http://127.0.0.1:5187/editor/` was observed on Sequencer with a live pattern read at22:49:58 after local reload. The owner has been asked to return physically to CTRL, without clicking the editor. That physical acceptance and sustained key availability remain pending. No commit, push or production deployment of this replacement has occurred.
+
+Passive runtime check at22:55 CET: the input-only eight-second recorder saw six valid48 replies and no other packets in its observation window. The native listener was closed afterward. This verifies that the running local browser reader receives replies; it does not substitute for exercising the physical mode key. Generic publication scanning passed; the full private-denylist scanner still reports five existing file findings and five historical commit findings. No hook was bypassed and no push was attempted.

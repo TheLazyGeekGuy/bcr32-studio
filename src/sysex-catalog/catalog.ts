@@ -1,5 +1,5 @@
 // Compatibility view for existing catalogue consumers. SXM is the sole shipped definition source.
-import data from './starter.sxm.json'
+import data from './expanded.sxm.json'
 import {validateMap,renderParameter,type SysExMap,type SxmDevice,type SxmParameter} from '../sysex-map'
 import {parameterBcl} from './bcl-adapter'
 export type CatalogField={name:string;label:string;index:number;base:number;minimum:number;maximum:number;default:number}
@@ -15,6 +15,11 @@ export function catalogModels(doc:SysExMap):CatalogModel[]{
 }
 export const synthCatalog:readonly CatalogModel[]=catalogModels(starterMap)
 export const catalogSources=starterMap.sources
+export function catalogueInfo(device:SxmDevice):{scope:string;inventoryOnly:{name:string;reason:string}[];notCovered:string[]}{
+ const x=device.extensions?.['org.midistudio.catalogue']
+ const info=x&&typeof x==='object'&&!Array.isArray(x)?x as Record<string,unknown>:{}
+ return {scope:typeof info.scope==='string'?info.scope:'',inventoryOnly:Array.isArray(info.inventoryOnly)?info.inventoryOnly.filter((x):x is {name:string;reason:string}=>!!x&&typeof x==='object'&&typeof x.name==='string'&&typeof x.reason==='string').slice(0,64):[],notCovered:Array.isArray(info.notCovered)?info.notCovered.filter((x):x is string=>typeof x==='string').slice(0,64):[]}
+}
 export const hexBytes=(bytes:readonly number[])=>bytes.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')
 export function findCatalog(query:string,models:readonly CatalogModel[]=synthCatalog):readonly CatalogModel[]{
  const terms=query.toLowerCase().trim().split(/\s+/).filter(Boolean)

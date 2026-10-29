@@ -104,6 +104,7 @@ export function createZaqHost(send: (bytes: number[]) => void, device: number, t
     enterSequencer() {if(closed||pending)throw Error('Sequencer transfer busy');send(hostPage('sequencer'))},
     readLane(track:number,field:number) {return request(readHostLane(track,field),r=>r.command===0x45&&r.track===track&&r.field===field)},
     readTiming(track:number,field:number) {return request(readHostTiming(track,field),r=>r.command===0x46&&r.track===track&&r.field===field)},
+    stateReply() {return request(readHostState(),r=>r.command===0x48)},
     state() {return request(readHostState(),r=>r.command===0x48).then(r=>{if(r.status!==0)throw Error(`Sequencer request refused · command 48 · status ${r.status.toString(16).padStart(2,'0').toUpperCase()}`);return r})},
     write(track:number,step:number,field:number,value:number) {return request(writeHostStep(track,step,field,value),r=>r.command===0x44&&r.track===track&&r.step===step&&r.field===field)},
     close() {closed=true;if(pending){const p=pending;pending=null;clearTimeout(p.timer);p.reject(Error('Sequencer session cancelled'))}},

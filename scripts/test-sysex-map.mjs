@@ -44,4 +44,23 @@ assert.deepEqual(m.decodeMap(new TextEncoder().encode(m.serializeMap(example))),
 assert.throws(()=>m.decodeMap(Uint8Array.from([123,34,120,34,58,34,255,34,125])),'malformed UTF-8 must not be normalized into replacement characters')
 assert.equal(m.serializeMap(m.parseMap(m.serializeMap(example))),m.serializeMap(example))
 const mutated=copy(example);mutated.extensions={'z.app':{unicode:'é',array:[null,true,3.5]},'a.app':{field:'kept'}};assert.deepEqual(m.parseMap(m.serializeMap(mutated)).extensions,mutated.extensions)
-console.log('PASS SXM 1.0: schema-driven structure + references/framing/ranges/checksum semantics, duplicate-key/depth/budget refusals, deterministic roundtrip/extensions/values, 20-model legacy parity, inert standalone SDK and 11 independent Python/TypeScript golden vectors')
+console.log('PASS SXM 1.0: schema-driven structure + references/framing/ranges/checksum semantics, duplicate-key/depth/budget refusals, deterministic roundtrip/extensions/values, 20-model legacy parity, inert standalone SDK and 13 independent Python/TypeScript golden vectors')
+
+// Discrete-domain contract: an old consumer must refuse this required feature.
+const domainDoc=copy(example),key=m.valueDomainExtension,dp=domainDoc.devices[0].parameters[0]
+domainDoc.requiredExtensions=[key];delete domainDoc.values;dp.value={minimum:0,maximum:6,default:2};dp.extensions={[key]:{step:2}}
+const validDomain=m.validateMap(domainDoc);assert.deepEqual(m.renderParameter(validDomain.devices[0].parameters[0],2),[[240,67,16,18,52,2,247]])
+assert.throws(()=>m.renderParameter(validDomain.devices[0].parameters[0],3),/discrete/);assert.throws(()=>m.withMapValue(validDomain,{device:'tx81z',parameter:'algorithm',value:3,fields:{channel:1},origin:'user'}))
+for(const change of [d=>delete d.requiredExtensions,d=>d.devices[0].parameters[0].extensions[key].step=0,d=>d.devices[0].parameters[0].extensions[key].allowed=[0,2,2,6],d=>d.devices[0].parameters[0].extensions[key].extra=1,d=>d.devices[0].parameters[0].value.default=3]){const d=copy(domainDoc);change(d);assert.throws(()=>m.validateMap(d))}
+const expanded=m.parseMap(read('src/sysex-catalog/expanded.sxm.json')),serialized=m.serializeMap(expanded)
+assert.ok(Buffer.byteLength(serialized)<=m.maxMapBytes);assert.deepEqual(m.parseMap(serialized),expanded,'large catalogue serializes within its own import budget')
+assert.deepEqual(m.subsetMap(expanded,'tx81z','algorithm').requiredExtensions,[],'simple scoped export remains usable without the domain extension')
+assert.deepEqual(m.subsetMap(expanded,'blofeld','parameter-1').requiredExtensions,[key])
+console.log('PASS discrete domains: required feature, invalid intermediate/default/refusals, scoped compatibility and large-catalogue deterministic reimport')
+
+for (const [parameter,value] of [['step-domain',3],['allowed-domain',3]]) {
+ const doc=m.parseMap(read(base+'encoding-demo.sxm.json'));
+ assert.throws(()=>m.renderParameter(m.resolveParameter(doc,'demo',parameter).parameter,value),/discrete/);
+ const refusal=spawnSync('python3',[base+'reference-renderer.py',base+'encoding-demo.sxm.json','--device','demo','--parameter',parameter,'--value',String(value)],{encoding:'utf8'});
+ assert.notEqual(refusal.status,0);assert.match(refusal.stderr,/outside discrete domain/);
+}

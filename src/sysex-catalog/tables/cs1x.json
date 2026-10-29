@@ -1,0 +1,746 @@
+{
+  "scope": "MIDI Data Table Multi Part08 nn, XG model4C; CS1x PDF23-24 / CS2x PDF31-32",
+  "rows": [
+    {
+      "index": 48,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Pitch Bend"
+    },
+    {
+      "index": 49,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Ch After Touch"
+    },
+    {
+      "index": 50,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Program Change"
+    },
+    {
+      "index": 51,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Control Change"
+    },
+    {
+      "index": 52,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Key's After Touch off/on"
+    },
+    {
+      "index": 53,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Note Message"
+    },
+    {
+      "index": 54,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv RPN"
+    },
+    {
+      "index": 55,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv NRPN"
+    },
+    {
+      "index": 56,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Modulation"
+    },
+    {
+      "index": 57,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Volume"
+    },
+    {
+      "index": 58,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Pan"
+    },
+    {
+      "index": 59,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Expression"
+    },
+    {
+      "index": 60,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Hold1"
+    },
+    {
+      "index": 61,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Portamento"
+    },
+    {
+      "index": 62,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Sostenute"
+    },
+    {
+      "index": 63,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Soft Pedal"
+    },
+    {
+      "index": 64,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Rcv Bank Select"
+    },
+    {
+      "index": 65,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning C"
+    },
+    {
+      "index": 66,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning C#"
+    },
+    {
+      "index": 67,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning D"
+    },
+    {
+      "index": 68,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning D#"
+    },
+    {
+      "index": 69,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning E"
+    },
+    {
+      "index": 70,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning F"
+    },
+    {
+      "index": 71,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning F#"
+    },
+    {
+      "index": 72,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning G"
+    },
+    {
+      "index": 73,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning G#"
+    },
+    {
+      "index": 74,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning A"
+    },
+    {
+      "index": 75,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning A#"
+    },
+    {
+      "index": 76,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Scale Tuning B"
+    },
+    {
+      "index": 77,
+      "size": 1,
+      "minimum": 40,
+      "maximum": 88,
+      "name": "Ch's AT Pitch Cntrl"
+    },
+    {
+      "index": 78,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Ch's AT Filter Cntrl -9600..+9450[cent]"
+    },
+    {
+      "index": 79,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Ch's AT Amp. Cntrl"
+    },
+    {
+      "index": 80,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Ch's AT LFO PMod"
+    },
+    {
+      "index": 81,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Ch's AT LFO FMod"
+    },
+    {
+      "index": 82,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Ch's AT LFO AMod"
+    },
+    {
+      "index": 83,
+      "size": 1,
+      "minimum": 40,
+      "maximum": 88,
+      "name": "Key's AT Pitch Cntrl -24..+24[semitones]"
+    },
+    {
+      "index": 84,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Key's AT Filter Cntrl -9600..+9450[cent]"
+    },
+    {
+      "index": 85,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Key's AT Amp. Cntrl"
+    },
+    {
+      "index": 86,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Key's AT LFO PMod"
+    },
+    {
+      "index": 87,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Key's AT LFO FMod"
+    },
+    {
+      "index": 88,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Key's AT LFO AMod"
+    },
+    {
+      "index": 89,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 95,
+      "name": "AC1(FC) Cntrl Number"
+    },
+    {
+      "index": 90,
+      "size": 1,
+      "minimum": 40,
+      "maximum": 88,
+      "name": "AC1(FC) Pitch Cntrl"
+    },
+    {
+      "index": 91,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC1(FC) Filter Cntrl"
+    },
+    {
+      "index": 92,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC1(FC) Amp. Cntrl"
+    },
+    {
+      "index": 93,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC1(FC) LFO PMod"
+    },
+    {
+      "index": 94,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC1(FC) LFO FMod"
+    },
+    {
+      "index": 95,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC1(FC) LFO AMod"
+    },
+    {
+      "index": 96,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 95,
+      "name": "AC2 Cntrl Number"
+    },
+    {
+      "index": 97,
+      "size": 1,
+      "minimum": 40,
+      "maximum": 88,
+      "name": "AC2 Pitch Cntrl"
+    },
+    {
+      "index": 98,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC2 Filter Cntrl"
+    },
+    {
+      "index": 99,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC2 Amp. Cntrl"
+    },
+    {
+      "index": 100,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC2 LFO PMod"
+    },
+    {
+      "index": 101,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC2 LFO FMod"
+    },
+    {
+      "index": 0,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 32,
+      "name": "Element Reserve"
+    },
+    {
+      "index": 102,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "AC2 LFO AMod"
+    },
+    {
+      "index": 1,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Bank Select MSB"
+    },
+    {
+      "index": 2,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Bank Select LSB"
+    },
+    {
+      "index": 103,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Portamento Switch"
+    },
+    {
+      "index": 3,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Program Number"
+    },
+    {
+      "index": 104,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Portamento Time"
+    },
+    {
+      "index": 4,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Rcv Channel",
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        127
+      ]
+    },
+    {
+      "index": 105,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "PitchEG Initial Level -64..+63"
+    },
+    {
+      "index": 5,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 1,
+      "name": "Mono/Poly Mode"
+    },
+    {
+      "index": 106,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "PitchEG Attack Time"
+    },
+    {
+      "index": 6,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 2,
+      "name": "Same Note Number"
+    },
+    {
+      "index": 107,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "PitchEG Release Level -64..+63"
+    },
+    {
+      "index": 108,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "PitchEG Release Time -64..+63"
+    },
+    {
+      "index": 109,
+      "size": 1,
+      "minimum": 1,
+      "maximum": 127,
+      "name": "Velocity Limit Low"
+    },
+    {
+      "index": 7,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 2,
+      "name": "Part Mode"
+    },
+    {
+      "index": 110,
+      "size": 1,
+      "minimum": 1,
+      "maximum": 127,
+      "name": "Velocity Limit High"
+    },
+    {
+      "index": 8,
+      "size": 1,
+      "minimum": 40,
+      "maximum": 88,
+      "name": "Note Shift"
+    },
+    {
+      "index": 9,
+      "size": 2,
+      "minimum": 0,
+      "maximum": 255,
+      "name": "Detune",
+      "encoding": "nibbles"
+    },
+    {
+      "index": 11,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Volume"
+    },
+    {
+      "index": 12,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Velocity Sense Depth 0..127"
+    },
+    {
+      "index": 13,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Velocity Sense Offset 0..127"
+    },
+    {
+      "index": 14,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Pan"
+    },
+    {
+      "index": 15,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Note Limit Low"
+    },
+    {
+      "index": 16,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Note Limit High"
+    },
+    {
+      "index": 17,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Dry Level"
+    },
+    {
+      "index": 18,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Chorus Send"
+    },
+    {
+      "index": 19,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Reverb Send"
+    },
+    {
+      "index": 20,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Variation Send"
+    },
+    {
+      "index": 21,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Vibrato Rate"
+    },
+    {
+      "index": 22,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Vibrato Depth"
+    },
+    {
+      "index": 23,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Vibrato Delay"
+    },
+    {
+      "index": 24,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Filter Cutoff Freq."
+    },
+    {
+      "index": 25,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Filter Resonance"
+    },
+    {
+      "index": 26,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "EG Attack Time"
+    },
+    {
+      "index": 27,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "EG Decay Time"
+    },
+    {
+      "index": 28,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "EG Release Time"
+    },
+    {
+      "index": 29,
+      "size": 1,
+      "minimum": 40,
+      "maximum": 88,
+      "name": "MW Pitch Control"
+    },
+    {
+      "index": 30,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "MW Filter Control"
+    },
+    {
+      "index": 31,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "MW Amp. Control"
+    },
+    {
+      "index": 32,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "MW LFO PMod Depth"
+    },
+    {
+      "index": 33,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "MW LFO FMod Depth"
+    },
+    {
+      "index": 34,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "MW LFO AMod Depth"
+    },
+    {
+      "index": 35,
+      "size": 1,
+      "minimum": 40,
+      "maximum": 88,
+      "name": "Bend Pitch Control"
+    },
+    {
+      "index": 36,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Bend Filter Control"
+    },
+    {
+      "index": 37,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Bend Amp. Control"
+    },
+    {
+      "index": 38,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Bend LFO PMod Depth"
+    },
+    {
+      "index": 39,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Bend LFO FMod Depth"
+    },
+    {
+      "index": 40,
+      "size": 1,
+      "minimum": 0,
+      "maximum": 127,
+      "name": "Bend LFO AMod Depth"
+    }
+  ]
+}

@@ -194,3 +194,17 @@ The editor checks at most once per second while idle, follows a validated mode r
 ## Withdrawal of export-based page follow (0.46.0-alpha.11)
 
 The alpha.10 mechanism above failed physical acceptance: the owner could switch through the web UI, but the physical mode key was blocked during repeated08 exports. After the exports stopped, the owner confirmed that the physical key worked again. Therefore08 is an export operation with relevant transfer-state side effects, **not an approved background status query**. Automatic follow was removed and read08 revoked from the host query gate. Its valid CTRL/ZQR headers remain protocol observations only. Explicit UI page commands remain available. Physical-key-to-UI synchronization is unresolved until a nonblocking event/status mechanism is established. No safe alternative is claimed from `.startup`, firmware identity or the sequencer running state.
+
+
+## Firmware1.0.3 state availability and physical-page follow — 2026-10-29 22:47–22:53 CET
+
+This supersedes the statement that no alternative to export08 is known; the failed export-based mechanism remains withdrawn. In two owner-confirmed physical modes, after a fresh product identity, the existing `F0 00 20 32 7F 64 48 00 F7` request returned:
+
+- CTRL: `F0 00 20 32 00 64 48 00 02 F7`.
+- ZQR: `F0 00 20 32 00 64 48 00 00 00 00 00 00 00 00 F7`, a valid packed five-byte state.
+
+Sanitized, source-hashed evidence is retained in `scripts/fixtures/page-state-103.json`. This qualifies a state-availability distinction for the tested firmware1.0.3/device, not a universal page-notification opcode. A running flag does not identify the page. Another status, timeout, malformed frame, source mismatch or unsupported firmware must leave navigation unchanged.
+
+The local implementation shares a single48/00 exchange between sequencer reads and page observation, requires two matching observations at least500ms apart, polls no more than once per second while idle, and pauses background observation during preset/global/assignment/pattern operations. Manual page commands invalidate old observations and allow hardware settling. Port/session disposal cancels the observer. Navigation driven by a received observation never sends0B/0C. Export08, STORE and firmware operations are absent from this reader.
+
+The local Firefox view was observed on Sequencer with a successfully read live pattern. Unit tests, TypeScript, build and simulated-browser page-follow/regression tests pass. Physical return-to-CTRL and sustained key availability under this reader are still pending owner acceptance; this is not yet a claim of complete physical qualification. Source/reviewer provenance and the ongoing acceptance record: [page-follow work item](work-items/2026-10-29-controller-sequencer-switch.md).

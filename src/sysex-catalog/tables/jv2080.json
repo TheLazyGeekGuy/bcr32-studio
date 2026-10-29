@@ -1,0 +1,1224 @@
+{
+  "scope": "JV-2080 Owner Manual MIDI Implementation1.3 Patch Common and Patch Tone / PDF188-190; temporary Patch Mode only",
+  "sections": {
+    "patch-common": [
+      {
+        "index": 12,
+        "name": "Effect Type",
+        "minimum": 0,
+        "maximum": 39
+      },
+      {
+        "index": 13,
+        "name": "Effect Parameter 1",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 14,
+        "name": "Effect Parameter 2",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 15,
+        "name": "Effect Parameter 3",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 16,
+        "name": "Effect Parameter 4",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 17,
+        "name": "Effect Parameter 5",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 18,
+        "name": "Effect Parameter 6",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 19,
+        "name": "Effect Parameter 7",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 20,
+        "name": "Effect Parameter 8",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 21,
+        "name": "Effect Parameter 9",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 22,
+        "name": "Effect Parameter 10",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 23,
+        "name": "Effect Parameter 11",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 24,
+        "name": "Effect Parameter 12",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 25,
+        "name": "Effect Output Assign",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 26,
+        "name": "Effect Mix Send Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 27,
+        "name": "Effect Chorus Send Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 28,
+        "name": "Effect Reverb Send Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 29,
+        "name": "Effect Control Source 1",
+        "minimum": 0,
+        "maximum": 10
+      },
+      {
+        "index": 30,
+        "name": "Effect Control Depth 1",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 31,
+        "name": "Effect Control Source 2",
+        "minimum": 0,
+        "maximum": 10
+      },
+      {
+        "index": 32,
+        "name": "Effect Control Depth 2",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 33,
+        "name": "Chorus Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 34,
+        "name": "Chorus Rate",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 35,
+        "name": "Chorus Depth",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 36,
+        "name": "Chorus Pre-Delay",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 37,
+        "name": "Chorus Feedback",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 38,
+        "name": "Chorus Output",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 39,
+        "name": "Reverb Type",
+        "minimum": 0,
+        "maximum": 7
+      },
+      {
+        "index": 40,
+        "name": "Reverb Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 41,
+        "name": "Reverb Time",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 42,
+        "name": "Reverb HF Damp",
+        "minimum": 0,
+        "maximum": 17
+      },
+      {
+        "index": 43,
+        "name": "Delay Feedback",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 44,
+        "name": "Tempo",
+        "minimum": 20,
+        "maximum": 250,
+        "size": 2
+      },
+      {
+        "index": 46,
+        "name": "Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 47,
+        "name": "Pan",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 48,
+        "name": "Analog Feel",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 49,
+        "name": "Bend Range Up",
+        "minimum": 0,
+        "maximum": 12
+      },
+      {
+        "index": 50,
+        "name": "Bend Range Down",
+        "minimum": 0,
+        "maximum": 48
+      },
+      {
+        "index": 51,
+        "name": "Key Assign Mode",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 52,
+        "name": "Solo Legato",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 53,
+        "name": "Portamento Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 54,
+        "name": "Portamento Mode",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 55,
+        "name": "Portamento Type",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 56,
+        "name": "Portamento Start",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 57,
+        "name": "Portamento Time",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 58,
+        "name": "Control Source 2",
+        "minimum": 0,
+        "maximum": 15
+      },
+      {
+        "index": 59,
+        "name": "Control Source 3",
+        "minimum": 0,
+        "maximum": 15
+      },
+      {
+        "index": 60,
+        "name": "Effect Control Hold / Peak",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 61,
+        "name": "Control 1 Hold / Peak",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 62,
+        "name": "Control 2 Hold / Peak",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 63,
+        "name": "Control 3 Hold / Peak",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 64,
+        "name": "Velocity Range Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 65,
+        "name": "Octave Shift",
+        "minimum": 0,
+        "maximum": 6
+      },
+      {
+        "index": 66,
+        "name": "Stretch Tune Depth",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 67,
+        "name": "Voice Priority",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 68,
+        "name": "Structure Type 1 / 2",
+        "minimum": 0,
+        "maximum": 9
+      },
+      {
+        "index": 69,
+        "name": "Booster 1 / 2",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 70,
+        "name": "Structure Type 3 / 4",
+        "minimum": 0,
+        "maximum": 9
+      },
+      {
+        "index": 71,
+        "name": "Booster 3 / 4",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 72,
+        "name": "Clock Source",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 73,
+        "name": "Category",
+        "minimum": 0,
+        "maximum": 17
+      },
+      {
+        "index": 0,
+        "name": "Name Character 1",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 1,
+        "name": "Name Character 2",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 2,
+        "name": "Name Character 3",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 3,
+        "name": "Name Character 4",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 4,
+        "name": "Name Character 5",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 5,
+        "name": "Name Character 6",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 6,
+        "name": "Name Character 7",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 7,
+        "name": "Name Character 8",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 8,
+        "name": "Name Character 9",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 9,
+        "name": "Name Character 10",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 10,
+        "name": "Name Character 11",
+        "minimum": 32,
+        "maximum": 125
+      },
+      {
+        "index": 11,
+        "name": "Name Character 12",
+        "minimum": 32,
+        "maximum": 125
+      }
+    ],
+    "tone": [
+      {
+        "index": 0,
+        "name": "Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 1,
+        "name": "Wave Group Type",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 2,
+        "name": "Wave Group ID",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 3,
+        "name": "Wave Number",
+        "minimum": 0,
+        "maximum": 254,
+        "size": 2
+      },
+      {
+        "index": 5,
+        "name": "Wave Gain",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 6,
+        "name": "FXM Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 7,
+        "name": "FXM Color",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 8,
+        "name": "FXM Depth",
+        "minimum": 0,
+        "maximum": 15
+      },
+      {
+        "index": 9,
+        "name": "Delay Mode",
+        "minimum": 0,
+        "maximum": 7
+      },
+      {
+        "index": 10,
+        "name": "Delay Time",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 11,
+        "name": "Velocity Cross Fade",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 12,
+        "name": "Velocity Range Lower",
+        "minimum": 1,
+        "maximum": 127
+      },
+      {
+        "index": 13,
+        "name": "Velocity Range Upper",
+        "minimum": 1,
+        "maximum": 127
+      },
+      {
+        "index": 14,
+        "name": "Keyboard Range Lower",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 15,
+        "name": "Keyboard Range Upper",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 16,
+        "name": "Redamper Control Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 17,
+        "name": "Volume Control Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 18,
+        "name": "Hold 1 Control Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 19,
+        "name": "Pitch Bend Control Enable",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 20,
+        "name": "Pan Control Mode",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 45,
+        "name": "LFO 1 Waveform",
+        "minimum": 0,
+        "maximum": 7
+      },
+      {
+        "index": 46,
+        "name": "LFO 1 Key Trigger",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 47,
+        "name": "LFO 1 Rate",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 48,
+        "name": "LFO 1 Offset",
+        "minimum": 0,
+        "maximum": 4
+      },
+      {
+        "index": 49,
+        "name": "LFO 1 Delay",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 50,
+        "name": "LFO 1 Fade Mode",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 51,
+        "name": "LFO 1 Fade Time",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 52,
+        "name": "LFO 1 External Sync",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 53,
+        "name": "LFO 2 Waveform",
+        "minimum": 0,
+        "maximum": 7
+      },
+      {
+        "index": 54,
+        "name": "LFO 2 Key Trigger",
+        "minimum": 0,
+        "maximum": 1
+      },
+      {
+        "index": 55,
+        "name": "LFO 2 Rate",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 56,
+        "name": "LFO 2 Offset",
+        "minimum": 0,
+        "maximum": 4
+      },
+      {
+        "index": 57,
+        "name": "LFO 2 Delay",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 58,
+        "name": "LFO 2 Fade Mode",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 59,
+        "name": "LFO 2 Fade Time",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 60,
+        "name": "LFO 2 External Sync",
+        "minimum": 0,
+        "maximum": 2
+      },
+      {
+        "index": 61,
+        "name": "Coarse Tune",
+        "minimum": 0,
+        "maximum": 96
+      },
+      {
+        "index": 62,
+        "name": "Fine Tune",
+        "minimum": 0,
+        "maximum": 100
+      },
+      {
+        "index": 63,
+        "name": "Random Pitch Depth",
+        "minimum": 0,
+        "maximum": 30
+      },
+      {
+        "index": 64,
+        "name": "Pitch Key Follow",
+        "minimum": 0,
+        "maximum": 15
+      },
+      {
+        "index": 65,
+        "name": "Pitch Envelope Depth",
+        "minimum": 0,
+        "maximum": 24
+      },
+      {
+        "index": 66,
+        "name": "Pitch Envelope Velocity Sensitivity",
+        "minimum": 0,
+        "maximum": 125
+      },
+      {
+        "index": 67,
+        "name": "Pitch Envelope Velocity Time 1",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 68,
+        "name": "Pitch Envelope Velocity Time 4",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 69,
+        "name": "Pitch Envelope Time Key Follow",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 70,
+        "name": "Pitch Envelope Time 1",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 71,
+        "name": "Pitch Envelope Time 2",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 72,
+        "name": "Pitch Envelope Time 3",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 73,
+        "name": "Pitch Envelope Time 4",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 74,
+        "name": "Pitch Envelope Level 1",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 75,
+        "name": "Pitch Envelope Level 2",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 76,
+        "name": "Pitch Envelope Level 3",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 77,
+        "name": "Pitch Envelope Level 4",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 78,
+        "name": "Pitch LFO 1 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 79,
+        "name": "Pitch LFO 2 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 80,
+        "name": "Filter Type",
+        "minimum": 0,
+        "maximum": 4
+      },
+      {
+        "index": 81,
+        "name": "Filter Cutoff",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 82,
+        "name": "Filter Cutoff Key Follow",
+        "minimum": 0,
+        "maximum": 15
+      },
+      {
+        "index": 83,
+        "name": "Filter Resonance",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 84,
+        "name": "Filter Resonance Velocity Sensitivity",
+        "minimum": 0,
+        "maximum": 125
+      },
+      {
+        "index": 85,
+        "name": "Filter Envelope Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 86,
+        "name": "Filter Envelope Velocity Curve",
+        "minimum": 0,
+        "maximum": 6
+      },
+      {
+        "index": 87,
+        "name": "Filter Envelope Velocity Sensitivity",
+        "minimum": 0,
+        "maximum": 125
+      },
+      {
+        "index": 88,
+        "name": "Filter Envelope Velocity Time 1",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 89,
+        "name": "Filter Envelope Velocity Time 4",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 90,
+        "name": "Filter Envelope Time Key Follow",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 91,
+        "name": "Filter Envelope Time 1",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 92,
+        "name": "Filter Envelope Time 2",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 93,
+        "name": "Filter Envelope Time 3",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 94,
+        "name": "Filter Envelope Time 4",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 95,
+        "name": "Filter Envelope Level 1",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 96,
+        "name": "Filter Envelope Level 2",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 97,
+        "name": "Filter Envelope Level 3",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 98,
+        "name": "Filter Envelope Level 4",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 99,
+        "name": "Filter LFO 1 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 100,
+        "name": "Filter LFO 2 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 101,
+        "name": "Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 102,
+        "name": "Bias Direction",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 103,
+        "name": "Bias Position",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 104,
+        "name": "Bias Level",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 105,
+        "name": "Level Envelope Velocity Curve",
+        "minimum": 0,
+        "maximum": 6
+      },
+      {
+        "index": 106,
+        "name": "Level Envelope Velocity Sensitivity",
+        "minimum": 0,
+        "maximum": 125
+      },
+      {
+        "index": 107,
+        "name": "Level Envelope Velocity Time 1",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 108,
+        "name": "Level Envelope Velocity Time 4",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 109,
+        "name": "Level Envelope Time Key Follow",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 110,
+        "name": "Level Envelope Time 1",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 111,
+        "name": "Level Envelope Time 2",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 112,
+        "name": "Level Envelope Time 3",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 113,
+        "name": "Level Envelope Time 4",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 114,
+        "name": "Level Envelope Level 1",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 115,
+        "name": "Level Envelope Level 2",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 116,
+        "name": "Level Envelope Level 3",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 117,
+        "name": "Level LFO 1 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 118,
+        "name": "Level LFO 2 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 119,
+        "name": "Pan",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 120,
+        "name": "Pan Key Follow",
+        "minimum": 0,
+        "maximum": 14
+      },
+      {
+        "index": 121,
+        "name": "Random Pan Depth",
+        "minimum": 0,
+        "maximum": 63
+      },
+      {
+        "index": 122,
+        "name": "Alternate Pan Depth",
+        "minimum": 1,
+        "maximum": 127
+      },
+      {
+        "index": 123,
+        "name": "Pan LFO 1 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 124,
+        "name": "Pan LFO 2 Depth",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 125,
+        "name": "Output Assign",
+        "minimum": 0,
+        "maximum": 3
+      },
+      {
+        "index": 126,
+        "name": "Mix / Effect Send Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 127,
+        "name": "Chorus Send Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 128,
+        "name": "Reverb Send Level",
+        "minimum": 0,
+        "maximum": 127
+      },
+      {
+        "index": 21,
+        "name": "Controller 1 Destination 1",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 22,
+        "name": "Controller 1 Depth 1",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 23,
+        "name": "Controller 1 Destination 2",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 24,
+        "name": "Controller 1 Depth 2",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 25,
+        "name": "Controller 1 Destination 3",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 26,
+        "name": "Controller 1 Depth 3",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 27,
+        "name": "Controller 1 Destination 4",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 28,
+        "name": "Controller 1 Depth 4",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 29,
+        "name": "Controller 2 Destination 1",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 30,
+        "name": "Controller 2 Depth 1",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 31,
+        "name": "Controller 2 Destination 2",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 32,
+        "name": "Controller 2 Depth 2",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 33,
+        "name": "Controller 2 Destination 3",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 34,
+        "name": "Controller 2 Depth 3",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 35,
+        "name": "Controller 2 Destination 4",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 36,
+        "name": "Controller 2 Depth 4",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 37,
+        "name": "Controller 3 Destination 1",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 38,
+        "name": "Controller 3 Depth 1",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 39,
+        "name": "Controller 3 Destination 2",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 40,
+        "name": "Controller 3 Depth 2",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 41,
+        "name": "Controller 3 Destination 3",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 42,
+        "name": "Controller 3 Depth 3",
+        "minimum": 0,
+        "maximum": 126
+      },
+      {
+        "index": 43,
+        "name": "Controller 3 Destination 4",
+        "minimum": 0,
+        "maximum": 18
+      },
+      {
+        "index": 44,
+        "name": "Controller 3 Depth 4",
+        "minimum": 0,
+        "maximum": 126
+      }
+    ]
+  },
+  "source": {
+    "title": "Roland JV-2080 Owner Manual / MIDI Implementation",
+    "url": "https://static.roland.com/assets/media/pdf/JV-2080_OM.pdf",
+    "sha256": "668a223fcffdfe300f1816cdd0f538125ba829a6d2072df72d95b36a7e94e001",
+    "bytes": 14935712,
+    "retrieved": "2026-10-29"
+  }
+}

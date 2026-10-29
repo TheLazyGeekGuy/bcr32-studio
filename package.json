@@ -1,20 +1,21 @@
 {
   "name": "bcr32-studio",
-  "version": "0.46.0-alpha.11",
+  "version": "0.46.0-alpha.12",
   "private": true,
   "description": "BCR32 editor with firmware 1.0.3 sequencer integration, shared MIDI Studio tools and preset library.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "modules:generate": "node scripts/generate-editor-registrations.mjs",
     "predev": "npm run modules:generate",
-    "prebuild": "npm run modules:generate",
+    "prebuild": "npm run modules:generate && node scripts/build-sysex-catalog.mjs --check",
     "typecheck": "tsc -b --noEmit",
     "build": "tsc -b && vite build && node scripts/verify-distribution.mjs dist",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node scripts/run-tests.mjs",
     "leak-gate": "node scripts/leak-gate.mjs",
     "midi": "node scripts/bcr32-midi.cjs",
-    "build:sysex-map-sdk": "node scripts/build-sysex-map-sdk.mjs"
+    "build:sysex-map-sdk": "node scripts/build-sysex-map-sdk.mjs",
+    "catalogue:generate": "node scripts/build-sysex-catalog.mjs"
   },
   "dependencies": {
     "@julusian/midi": "3.8.1",

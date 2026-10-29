@@ -1,0 +1,1029 @@
+{
+  "scope": "BPRD byte table and RTBP 60h, OS2.0; RTBP index = BPRD byte offset minus 5",
+  "rows": [
+    {
+      "index": 0,
+      "name": "Osc 1 Octave",
+      "minimum": 0,
+      "maximum": 64,
+      "step": 16
+    },
+    {
+      "index": 1,
+      "name": "Osc 1 Semitone",
+      "minimum": 0,
+      "maximum": 120,
+      "step": 8
+    },
+    {
+      "index": 2,
+      "name": "Osc 1 Detune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 3,
+      "name": "Osc 1 Bend Range",
+      "minimum": 0,
+      "maximum": 12
+    },
+    {
+      "index": 4,
+      "name": "Osc 1 Pitch Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 5,
+      "name": "Osc 1 Modifier 1 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 6,
+      "name": "Osc 1 Modifier 1 Control",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 7,
+      "name": "Osc 1 Modifier 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 8,
+      "name": "Osc 1 Modifier 2 Source",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 9,
+      "name": "Osc 1 Modifier 2 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 10,
+      "name": "Osc 1 Modifier 2 Quantize",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 11,
+      "name": "Osc 2 Octave",
+      "minimum": 0,
+      "maximum": 64,
+      "step": 16
+    },
+    {
+      "index": 12,
+      "name": "Osc 2 Semitone",
+      "minimum": 0,
+      "maximum": 120,
+      "step": 8
+    },
+    {
+      "index": 13,
+      "name": "Osc 2 Detune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 14,
+      "name": "Osc 2 Bend Range",
+      "minimum": 0,
+      "maximum": 12
+    },
+    {
+      "index": 15,
+      "name": "Osc 2 Pitch Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 16,
+      "name": "Osc 2 Modifier 1 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 17,
+      "name": "Osc 2 Modifier 1 Control",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 18,
+      "name": "Osc 2 Modifier 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 19,
+      "name": "Osc 2 Modifier 2 Source",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 20,
+      "name": "Osc 2 Modifier 2 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 21,
+      "name": "Osc 2 Modifier 2 Quantize",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 22,
+      "name": "Osc 2 Link Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 23,
+      "name": "Wave 1 & 2 Wavetable",
+      "minimum": 0,
+      "maximum": 80
+    },
+    {
+      "index": 24,
+      "name": "Wave 1 Startwave",
+      "minimum": 0,
+      "maximum": 63
+    },
+    {
+      "index": 25,
+      "name": "Wave 1 Startsample",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 26,
+      "name": "Wave 1 Envelope Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 27,
+      "name": "Wave 1 Envelope Velocity",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 28,
+      "name": "Wave 1 Keytrack Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 29,
+      "name": "Wave 1 Modifier 1 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 30,
+      "name": "Wave 1 Modifier 1 Control",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 31,
+      "name": "Wave 1 Modifier 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 32,
+      "name": "Wave 1 Modifier 2 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 33,
+      "name": "Wave 1 Modifier 2 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 34,
+      "name": "Wave 1 Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 36,
+      "name": "Wave 2 Startwave",
+      "minimum": 0,
+      "maximum": 63
+    },
+    {
+      "index": 37,
+      "name": "Wave 2 Startsample",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 38,
+      "name": "Wave 2 Envelope Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 39,
+      "name": "Wave 2 Envelope Velocity",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 40,
+      "name": "Wave 2 Keytrack Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 41,
+      "name": "Wave 2 Modifier 1 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 42,
+      "name": "Wave 2 Modifier 1 Control",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 43,
+      "name": "Wave 2 Modifier 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 44,
+      "name": "Wave 2 Modifier 2 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 45,
+      "name": "Wave 2 Modifier 2 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 46,
+      "name": "Wave 2 Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 47,
+      "name": "Wave 2 Link Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 48,
+      "name": "Wave 1 Volume",
+      "minimum": 0,
+      "maximum": 112,
+      "step": 16
+    },
+    {
+      "index": 49,
+      "name": "Wave 2 Volume",
+      "minimum": 0,
+      "maximum": 112,
+      "step": 16
+    },
+    {
+      "index": 50,
+      "name": "Noise Volume",
+      "minimum": 0,
+      "maximum": 112,
+      "step": 16
+    },
+    {
+      "index": 51,
+      "name": "Sound Volume",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 52,
+      "name": "Volume Envelope Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 53,
+      "name": "Volume Envelope Velocity",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 54,
+      "name": "Volume Keytrack Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 55,
+      "name": "Volume Modifier 1 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 56,
+      "name": "Volume Modifier 1 Control",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 57,
+      "name": "Volume Modifier 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 58,
+      "name": "Volume Modifier 2 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 59,
+      "name": "Volume Modifier 2 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 60,
+      "name": "Filter Cutoff Frequency",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 61,
+      "name": "Filter Resonance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 62,
+      "name": "Cutoff Envelope Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 63,
+      "name": "Cutoff Envelope Velocity",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 64,
+      "name": "Cutoff Keytrack Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 65,
+      "name": "Cutoff Modifier 1 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 66,
+      "name": "Cutoff Modifier 1 Control",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 67,
+      "name": "Cutoff Modifier 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 68,
+      "name": "Cutoff Modifier 2 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 69,
+      "name": "Cutoff Modifier 2 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 70,
+      "name": "Reson. Modifier 1 Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 71,
+      "name": "Reson. Modifier 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 72,
+      "name": "Vol Envel Attack Time",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 73,
+      "name": "Vol Envel Decay Time",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 74,
+      "name": "Vol Envel Sustain Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 75,
+      "name": "Vol Envel Release Time",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 76,
+      "name": "Vol Envel Attack Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 77,
+      "name": "Vol Envel Attack Modifier Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 78,
+      "name": "Vol Envel Decay Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 79,
+      "name": "Vol Envel Decay Modifier Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 80,
+      "name": "Vol Envel Sustain Modif. Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 81,
+      "name": "Vol Envel Sustain Modif. Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 82,
+      "name": "Vol Envel Release Modif. Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 83,
+      "name": "Vol Envel Release Modif. Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 85,
+      "name": "Fltr Envel Delay Time",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 86,
+      "name": "Fltr Envel Attack Time",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 87,
+      "name": "Fltr Envel Decay Time",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 88,
+      "name": "Fltr Envel Sustain Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 89,
+      "name": "Fltr Envel Release Time",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 90,
+      "name": "Fltr Envel Delay Modif. Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 91,
+      "name": "Fltr Envel Delay Modif. Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 92,
+      "name": "Fltr Envel Attack Modif. Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 93,
+      "name": "Fltr Envel Attack Modif. Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 94,
+      "name": "Fltr Envel Decay Modif. Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 95,
+      "name": "Fltr Envel Decay Modif. Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 96,
+      "name": "Fltr Envel Sustain Modif. Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 97,
+      "name": "Fltr Envel Sustain Modif. Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 98,
+      "name": "Fltr Envel Release Modif. Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 99,
+      "name": "Fltr Envel Release Modif. Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 101,
+      "name": "Wav Envel Time 1",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 102,
+      "name": "Wav Envel Level 1",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 103,
+      "name": "Wav Envel Time 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 104,
+      "name": "Wav Envel Level 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 105,
+      "name": "Wav Envel Time 3",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 106,
+      "name": "Wav Envel Level 3",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 107,
+      "name": "Wav Envel Time 4",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 108,
+      "name": "Wav Envel Level 4",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 109,
+      "name": "Wav Envel Time 5",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 110,
+      "name": "Wav Envel Level 5",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 111,
+      "name": "Wav Envel Time 6",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 112,
+      "name": "Wav Envel Level 6",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 113,
+      "name": "Wav Envel Time 7",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 114,
+      "name": "Wav Envel Level 7",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 115,
+      "name": "Wav Envel Time 8",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 116,
+      "name": "Wav Envel Level 8",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 117,
+      "name": "Wav Envel Time Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 118,
+      "name": "Wav Envel Time Modifier Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 119,
+      "name": "Wav Envel Level Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 120,
+      "name": "Wav Envel Level Modifier Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 121,
+      "name": "Wav Envel Key Off Point",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 122,
+      "name": "Wav Envel Loop Start Point",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 123,
+      "name": "Wav Envel Loop Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 124,
+      "name": "LFO 1 Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 125,
+      "name": "LFO 1 Shape",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 126,
+      "name": "LFO 1 Symmetry",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 127,
+      "name": "LFO 1 Humanize",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 128,
+      "name": "LFO 1 Rate Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 129,
+      "name": "LFO 1 Rate Modifier Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 130,
+      "name": "LFO 1 Level Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 131,
+      "name": "LFO 1 Sync",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 132,
+      "name": "LFO 1 Delay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 133,
+      "name": "LFO 1 Attack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 134,
+      "name": "LFO 1 Decay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 135,
+      "name": "LFO 2 Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 136,
+      "name": "LFO 2 Shape",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 137,
+      "name": "LFO 2 Symmetry",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 138,
+      "name": "LFO 2 Humanize",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 139,
+      "name": "LFO 2 Phase Shift",
+      "minimum": 0,
+      "maximum": 90
+    },
+    {
+      "index": 141,
+      "name": "Panning",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 142,
+      "name": "Pan Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 143,
+      "name": "Pan Modifier Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 144,
+      "name": "Glide",
+      "minimum": 0,
+      "maximum": 6
+    },
+    {
+      "index": 145,
+      "name": "Glide Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 146,
+      "name": "Glide Mode",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 147,
+      "name": "Tuning Table",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 148,
+      "name": "Name Character 1",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 149,
+      "name": "Name Character 2",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 150,
+      "name": "Name Character 3",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 151,
+      "name": "Name Character 4",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 152,
+      "name": "Name Character 5",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 153,
+      "name": "Name Character 6",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 154,
+      "name": "Name Character 7",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 155,
+      "name": "Name Character 8",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 156,
+      "name": "Name Character 9",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 157,
+      "name": "Name Character 10",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 158,
+      "name": "Name Character 11",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 159,
+      "name": "Name Character 12",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 160,
+      "name": "Name Character 13",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 161,
+      "name": "Name Character 14",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 162,
+      "name": "Name Character 15",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 163,
+      "name": "Name Character 16",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 164,
+      "name": "Wave 1 Level Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 165,
+      "name": "Wave 1 Level Modifier Amount",
+      "minimum": 8,
+      "maximum": 120,
+      "step": 8
+    },
+    {
+      "index": 166,
+      "name": "Wave 2 Level Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 167,
+      "name": "Wave 2 Level Modifier Amount",
+      "minimum": 8,
+      "maximum": 120,
+      "step": 8
+    },
+    {
+      "index": 168,
+      "name": "Noise Level Modifier Source",
+      "minimum": 0,
+      "maximum": 23
+    },
+    {
+      "index": 169,
+      "name": "Noise Level Modifier Amount",
+      "minimum": 8,
+      "maximum": 120,
+      "step": 8
+    }
+  ],
+  "reserved": [
+    35,
+    84,
+    100,
+    140,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178
+  ],
+  "metadata": [
+    179
+  ]
+}

@@ -283,8 +283,79 @@
           ],
           "effect": "edit-buffer",
           "evidence": "unverified"
+        },
+        {
+          "id": "step-domain",
+          "name": "step-domain",
+          "value": {
+            "minimum": 0,
+            "maximum": 6
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified",
+          "extensions": {
+            "org.midistudio.value-domain.v1": {
+              "step": 2
+            }
+          }
+        },
+        {
+          "id": "allowed-domain",
+          "name": "allowed-domain",
+          "value": {
+            "minimum": 1,
+            "maximum": 4
+          },
+          "fields": {},
+          "messages": [
+            {
+              "bytes": [
+                240,
+                125,
+                {
+                  "value": {
+                    "shift": 0,
+                    "bits": 7,
+                    "add": 0
+                  }
+                },
+                247
+              ]
+            }
+          ],
+          "effect": "edit-buffer",
+          "evidence": "unverified",
+          "extensions": {
+            "org.midistudio.value-domain.v1": {
+              "allowed": [
+                1,
+                2,
+                4
+              ]
+            }
+          }
         }
       ]
     }
+  ],
+  "requiredExtensions": [
+    "org.midistudio.value-domain.v1"
   ]
 }

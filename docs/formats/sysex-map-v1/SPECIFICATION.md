@@ -82,7 +82,7 @@ A reader must validate structure **and** semantic references before replacing a 
 
 Reference limits: 2 MiB UTF-8 input, JSON nesting depth 32, 256 devices, 8192 parameters total, 32 fields per parameter, 16 messages per parameter, 1024 bytes/tokens per message, 4096 sources, 8192 saved values. Known-field strings are bounded by the schema; the total byte/depth budget also bounds optional extension data. More devices are supported by multiple files; limits are not MIDI transport timing guarantees. Inputs exceeding limits fail before activation. Object prototype-control keys are rejected at every level.
 
-The reference serializer emits canonical JSON: object keys sorted lexically by UTF-16 code units (without Unicode normalization), arrays in original order, two-space indentation and one trailing newline. Canonical JSON is defined here for deterministic exchange, not cryptographic signing or equivalence to RFC 8785. UTF-8 input accepts a leading BOM; invalid UTF-8 bytes must be refused rather than replaced by replacement characters. A byte-identical round trip is not promised; data and optional extensions are retained. Invalid JSON, duplicate object keys, nonfinite numbers and unsupported required features must be rejected.
+The reference serializer emits canonical JSON: object keys sorted lexically by UTF-16 code units (without Unicode normalization), arrays in original order, two-space indentation when it fits the input byte budget, otherwise compact separators, and one trailing newline. Canonical JSON is defined here for deterministic exchange, not cryptographic signing or equivalence to RFC 8785. UTF-8 input accepts a leading BOM; invalid UTF-8 bytes must be refused rather than replaced by replacement characters. A byte-identical round trip is not promised; data and optional extensions are retained. Invalid JSON, duplicate object keys, nonfinite numbers and unsupported required features must be rejected.
 
 ## 8. Minimal example
 
@@ -124,3 +124,9 @@ Value 3, channel 8 renders `F0 43 17 12 34 03 F7`. This example is included as a
 6. A device-specific adapter must report unsupported operations/tokens; it must not rewrite them as OFF or pretend they executed on hardware.
 
 The [schema](../../../src/sysex-map/schema.json), [golden vectors](vectors.json), Python reference and [integration guide](INTEGRATION.md) accompany this specification. Adoption by another product remains an external integration test, not a claim established by these reference tests.
+
+## Required extension: discrete value domains
+
+`org.midistudio.value-domain.v1` is supported by the TypeScript and Python reference implementations. If a parameter uses `extensions["org.midistudio.value-domain.v1"]`, its document MUST list this identifier in `requiredExtensions`. A consumer without support MUST refuse the document before activation. The object may contain `step` (positive integer, origin is `value.minimum`), `allowed` (nonempty unique integer array), or both. Values must satisfy every supplied constraint as well as the ordinary range. Range endpoints and default must belong to the domain. The compiler emits allowed arrays in ascending order. No expression, callback, code or implicit value scaling is permitted.
+
+A scoped export can remove this required identifier only when none of its retained parameters uses it. This extension controls local value validity; it grants no native BCL capability. The BCL adapter currently refuses such definitions.

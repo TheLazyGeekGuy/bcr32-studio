@@ -1,0 +1,1490 @@
+{
+  "scope": "MIDI Exclusive Format21 and Tables1/5, PDF126,128,131; EDIT PROGRAM mode with matching Single/Double layout; positions8..15 are wire positions, not dump offsets",
+  "rows": [
+    {
+      "index": 0,
+      "layout": "Single",
+      "page": 0,
+      "position": 8,
+      "name": "Oscillator Mode",
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "index": 1,
+      "layout": "Single",
+      "page": 0,
+      "position": 10,
+      "name": "Mono Assign",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 2,
+      "layout": "Single",
+      "page": 0,
+      "position": 12,
+      "name": "Hold Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 3,
+      "layout": "Single",
+      "page": 1,
+      "position": 8,
+      "name": "Osc 1 Internal Multisound",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 4,
+      "layout": "Single",
+      "page": 1,
+      "position": 11,
+      "name": "Osc 1 Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 5,
+      "layout": "Single",
+      "page": 1,
+      "position": 12,
+      "name": "Osc 1 Octave",
+      "minimum": -1,
+      "maximum": 1
+    },
+    {
+      "index": 6,
+      "layout": "Single",
+      "page": 2,
+      "position": 8,
+      "name": "Osc 1 Pitch Envelope Start Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 7,
+      "layout": "Single",
+      "page": 2,
+      "position": 9,
+      "name": "Osc 1 Pitch Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 8,
+      "layout": "Single",
+      "page": 2,
+      "position": 10,
+      "name": "Osc 1 Pitch Envelope Attack Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 9,
+      "layout": "Single",
+      "page": 2,
+      "position": 11,
+      "name": "Osc 1 Pitch Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 10,
+      "layout": "Single",
+      "page": 2,
+      "position": 12,
+      "name": "Osc 1 Pitch Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 11,
+      "layout": "Single",
+      "page": 2,
+      "position": 13,
+      "name": "Osc 1 Pitch Envelope Release Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 12,
+      "layout": "Single",
+      "page": 2,
+      "position": 14,
+      "name": "Osc 1 Pitch Envelope Level Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 13,
+      "layout": "Single",
+      "page": 2,
+      "position": 15,
+      "name": "Osc 1 Pitch Envelope Time Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 14,
+      "layout": "Single",
+      "page": 3,
+      "position": 9,
+      "name": "Filter 1 Cutoff",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 15,
+      "layout": "Single",
+      "page": 3,
+      "position": 12,
+      "name": "Filter 1 Envelope Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 16,
+      "layout": "Single",
+      "page": 4,
+      "position": 8,
+      "name": "Filter 1 Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 17,
+      "layout": "Single",
+      "page": 4,
+      "position": 9,
+      "name": "Filter 1 Envelope Attack Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 18,
+      "layout": "Single",
+      "page": 4,
+      "position": 10,
+      "name": "Filter 1 Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 19,
+      "layout": "Single",
+      "page": 4,
+      "position": 11,
+      "name": "Filter 1 Envelope Breakpoint",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 20,
+      "layout": "Single",
+      "page": 4,
+      "position": 12,
+      "name": "Filter 1 Envelope Slope Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 21,
+      "layout": "Single",
+      "page": 4,
+      "position": 13,
+      "name": "Filter 1 Envelope Sustain Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 22,
+      "layout": "Single",
+      "page": 4,
+      "position": 14,
+      "name": "Filter 1 Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 23,
+      "layout": "Single",
+      "page": 4,
+      "position": 15,
+      "name": "Filter 1 Envelope Release Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 24,
+      "layout": "Single",
+      "page": 5,
+      "position": 8,
+      "name": "Filter 1 Envelope Velocity Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 25,
+      "layout": "Single",
+      "page": 5,
+      "position": 10,
+      "name": "Filter 1 Envelope Time Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 26,
+      "layout": "Single",
+      "page": 6,
+      "position": 8,
+      "name": "Filter 1 Keyboard Track Center",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 27,
+      "layout": "Single",
+      "page": 6,
+      "position": 9,
+      "name": "Filter 1 Keyboard Track Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 28,
+      "layout": "Single",
+      "page": 6,
+      "position": 10,
+      "name": "Filter 1 Envelope Time Keyboard Track",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 29,
+      "layout": "Single",
+      "page": 7,
+      "position": 8,
+      "name": "Amplifier 1 Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 30,
+      "layout": "Single",
+      "page": 7,
+      "position": 9,
+      "name": "Amplifier 1 Envelope Attack Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 31,
+      "layout": "Single",
+      "page": 7,
+      "position": 10,
+      "name": "Amplifier 1 Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 32,
+      "layout": "Single",
+      "page": 7,
+      "position": 11,
+      "name": "Amplifier 1 Envelope Breakpoint",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 33,
+      "layout": "Single",
+      "page": 7,
+      "position": 12,
+      "name": "Amplifier 1 Envelope Slope Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 34,
+      "layout": "Single",
+      "page": 7,
+      "position": 13,
+      "name": "Amplifier 1 Envelope Sustain Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 35,
+      "layout": "Single",
+      "page": 7,
+      "position": 14,
+      "name": "Amplifier 1 Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 36,
+      "layout": "Single",
+      "page": 8,
+      "position": 9,
+      "name": "Amplifier 1 Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 37,
+      "layout": "Single",
+      "page": 8,
+      "position": 10,
+      "name": "Amplifier 1 Envelope Time Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 38,
+      "layout": "Single",
+      "page": 9,
+      "position": 8,
+      "name": "Amplifier 1 Keyboard Track Center",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 39,
+      "layout": "Single",
+      "page": 9,
+      "position": 9,
+      "name": "Amplifier 1 Keyboard Track Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 40,
+      "layout": "Single",
+      "page": 9,
+      "position": 10,
+      "name": "Amplifier 1 Envelope Time Keyboard Track",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 41,
+      "layout": "Single",
+      "page": 10,
+      "position": 8,
+      "name": "Pitch LFO Waveform",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 42,
+      "layout": "Single",
+      "page": 10,
+      "position": 10,
+      "name": "Pitch LFO Frequency",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 43,
+      "layout": "Single",
+      "page": 10,
+      "position": 11,
+      "name": "Pitch LFO Delay",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 44,
+      "layout": "Single",
+      "page": 10,
+      "position": 12,
+      "name": "Pitch LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 45,
+      "layout": "Single",
+      "page": 11,
+      "position": 8,
+      "name": "Filter LFO Waveform",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 46,
+      "layout": "Single",
+      "page": 11,
+      "position": 10,
+      "name": "Filter LFO Frequency",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 47,
+      "layout": "Single",
+      "page": 11,
+      "position": 11,
+      "name": "Filter LFO Delay",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 48,
+      "layout": "Single",
+      "page": 11,
+      "position": 12,
+      "name": "Filter LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 49,
+      "layout": "Single",
+      "page": 12,
+      "position": 8,
+      "name": "Aftertouch Pitch",
+      "minimum": -12,
+      "maximum": 12
+    },
+    {
+      "index": 50,
+      "layout": "Single",
+      "page": 12,
+      "position": 9,
+      "name": "Aftertouch Pitch LFO",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 51,
+      "layout": "Single",
+      "page": 12,
+      "position": 11,
+      "name": "Aftertouch Filter Cutoff",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 52,
+      "layout": "Single",
+      "page": 12,
+      "position": 12,
+      "name": "Aftertouch Filter LFO",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 53,
+      "layout": "Single",
+      "page": 12,
+      "position": 14,
+      "name": "Aftertouch Amplifier Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 54,
+      "layout": "Single",
+      "page": 13,
+      "position": 8,
+      "name": "Joystick Pitch Bend",
+      "minimum": -12,
+      "maximum": 12
+    },
+    {
+      "index": 55,
+      "layout": "Single",
+      "page": 13,
+      "position": 9,
+      "name": "Joystick Filter Sweep",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 56,
+      "layout": "Single",
+      "page": 13,
+      "position": 11,
+      "name": "Joystick Pitch LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 57,
+      "layout": "Single",
+      "page": 13,
+      "position": 12,
+      "name": "Joystick Pitch LFO Frequency",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 58,
+      "layout": "Single",
+      "page": 13,
+      "position": 14,
+      "name": "Joystick Filter LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 59,
+      "layout": "Single",
+      "page": 13,
+      "position": 15,
+      "name": "Joystick Filter LFO Frequency",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 60,
+      "layout": "Single",
+      "page": 14,
+      "position": 8,
+      "name": "Effect 1 Type",
+      "minimum": 0,
+      "maximum": 33
+    },
+    {
+      "index": 61,
+      "layout": "Single",
+      "page": 16,
+      "position": 8,
+      "name": "Effect 2 Type",
+      "minimum": 0,
+      "maximum": 33
+    },
+    {
+      "index": 62,
+      "layout": "Double",
+      "page": 0,
+      "position": 8,
+      "name": "Oscillator Mode",
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "index": 63,
+      "layout": "Double",
+      "page": 0,
+      "position": 10,
+      "name": "Mono Assign",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 64,
+      "layout": "Double",
+      "page": 0,
+      "position": 12,
+      "name": "Hold Enable",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 65,
+      "layout": "Double",
+      "page": 1,
+      "position": 8,
+      "name": "Osc 1 Internal Multisound",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 66,
+      "layout": "Double",
+      "page": 1,
+      "position": 11,
+      "name": "Osc 1 Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 67,
+      "layout": "Double",
+      "page": 1,
+      "position": 12,
+      "name": "Osc 1 Octave",
+      "minimum": -1,
+      "maximum": 1
+    },
+    {
+      "index": 68,
+      "layout": "Double",
+      "page": 2,
+      "position": 8,
+      "name": "Osc 2 Internal Multisound",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 69,
+      "layout": "Double",
+      "page": 2,
+      "position": 11,
+      "name": "Osc 2 Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 70,
+      "layout": "Double",
+      "page": 2,
+      "position": 12,
+      "name": "Osc 2 Octave",
+      "minimum": -1,
+      "maximum": 1
+    },
+    {
+      "index": 71,
+      "layout": "Double",
+      "page": 2,
+      "position": 13,
+      "name": "Osc 2 Interval",
+      "minimum": -12,
+      "maximum": 12
+    },
+    {
+      "index": 72,
+      "layout": "Double",
+      "page": 2,
+      "position": 14,
+      "name": "Osc 2 Detune",
+      "minimum": -50,
+      "maximum": 50
+    },
+    {
+      "index": 73,
+      "layout": "Double",
+      "page": 2,
+      "position": 15,
+      "name": "Osc 2 Delay Start",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 74,
+      "layout": "Double",
+      "page": 3,
+      "position": 8,
+      "name": "Osc 1 Pitch Envelope Start Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 75,
+      "layout": "Double",
+      "page": 3,
+      "position": 9,
+      "name": "Osc 1 Pitch Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 76,
+      "layout": "Double",
+      "page": 3,
+      "position": 10,
+      "name": "Osc 1 Pitch Envelope Attack Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 77,
+      "layout": "Double",
+      "page": 3,
+      "position": 11,
+      "name": "Osc 1 Pitch Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 78,
+      "layout": "Double",
+      "page": 3,
+      "position": 12,
+      "name": "Osc 1 Pitch Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 79,
+      "layout": "Double",
+      "page": 3,
+      "position": 13,
+      "name": "Osc 1 Pitch Envelope Release Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 80,
+      "layout": "Double",
+      "page": 3,
+      "position": 14,
+      "name": "Osc 1 Pitch Envelope Level Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 81,
+      "layout": "Double",
+      "page": 3,
+      "position": 15,
+      "name": "Osc 1 Pitch Envelope Time Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 82,
+      "layout": "Double",
+      "page": 5,
+      "position": 9,
+      "name": "Filter 1 Cutoff",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 83,
+      "layout": "Double",
+      "page": 5,
+      "position": 12,
+      "name": "Filter 1 Envelope Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 84,
+      "layout": "Double",
+      "page": 6,
+      "position": 8,
+      "name": "Filter 1 Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 85,
+      "layout": "Double",
+      "page": 6,
+      "position": 9,
+      "name": "Filter 1 Envelope Attack Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 86,
+      "layout": "Double",
+      "page": 6,
+      "position": 10,
+      "name": "Filter 1 Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 87,
+      "layout": "Double",
+      "page": 6,
+      "position": 11,
+      "name": "Filter 1 Envelope Breakpoint",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 88,
+      "layout": "Double",
+      "page": 6,
+      "position": 12,
+      "name": "Filter 1 Envelope Slope Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 89,
+      "layout": "Double",
+      "page": 6,
+      "position": 13,
+      "name": "Filter 1 Envelope Sustain Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 90,
+      "layout": "Double",
+      "page": 6,
+      "position": 14,
+      "name": "Filter 1 Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 91,
+      "layout": "Double",
+      "page": 6,
+      "position": 15,
+      "name": "Filter 1 Envelope Release Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 92,
+      "layout": "Double",
+      "page": 7,
+      "position": 8,
+      "name": "Filter 1 Envelope Velocity Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 93,
+      "layout": "Double",
+      "page": 7,
+      "position": 10,
+      "name": "Filter 1 Envelope Time Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 94,
+      "layout": "Double",
+      "page": 8,
+      "position": 8,
+      "name": "Filter 1 Keyboard Track Center",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 95,
+      "layout": "Double",
+      "page": 8,
+      "position": 9,
+      "name": "Filter 1 Keyboard Track Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 96,
+      "layout": "Double",
+      "page": 8,
+      "position": 10,
+      "name": "Filter 1 Envelope Time Keyboard Track",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 97,
+      "layout": "Double",
+      "page": 13,
+      "position": 8,
+      "name": "Amplifier 1 Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 98,
+      "layout": "Double",
+      "page": 13,
+      "position": 9,
+      "name": "Amplifier 1 Envelope Attack Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 99,
+      "layout": "Double",
+      "page": 13,
+      "position": 10,
+      "name": "Amplifier 1 Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 100,
+      "layout": "Double",
+      "page": 13,
+      "position": 11,
+      "name": "Amplifier 1 Envelope Breakpoint",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 101,
+      "layout": "Double",
+      "page": 13,
+      "position": 12,
+      "name": "Amplifier 1 Envelope Slope Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 102,
+      "layout": "Double",
+      "page": 13,
+      "position": 13,
+      "name": "Amplifier 1 Envelope Sustain Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 103,
+      "layout": "Double",
+      "page": 13,
+      "position": 14,
+      "name": "Amplifier 1 Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 104,
+      "layout": "Double",
+      "page": 14,
+      "position": 9,
+      "name": "Amplifier 1 Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 105,
+      "layout": "Double",
+      "page": 14,
+      "position": 10,
+      "name": "Amplifier 1 Envelope Time Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 106,
+      "layout": "Double",
+      "page": 15,
+      "position": 8,
+      "name": "Amplifier 1 Keyboard Track Center",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 107,
+      "layout": "Double",
+      "page": 15,
+      "position": 9,
+      "name": "Amplifier 1 Keyboard Track Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 108,
+      "layout": "Double",
+      "page": 15,
+      "position": 10,
+      "name": "Amplifier 1 Envelope Time Keyboard Track",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 109,
+      "layout": "Double",
+      "page": 4,
+      "position": 8,
+      "name": "Osc 2 Pitch Envelope Start Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 110,
+      "layout": "Double",
+      "page": 4,
+      "position": 9,
+      "name": "Osc 2 Pitch Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 111,
+      "layout": "Double",
+      "page": 4,
+      "position": 10,
+      "name": "Osc 2 Pitch Envelope Attack Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 112,
+      "layout": "Double",
+      "page": 4,
+      "position": 11,
+      "name": "Osc 2 Pitch Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 113,
+      "layout": "Double",
+      "page": 4,
+      "position": 12,
+      "name": "Osc 2 Pitch Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 114,
+      "layout": "Double",
+      "page": 4,
+      "position": 13,
+      "name": "Osc 2 Pitch Envelope Release Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 115,
+      "layout": "Double",
+      "page": 4,
+      "position": 14,
+      "name": "Osc 2 Pitch Envelope Level Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 116,
+      "layout": "Double",
+      "page": 4,
+      "position": 15,
+      "name": "Osc 2 Pitch Envelope Time Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 117,
+      "layout": "Double",
+      "page": 9,
+      "position": 9,
+      "name": "Filter 2 Cutoff",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 118,
+      "layout": "Double",
+      "page": 9,
+      "position": 12,
+      "name": "Filter 2 Envelope Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 119,
+      "layout": "Double",
+      "page": 10,
+      "position": 8,
+      "name": "Filter 2 Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 120,
+      "layout": "Double",
+      "page": 10,
+      "position": 9,
+      "name": "Filter 2 Envelope Attack Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 121,
+      "layout": "Double",
+      "page": 10,
+      "position": 10,
+      "name": "Filter 2 Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 122,
+      "layout": "Double",
+      "page": 10,
+      "position": 11,
+      "name": "Filter 2 Envelope Breakpoint",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 123,
+      "layout": "Double",
+      "page": 10,
+      "position": 12,
+      "name": "Filter 2 Envelope Slope Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 124,
+      "layout": "Double",
+      "page": 10,
+      "position": 13,
+      "name": "Filter 2 Envelope Sustain Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 125,
+      "layout": "Double",
+      "page": 10,
+      "position": 14,
+      "name": "Filter 2 Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 126,
+      "layout": "Double",
+      "page": 10,
+      "position": 15,
+      "name": "Filter 2 Envelope Release Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 127,
+      "layout": "Double",
+      "page": 11,
+      "position": 8,
+      "name": "Filter 2 Envelope Velocity Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 128,
+      "layout": "Double",
+      "page": 11,
+      "position": 10,
+      "name": "Filter 2 Envelope Time Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 129,
+      "layout": "Double",
+      "page": 12,
+      "position": 8,
+      "name": "Filter 2 Keyboard Track Center",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 130,
+      "layout": "Double",
+      "page": 12,
+      "position": 9,
+      "name": "Filter 2 Keyboard Track Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 131,
+      "layout": "Double",
+      "page": 12,
+      "position": 10,
+      "name": "Filter 2 Envelope Time Keyboard Track",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 132,
+      "layout": "Double",
+      "page": 16,
+      "position": 8,
+      "name": "Amplifier 2 Envelope Attack Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 133,
+      "layout": "Double",
+      "page": 16,
+      "position": 9,
+      "name": "Amplifier 2 Envelope Attack Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 134,
+      "layout": "Double",
+      "page": 16,
+      "position": 10,
+      "name": "Amplifier 2 Envelope Decay Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 135,
+      "layout": "Double",
+      "page": 16,
+      "position": 11,
+      "name": "Amplifier 2 Envelope Breakpoint",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 136,
+      "layout": "Double",
+      "page": 16,
+      "position": 12,
+      "name": "Amplifier 2 Envelope Slope Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 137,
+      "layout": "Double",
+      "page": 16,
+      "position": 13,
+      "name": "Amplifier 2 Envelope Sustain Level",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 138,
+      "layout": "Double",
+      "page": 16,
+      "position": 14,
+      "name": "Amplifier 2 Envelope Release Time",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 139,
+      "layout": "Double",
+      "page": 17,
+      "position": 9,
+      "name": "Amplifier 2 Velocity Sensitivity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 140,
+      "layout": "Double",
+      "page": 17,
+      "position": 10,
+      "name": "Amplifier 2 Envelope Time Velocity Sensitivity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 141,
+      "layout": "Double",
+      "page": 18,
+      "position": 8,
+      "name": "Amplifier 2 Keyboard Track Center",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 142,
+      "layout": "Double",
+      "page": 18,
+      "position": 9,
+      "name": "Amplifier 2 Keyboard Track Intensity",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 143,
+      "layout": "Double",
+      "page": 18,
+      "position": 10,
+      "name": "Amplifier 2 Envelope Time Keyboard Track",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 144,
+      "layout": "Double",
+      "page": 19,
+      "position": 8,
+      "name": "Pitch LFO Waveform",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 145,
+      "layout": "Double",
+      "page": 19,
+      "position": 10,
+      "name": "Pitch LFO Frequency",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 146,
+      "layout": "Double",
+      "page": 19,
+      "position": 11,
+      "name": "Pitch LFO Delay",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 147,
+      "layout": "Double",
+      "page": 19,
+      "position": 12,
+      "name": "Pitch LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 148,
+      "layout": "Double",
+      "page": 20,
+      "position": 8,
+      "name": "Filter LFO Waveform",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 149,
+      "layout": "Double",
+      "page": 20,
+      "position": 10,
+      "name": "Filter LFO Frequency",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 150,
+      "layout": "Double",
+      "page": 20,
+      "position": 11,
+      "name": "Filter LFO Delay",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 151,
+      "layout": "Double",
+      "page": 20,
+      "position": 12,
+      "name": "Filter LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 152,
+      "layout": "Double",
+      "page": 21,
+      "position": 8,
+      "name": "Aftertouch Pitch",
+      "minimum": -12,
+      "maximum": 12
+    },
+    {
+      "index": 153,
+      "layout": "Double",
+      "page": 21,
+      "position": 9,
+      "name": "Aftertouch Pitch LFO",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 154,
+      "layout": "Double",
+      "page": 21,
+      "position": 11,
+      "name": "Aftertouch Filter Cutoff",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 155,
+      "layout": "Double",
+      "page": 21,
+      "position": 12,
+      "name": "Aftertouch Filter LFO",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 156,
+      "layout": "Double",
+      "page": 21,
+      "position": 14,
+      "name": "Aftertouch Amplifier Level",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 157,
+      "layout": "Double",
+      "page": 22,
+      "position": 8,
+      "name": "Joystick Pitch Bend",
+      "minimum": -12,
+      "maximum": 12
+    },
+    {
+      "index": 158,
+      "layout": "Double",
+      "page": 22,
+      "position": 9,
+      "name": "Joystick Filter Sweep",
+      "minimum": -99,
+      "maximum": 99
+    },
+    {
+      "index": 159,
+      "layout": "Double",
+      "page": 22,
+      "position": 11,
+      "name": "Joystick Pitch LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 160,
+      "layout": "Double",
+      "page": 22,
+      "position": 12,
+      "name": "Joystick Pitch LFO Frequency",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 161,
+      "layout": "Double",
+      "page": 22,
+      "position": 14,
+      "name": "Joystick Filter LFO Intensity",
+      "minimum": 0,
+      "maximum": 99
+    },
+    {
+      "index": 162,
+      "layout": "Double",
+      "page": 22,
+      "position": 15,
+      "name": "Joystick Filter LFO Frequency",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 163,
+      "layout": "Double",
+      "page": 23,
+      "position": 8,
+      "name": "Effect 1 Type",
+      "minimum": 0,
+      "maximum": 33
+    },
+    {
+      "index": 164,
+      "layout": "Double",
+      "page": 25,
+      "position": 8,
+      "name": "Effect 2 Type",
+      "minimum": 0,
+      "maximum": 33
+    }
+  ]
+}

@@ -1,0 +1,2974 @@
+{
+  "scope": "SDATA",
+  "rows": [
+    {
+      "index": 1,
+      "name": "Osc 1 Octave, in steps of 12",
+      "minimum": 16,
+      "maximum": 112,
+      "step": 12
+    },
+    {
+      "index": 2,
+      "name": "Osc 1 Semitone",
+      "minimum": 52,
+      "maximum": 76
+    },
+    {
+      "index": 3,
+      "name": "Osc 1 Detune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 4,
+      "name": "Osc 1 Bend Range",
+      "minimum": 40,
+      "maximum": 88
+    },
+    {
+      "index": 5,
+      "name": "Osc 1 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 6,
+      "name": "Osc 1 FM Source",
+      "minimum": 0,
+      "maximum": 11
+    },
+    {
+      "index": 7,
+      "name": "Osc 1 FM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 8,
+      "name": "Osc 1 Shape",
+      "minimum": 0,
+      "maximum": 72
+    },
+    {
+      "index": 9,
+      "name": "Osc 1 Pulsewidth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 10,
+      "name": "Osc 1 PWM Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 11,
+      "name": "Osc 1 PWM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 14,
+      "name": "Osc 1 Limit WT",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 16,
+      "name": "Osc 1 Brilliance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 17,
+      "name": "Osc 2 Octave, in steps of 12",
+      "minimum": 16,
+      "maximum": 112,
+      "step": 12
+    },
+    {
+      "index": 18,
+      "name": "Osc 2 Semitone",
+      "minimum": 52,
+      "maximum": 76
+    },
+    {
+      "index": 19,
+      "name": "Osc 2 Detune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 20,
+      "name": "Osc 2 Bend Range",
+      "minimum": 40,
+      "maximum": 88
+    },
+    {
+      "index": 21,
+      "name": "Osc 2 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 22,
+      "name": "Osc 2 FM Source",
+      "minimum": 0,
+      "maximum": 11
+    },
+    {
+      "index": 23,
+      "name": "Osc 2 FM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 24,
+      "name": "Osc 2 Shape",
+      "minimum": 0,
+      "maximum": 72
+    },
+    {
+      "index": 25,
+      "name": "Osc 2 Pulsewidth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 26,
+      "name": "Osc 2 PWM Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 27,
+      "name": "Osc 2 PWM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 30,
+      "name": "Osc 2 Limit WT",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 32,
+      "name": "Osc 2 Brilliance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 33,
+      "name": "Osc 3 Octave, in steps of 12",
+      "minimum": 16,
+      "maximum": 112,
+      "step": 12
+    },
+    {
+      "index": 34,
+      "name": "Osc 3 Semitone",
+      "minimum": 52,
+      "maximum": 76
+    },
+    {
+      "index": 35,
+      "name": "Osc 3 Detune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 36,
+      "name": "Osc 3 Bend Range",
+      "minimum": 40,
+      "maximum": 88
+    },
+    {
+      "index": 37,
+      "name": "Osc 3 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 38,
+      "name": "Osc 3 FM Source",
+      "minimum": 0,
+      "maximum": 11
+    },
+    {
+      "index": 39,
+      "name": "Osc 3 FM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 40,
+      "name": "Osc 3 Shape",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 41,
+      "name": "Osc 3 Pulsewidth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 42,
+      "name": "Osc 3 PWM Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 43,
+      "name": "Osc 3 PWM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 48,
+      "name": "Osc 3 Brilliance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 49,
+      "name": "Osc 2 Sync to O3",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 50,
+      "name": "Osc Pitch Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 51,
+      "name": "Osc Pitch Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 53,
+      "name": "Glide",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 56,
+      "name": "Glide Mode",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 57,
+      "name": "Glide Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 58,
+      "name": "Allocation Mode and Unisono",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 59,
+      "name": "Unisono Uni Detune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 61,
+      "name": "Mixer Osc 1 Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 62,
+      "name": "Mixer Osc 1 Balance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 63,
+      "name": "Mixer Osc 2 Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 64,
+      "name": "Mixer Osc 2 Balance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 65,
+      "name": "Mixer Osc 3 Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 66,
+      "name": "Mixer Osc 3 Balance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 67,
+      "name": "Mixer Noise Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 68,
+      "name": "Mixer Noise Balance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 69,
+      "name": "Mixer Noise Colour",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 71,
+      "name": "Mixer RingMod Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 72,
+      "name": "Mixer RingMod Balance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 77,
+      "name": "Filter 1 Type",
+      "minimum": 0,
+      "maximum": 11
+    },
+    {
+      "index": 78,
+      "name": "Filter 1 Cutoff",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 80,
+      "name": "Filter 1 Resonance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 81,
+      "name": "Filter 1 Drive",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 82,
+      "name": "Filter 1 Drive Curve",
+      "minimum": 0,
+      "maximum": 12
+    },
+    {
+      "index": 86,
+      "name": "Filter 1 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 87,
+      "name": "Filter 1 Env Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 88,
+      "name": "Filter 1 Env Velocity",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 89,
+      "name": "Filter 1 Mod Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 90,
+      "name": "Filter 1 Mod Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 91,
+      "name": "Filter 1 FM Source",
+      "minimum": 0,
+      "maximum": 11
+    },
+    {
+      "index": 92,
+      "name": "Filter 1 FM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 93,
+      "name": "Filter 1 Pan",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 94,
+      "name": "Filter 1 Pan Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 95,
+      "name": "Filter 1 Pan Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 97,
+      "name": "Filter 2 Type",
+      "minimum": 0,
+      "maximum": 11
+    },
+    {
+      "index": 98,
+      "name": "Filter 2 Cutoff",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 100,
+      "name": "Filter 2 Resonance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 101,
+      "name": "Filter 2 Drive",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 102,
+      "name": "Filter 2 Drive Curve",
+      "minimum": 0,
+      "maximum": 12
+    },
+    {
+      "index": 106,
+      "name": "Filter 2 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 107,
+      "name": "Filter 2 Env Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 108,
+      "name": "Filter 2 Env Velocity",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 109,
+      "name": "Filter 2 Mod Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 110,
+      "name": "Filter 2 Mod Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 111,
+      "name": "Filter 2 FM Source",
+      "minimum": 0,
+      "maximum": 11
+    },
+    {
+      "index": 112,
+      "name": "Filter 2 FM Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 113,
+      "name": "Filter 2 Pan",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 114,
+      "name": "Filter 2 Pan Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 115,
+      "name": "Filter 2 Pan Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 117,
+      "name": "Filter Routing",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 121,
+      "name": "Amplifier Volume",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 122,
+      "name": "Amplifier Velocity",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 123,
+      "name": "Amplifier Mod Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 124,
+      "name": "Amplifier Mod Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 128,
+      "name": "Effect 1 Type",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 129,
+      "name": "Effect 1 Mix",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 130,
+      "name": "Effect 1 Parameter 1",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 131,
+      "name": "Effect 1 Parameter 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 132,
+      "name": "Effect 1 Parameter 3",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 133,
+      "name": "Effect 1 Parameter 4",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 134,
+      "name": "Effect 1 Parameter 5",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 135,
+      "name": "Effect 1 Parameter 6",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 136,
+      "name": "Effect 1 Parameter 7",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 137,
+      "name": "Effect 1 Parameter 8",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 138,
+      "name": "Effect 1 Parameter 9",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 139,
+      "name": "Effect 1 Parameter 10",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 140,
+      "name": "Effect 1 Parameter 11",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 141,
+      "name": "Effect 1 Parameter 12",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 142,
+      "name": "Effect 1 Parameter 13",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 143,
+      "name": "Effect 1 Parameter 14",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 144,
+      "name": "Effect 2 Type",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 145,
+      "name": "Effect 2 Mix",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 146,
+      "name": "Effect 2 Parameter 1",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 147,
+      "name": "Effect 2 Parameter 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 148,
+      "name": "Effect 2 Parameter 3",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 149,
+      "name": "Effect 2 Parameter 4",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 150,
+      "name": "Effect 2 Parameter 5",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 151,
+      "name": "Effect 2 Parameter 6",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 152,
+      "name": "Effect 2 Parameter 7",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 153,
+      "name": "Effect 2 Parameter 8",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 154,
+      "name": "Effect 2 Parameter 9",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 155,
+      "name": "Effect 2 Parameter 10",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 156,
+      "name": "Effect 2 Parameter 11",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 157,
+      "name": "Effect 2 Parameter 12",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 158,
+      "name": "Effect 2 Parameter 13",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 159,
+      "name": "Effect 2 Parameter 14",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 160,
+      "name": "LFO 1 Shape",
+      "minimum": 0,
+      "maximum": 5
+    },
+    {
+      "index": 161,
+      "name": "LFO 1 Speed",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 163,
+      "name": "LFO 1 Sync",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 164,
+      "name": "LFO 1 Clocked",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 165,
+      "name": "LFO 1 Start Phase",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 166,
+      "name": "LFO 1 Delay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 167,
+      "name": "LFO 1 Fade",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 170,
+      "name": "LFO 1 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 172,
+      "name": "LFO 2 Shape",
+      "minimum": 0,
+      "maximum": 5
+    },
+    {
+      "index": 173,
+      "name": "LFO 2 Speed",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 175,
+      "name": "LFO 2 Sync",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 176,
+      "name": "LFO 2 Clocked",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 177,
+      "name": "LFO 2 Start Phase",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 178,
+      "name": "LFO 2 Delay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 179,
+      "name": "LFO 2 Fade",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 182,
+      "name": "LFO 2 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 184,
+      "name": "LFO 3 Shape",
+      "minimum": 0,
+      "maximum": 5
+    },
+    {
+      "index": 185,
+      "name": "LFO 3 Speed",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 187,
+      "name": "LFO 3 Sync",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 188,
+      "name": "LFO 3 Clocked",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 189,
+      "name": "LFO 3 Start Phase",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 190,
+      "name": "LFO 3 Delay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 191,
+      "name": "LFO 3 Fade",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 194,
+      "name": "LFO 3 Keytrack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 196,
+      "name": "Filter Envelope Mode",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 199,
+      "name": "Filter Envelope Attack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 200,
+      "name": "Filter Envelope Attack Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 201,
+      "name": "Filter Envelope Decay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 202,
+      "name": "Filter Envelope Sustain",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 203,
+      "name": "Filter Envelope Decay 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 204,
+      "name": "Filter Envelope Sustain 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 205,
+      "name": "Filter Envelope Release",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 208,
+      "name": "Amplifier Envelope Mode",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 211,
+      "name": "Amplifier Envelope Attack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 212,
+      "name": "Amplifier Envelope Attack Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 213,
+      "name": "Amplifier Envelope Decay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 214,
+      "name": "Amplifier Envelope Sustain",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 215,
+      "name": "Amplifier Envelope Decay 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 216,
+      "name": "Amplifier Envelope Sustain 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 217,
+      "name": "Amplifier Envelope Release",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 220,
+      "name": "Envelope 3 Mode",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 223,
+      "name": "Envelope 3 Attack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 224,
+      "name": "Envelope 3 Attack Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 225,
+      "name": "Envelope 3 Decay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 226,
+      "name": "Envelope 3 Sustain",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 227,
+      "name": "Envelope 3 Decay 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 228,
+      "name": "Envelope 3 Sustain 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 229,
+      "name": "Envelope 3 Release",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 232,
+      "name": "Envelope 4 Mode",
+      "minimum": 0,
+      "maximum": 4
+    },
+    {
+      "index": 235,
+      "name": "Envelope 4 Attack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 236,
+      "name": "Envelope 4 Attack Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 237,
+      "name": "Envelope 4 Decay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 238,
+      "name": "Envelope 4 Sustain",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 239,
+      "name": "Envelope 4 Decay 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 240,
+      "name": "Envelope 4 Sustain 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 241,
+      "name": "Envelope 4 Release",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 245,
+      "name": "Modifier 1 Source A",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 246,
+      "name": "Modifier 1 Source B",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 247,
+      "name": "Modifier 1 Operation",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 248,
+      "name": "Modifier 1 Constant",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 249,
+      "name": "Modifier 2 Source A",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 250,
+      "name": "Modifier 2 Source B",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 251,
+      "name": "Modifier 2 Operation",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 252,
+      "name": "Modifier 2 Constant",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 253,
+      "name": "Modifier 3 Source A",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 254,
+      "name": "Modifier 3 Source B",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 255,
+      "name": "Modifier 3 Operation",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 256,
+      "name": "Modifier 3 Constant",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 257,
+      "name": "Modifier 4 Source A",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 258,
+      "name": "Modifier 4 Source B",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 259,
+      "name": "Modifier 4 Operation",
+      "minimum": 0,
+      "maximum": 7
+    },
+    {
+      "index": 260,
+      "name": "Modifier 4 Constant",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 261,
+      "name": "Modulation 1 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 262,
+      "name": "Modulation 1 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 263,
+      "name": "Modulation 1 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 264,
+      "name": "Modulation 2 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 265,
+      "name": "Modulation 2 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 266,
+      "name": "Modulation 2 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 267,
+      "name": "Modulation 3 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 268,
+      "name": "Modulation 3 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 269,
+      "name": "Modulation 3 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 270,
+      "name": "Modulation 4 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 271,
+      "name": "Modulation 4 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 272,
+      "name": "Modulation 4 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 273,
+      "name": "Modulation 5 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 274,
+      "name": "Modulation 5 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 275,
+      "name": "Modulation 5 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 276,
+      "name": "Modulation 6 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 277,
+      "name": "Modulation 6 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 278,
+      "name": "Modulation 6 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 279,
+      "name": "Modulation 7 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 280,
+      "name": "Modulation 7 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 281,
+      "name": "Modulation 7 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 282,
+      "name": "Modulation 8 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 283,
+      "name": "Modulation 8 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 284,
+      "name": "Modulation 8 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 285,
+      "name": "Modulation 9 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 286,
+      "name": "Modulation 9 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 287,
+      "name": "Modulation 9 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 288,
+      "name": "Modulation 10 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 289,
+      "name": "Modulation 10 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 290,
+      "name": "Modulation 10 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 291,
+      "name": "Modulation 11 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 292,
+      "name": "Modulation 11 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 293,
+      "name": "Modulation 11 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 294,
+      "name": "Modulation 12 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 295,
+      "name": "Modulation 12 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 296,
+      "name": "Modulation 12 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 297,
+      "name": "Modulation 13 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 298,
+      "name": "Modulation 13 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 299,
+      "name": "Modulation 13 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 300,
+      "name": "Modulation 14 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 301,
+      "name": "Modulation 14 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 302,
+      "name": "Modulation 14 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 303,
+      "name": "Modulation 15 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 304,
+      "name": "Modulation 15 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 305,
+      "name": "Modulation 15 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 306,
+      "name": "Modulation 16 Source",
+      "minimum": 0,
+      "maximum": 30
+    },
+    {
+      "index": 307,
+      "name": "Modulation 16 Destination",
+      "minimum": 0,
+      "maximum": 53
+    },
+    {
+      "index": 308,
+      "name": "Modulation 16 Amount",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 311,
+      "name": "Arpeggiator Mode",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 312,
+      "name": "Arpeggiator Pattern",
+      "minimum": 0,
+      "maximum": 16
+    },
+    {
+      "index": 314,
+      "name": "Arpeggiator Clock",
+      "minimum": 0,
+      "maximum": 42
+    },
+    {
+      "index": 315,
+      "name": "Arpeggiator Length",
+      "minimum": 0,
+      "maximum": 43
+    },
+    {
+      "index": 316,
+      "name": "Arpeggiator Octave",
+      "minimum": 0,
+      "maximum": 9
+    },
+    {
+      "index": 317,
+      "name": "Arpeggiator Direction",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "index": 318,
+      "name": "Arpeggiator Sort Order",
+      "minimum": 0,
+      "maximum": 5
+    },
+    {
+      "index": 319,
+      "name": "Arpeggiator Velocity",
+      "minimum": 0,
+      "maximum": 6
+    },
+    {
+      "index": 320,
+      "name": "Arpeggiator Timing Factor",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 322,
+      "name": "Arpeggiator Ptn Reset",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "index": 323,
+      "name": "Arpeggiator Ptn Length",
+      "minimum": 0,
+      "maximum": 15
+    },
+    {
+      "index": 326,
+      "name": "Arpeggiator Tempo",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 327,
+      "name": "Arp Pattern Step/Glide/Accent 1",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 328,
+      "name": "Arp Pattern Step/Glide/Accent 2",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 329,
+      "name": "Arp Pattern Step/Glide/Accent 3",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 330,
+      "name": "Arp Pattern Step/Glide/Accent 4",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 331,
+      "name": "Arp Pattern Step/Glide/Accent 5",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 332,
+      "name": "Arp Pattern Step/Glide/Accent 6",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 333,
+      "name": "Arp Pattern Step/Glide/Accent 7",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 334,
+      "name": "Arp Pattern Step/Glide/Accent 8",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 335,
+      "name": "Arp Pattern Step/Glide/Accent 9",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 336,
+      "name": "Arp Pattern Step/Glide/Accent 10",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 337,
+      "name": "Arp Pattern Step/Glide/Accent 11",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 338,
+      "name": "Arp Pattern Step/Glide/Accent 12",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 339,
+      "name": "Arp Pattern Step/Glide/Accent 13",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 340,
+      "name": "Arp Pattern Step/Glide/Accent 14",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 341,
+      "name": "Arp Pattern Step/Glide/Accent 15",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 342,
+      "name": "Arp Pattern Step/Glide/Accent 16",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 343,
+      "name": "Arp Pattern Timing/Length 1",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 344,
+      "name": "Arp Pattern Timing/Length 2",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 345,
+      "name": "Arp Pattern Timing/Length 3",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 346,
+      "name": "Arp Pattern Timing/Length 4",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 347,
+      "name": "Arp Pattern Timing/Length 5",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 348,
+      "name": "Arp Pattern Timing/Length 6",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 349,
+      "name": "Arp Pattern Timing/Length 7",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 350,
+      "name": "Arp Pattern Timing/Length 8",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 351,
+      "name": "Arp Pattern Timing/Length 9",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 352,
+      "name": "Arp Pattern Timing/Length 10",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 353,
+      "name": "Arp Pattern Timing/Length 11",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 354,
+      "name": "Arp Pattern Timing/Length 12",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 355,
+      "name": "Arp Pattern Timing/Length 13",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 356,
+      "name": "Arp Pattern Timing/Length 14",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 357,
+      "name": "Arp Pattern Timing/Length 15",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 358,
+      "name": "Arp Pattern Timing/Length 16",
+      "minimum": 0,
+      "maximum": 119,
+      "allowed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119
+      ]
+    },
+    {
+      "index": 363,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 364,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 365,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 366,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 367,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 368,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 369,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 370,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 371,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 372,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 373,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 374,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 375,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 376,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 377,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 378,
+      "name": "Name Char",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 379,
+      "name": "Category",
+      "minimum": 0,
+      "maximum": 12
+    }
+  ],
+  "reserved": [
+    0,
+    12,
+    13,
+    15,
+    28,
+    29,
+    31,
+    44,
+    45,
+    46,
+    47,
+    52,
+    54,
+    55,
+    60,
+    70,
+    73,
+    74,
+    75,
+    76,
+    79,
+    83,
+    84,
+    85,
+    96,
+    99,
+    103,
+    104,
+    105,
+    116,
+    118,
+    119,
+    120,
+    125,
+    126,
+    127,
+    162,
+    168,
+    169,
+    171,
+    174,
+    180,
+    181,
+    183,
+    186,
+    192,
+    193,
+    195,
+    197,
+    198,
+    206,
+    207,
+    209,
+    210,
+    218,
+    219,
+    221,
+    222,
+    230,
+    231,
+    233,
+    234,
+    242,
+    243,
+    244,
+    309,
+    310,
+    313,
+    321,
+    324,
+    325,
+    359,
+    360,
+    361,
+    362,
+    380,
+    381,
+    382
+  ]
+}

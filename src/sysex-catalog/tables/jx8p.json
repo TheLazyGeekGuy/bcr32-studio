@@ -1,0 +1,336 @@
+{
+  "scope": "MIDI Implementation 3.2 Individual Tone Parameter, PDF28-29; enum ranges remain raw 0..127 intervals",
+  "rows": [
+    {
+      "index": 0,
+      "name": "Name Character 1",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 1,
+      "name": "Name Character 2",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 2,
+      "name": "Name Character 3",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 3,
+      "name": "Name Character 4",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 4,
+      "name": "Name Character 5",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 5,
+      "name": "Name Character 6",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 6,
+      "name": "Name Character 7",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 7,
+      "name": "Name Character 8",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 8,
+      "name": "Name Character 9",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 9,
+      "name": "Name Character 10",
+      "minimum": 32,
+      "maximum": 127
+    },
+    {
+      "index": 11,
+      "name": "DCO 1 Range",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 12,
+      "name": "DCO 1 Waveform",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 13,
+      "name": "DCO 1 Tune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 14,
+      "name": "DCO 1 LFO Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 15,
+      "name": "DCO 1 Envelope Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 16,
+      "name": "DCO 2 Range",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 17,
+      "name": "DCO 2 Waveform",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 18,
+      "name": "DCO 2 Cross Mod",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 19,
+      "name": "DCO 2 Tune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 20,
+      "name": "DCO 2 Fine Tune",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 21,
+      "name": "DCO 2 LFO Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 22,
+      "name": "DCO 2 Envelope Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 26,
+      "name": "DCO Dynamics",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 27,
+      "name": "DCO Envelope Mode",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 28,
+      "name": "Mixer DCO 1 Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 29,
+      "name": "Mixer DCO 2 Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 30,
+      "name": "Mixer Envelope Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 31,
+      "name": "Mixer Dynamics",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 32,
+      "name": "Mixer Envelope Mode",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 33,
+      "name": "HPF Cutoff",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 34,
+      "name": "Filter Cutoff",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 35,
+      "name": "Filter Resonance",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 36,
+      "name": "Filter LFO Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 37,
+      "name": "Filter Envelope Mod Depth",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 38,
+      "name": "Filter Key Follow",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 39,
+      "name": "Filter Dynamics",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 40,
+      "name": "Filter Envelope Mode",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 41,
+      "name": "VCA Level",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 42,
+      "name": "VCA Dynamics",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 43,
+      "name": "Chorus",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 44,
+      "name": "LFO Waveform",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 45,
+      "name": "LFO Delay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 46,
+      "name": "LFO Rate",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 47,
+      "name": "Envelope 1 Attack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 48,
+      "name": "Envelope 1 Decay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 49,
+      "name": "Envelope 1 Sustain",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 50,
+      "name": "Envelope 1 Release",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 51,
+      "name": "Envelope 1 Key Follow",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 52,
+      "name": "Envelope 2 Attack",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 53,
+      "name": "Envelope 2 Decay",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 54,
+      "name": "Envelope 2 Sustain",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 55,
+      "name": "Envelope 2 Release",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 56,
+      "name": "Envelope 2 Key Follow",
+      "minimum": 0,
+      "maximum": 127
+    },
+    {
+      "index": 58,
+      "name": "VCA Envelope Mode",
+      "minimum": 0,
+      "maximum": 127
+    }
+  ],
+  "reserved": [
+    10,
+    23,
+    24,
+    25,
+    57
+  ]
+}

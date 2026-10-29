@@ -1,0 +1,49 @@
+{
+  "evidence": "Owner-confirmed physical mode, then product identity and existing48/00 only; 2026-10-29. No page command, export or STORE.",
+  "cases": [
+    {
+      "mode": "controller",
+      "at": "2026-10-29T19:47:34.833Z",
+      "sourceSha256": "59ea9ef0e1d39c3f4eae915cdcbdc1d52e71d81678488e98a6c06d91c0652f83",
+      "firmware": "1.0.3",
+      "device": 0,
+      "reply": [
+        240,
+        0,
+        32,
+        50,
+        0,
+        100,
+        72,
+        0,
+        2,
+        247
+      ]
+    },
+    {
+      "mode": "sequencer",
+      "at": "2026-10-29T21:47:28.039Z",
+      "sourceSha256": "a31c77ebbcd9f797d1cb389776b214f895efe1ca87bac8e5734fa6ec5ee0cf84",
+      "firmware": "1.0.3",
+      "device": 0,
+      "reply": [
+        240,
+        0,
+        32,
+        50,
+        0,
+        100,
+        72,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        247
+      ]
+    }
+  ]
+}

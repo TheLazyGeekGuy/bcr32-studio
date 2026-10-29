@@ -14,7 +14,7 @@ function fakeMidi({sync=false,timingMissing=false}={}){
   if(cmd===0x0b||cmd===0x0c){window.__page=cmd===0x0b?'sequencer':'controller';return}
   if(cmd===8&&b.length===8){const head=[240,0,32,50,127,100,4,window.__page==='sequencer'?11:12,2,0,0,0,...Array(256).fill(0)],sum=head.reduce((n,v)=>n+v,0)&65535;return reply([...head,...[12,8,4,0].map(shift=>sum>>shift&15),247])}
 
-  if(cmd===0x48&&b.length===9)return reply([...prefix,0x48,0,0,...pack([window.__running,window.__preset,2,0,0]),247])
+  if(cmd===0x48&&b.length===9)return reply(window.__page==='controller'?[...prefix,0x48,0,2,247]:[...prefix,0x48,0,0,...pack([window.__running,window.__preset,2,0,0]),247])
   if(cmd===0x45){const raw=Array.from({length:32},(_,s)=>b[9]===0?(b[8]===0&&s===0?window.__note:60):b[9]===1?100:b[9]===4?2:[5,6].includes(b[9])?-1:0).flatMap(v=>[v>>8&255,v&255]);return reply([...prefix,cmd,1,b[8],b[9],0,...pack(raw),247])}
   if(cmd===0x46){if(timingMissing)return;const value=[1,32,0,4,0,0,0][b[9]];return reply([...prefix,cmd,1,b[8],b[9],0,...pack([0,value]),247])}
   if(cmd===0x44){if(b[10]===0&&b[8]===0&&b[9]===0)window.__note=b[13];return reply([...prefix,cmd,2,b[8],b[9],b[10],0,...b.slice(11,14),247])}
@@ -41,6 +41,15 @@ if(require.main===module)(async()=>{const browser=await chromium.launch({headles
  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.studio')).some(e=>e.dataset.mode==='controller'))
  await page.waitForFunction(()=>window.__sent.some(b=>b.length===8&&b[6]===0x0c))
  assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===8).length),0,'opening and switching UI views never starts legacy export08 polling')
+ // Simulate the physical key without sending any page command from the application.
+ const manualPages=await page.evaluate(()=>window.__sent.filter(b=>b.length===8&&[11,12].includes(b[6])).length)
+ await page.evaluate(()=>window.__page='sequencer')
+ await page.waitForFunction(()=>document.querySelector('.studio[data-mode]')?.dataset.mode==='sequencer')
+ await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
+ await page.evaluate(()=>window.__page='controller')
+ await page.waitForFunction(()=>document.querySelector('.studio[data-mode]')?.dataset.mode==='controller')
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b.length===8&&[11,12].includes(b[6])).length),manualPages,'physical follow never echoes a page selection')
+ assert.equal(await page.evaluate(()=>window.__sent.filter(b=>b[6]===8).length),0,'state following never starts an export')
  // Begin the existing sequencer scenario with a fresh simulated trace.
  await page.evaluate(()=>window.__sent.length=0)
  await page.getByRole('button',{name:'Sequencer',exact:true}).click()

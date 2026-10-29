@@ -1,6 +1,8 @@
 /** Dependency-free SXM reader, serializer and local renderer. No MIDI permission or I/O. */
 import schema from './schema.json'
 import type {SysExMap,SxmDevice,SxmParameter,SxmValue} from './types.js'
+import {acceptsValue,valueDomain,valueDomainExtension} from './value-domain'
+export {acceptsValue,valueDomain,valueDomainExtension} from './value-domain'
 export type * from './types.js'
 function freeze(x:unknown):void{if(x&&typeof x==='object'){Object.values(x).forEach(freeze);Object.freeze(x)}}
 freeze(schema)
@@ -58,7 +60,7 @@ function fieldValues(p:SxmParameter,values:Readonly<Record<string,number>>):Reco
  return Object.fromEntries(Object.entries(p.fields).map(([id,f])=>{const v=values[id]??f.default;bounded(v,f.minimum,f.maximum,id);return [id,v]}))
 }
 export function renderParameter(p:SxmParameter,value:number,fields:Readonly<Record<string,number>>={}):number[][]{
- bounded(value,p.value.minimum,p.value.maximum,p.id);const resolved=fieldValues(p,fields)
+ bounded(value,p.value.minimum,p.value.maximum,p.id);if(!acceptsValue(p,value))fail(p.id,'value outside discrete domain');const resolved=fieldValues(p,fields)
  return p.messages.map(message=>{
   const bytes:number[]=[]
   for(const token of message.bytes){
@@ -78,13 +80,21 @@ export function renderParameter(p:SxmParameter,value:number,fields:Readonly<Reco
 export function validateMap(value:unknown):SysExMap{
  jsonTree(value);const serialized=JSON.stringify(value);if(new TextEncoder().encode(serialized).length>maxMapBytes)fail('$','file exceeds 2 MiB')
  structure(value,schema,'$');const d=value as SysExMap
- if(d.requiredExtensions?.length)fail('$','required extension unsupported')
+ if(d.requiredExtensions?.some(e=>e!==valueDomainExtension))fail('$','required extension unsupported')
  unique(d.devices.map(x=>x.id),'devices');let total=0
  for(const device of d.devices){
   if((total+=device.parameters.length)>8192)fail('$','too many parameters')
   unique(device.parameters.map(p=>p.id),device.id);unique(device.documentation.sources,device.id)
   for(const source of device.documentation.sources)if(!Object.hasOwn(d.sources,source))fail(device.id,'missing source reference')
   for(const p of device.parameters){
+   const domain=valueDomain(p)
+   if(domain!==undefined){
+    if(!d.requiredExtensions?.includes(valueDomainExtension))fail(p.id,'value domain must be a required extension')
+    if(!object(domain)||Object.keys(domain).some(k=>!['step','allowed'].includes(k))||!Object.keys(domain).length)fail(p.id,'invalid value domain')
+    if(domain.step!==undefined)bounded(domain.step,1,16384,p.id)
+    if(domain.allowed!==undefined){if(!Array.isArray(domain.allowed)||!domain.allowed.length||domain.allowed.length>16384)fail(p.id,'invalid allowed values');unique(domain.allowed.map(String),p.id);domain.allowed.forEach(v=>bounded(v,p.value.minimum,p.value.maximum,p.id))}
+    if(!acceptsValue(p,p.value.minimum)||!acceptsValue(p,p.value.maximum)||p.value.default!==undefined&&!acceptsValue(p,p.value.default))fail(p.id,'range endpoints/default must belong to domain')
+   }
    if(p.value.minimum>p.value.maximum)fail(p.id,'reversed value range')
    if(p.value.default!==undefined)bounded(p.value.default,p.value.minimum,p.value.maximum,p.id)
    for(const [k] of Object.entries(p.value.labels??{}))if(!/^-?(0|[1-9]\d*)$/.test(k)||k==='-0'||Number(k)<p.value.minimum||Number(k)>p.value.maximum)fail(p.id,'invalid value label key')
@@ -133,13 +143,18 @@ export function decodeMap(bytes:Uint8Array):SysExMap{
 export function serializeMap(doc:SysExMap):string{
  const valid=validateMap(doc)
  const sorted=(x:unknown):unknown=>Array.isArray(x)?x.map(sorted):object(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,sorted(x[k])])):x
- return JSON.stringify(sorted(valid),null,2)+'\n'
+ const tree=sorted(valid),pretty=JSON.stringify(tree,null,2)+'\n'
+ // Whitespace must not make a valid catalogue impossible to re-import.
+ if(new TextEncoder().encode(pretty).length<=maxMapBytes)return pretty
+ const compact=JSON.stringify(tree)+'\n'
+ if(new TextEncoder().encode(compact).length>maxMapBytes)fail('$','serialized file exceeds 2 MiB')
+ return compact
 }
 export function subsetMap(doc:SysExMap,deviceId:string,parameterId?:string):SysExMap{
  const device=doc.devices.find(d=>d.id===deviceId);if(!device)fail('$','device not found')
  const parameters=parameterId?device.parameters.filter(p=>p.id===parameterId):device.parameters;if(!parameters.length)fail('$','parameter not found')
  const ids=new Set(parameters.map(p=>p.id))
- return validateMap({...doc,name:`${device.manufacturer} ${device.name}${parameterId?' / '+parameters[0].name:''}`.slice(0,200),devices:[{...device,parameters}],sources:Object.fromEntries(device.documentation.sources.map(id=>[id,doc.sources[id]])),...(doc.values?{values:doc.values.filter(v=>v.device===deviceId&&ids.has(v.parameter))}:{})})
+ return validateMap({...doc,...(doc.requiredExtensions?{requiredExtensions:doc.requiredExtensions.filter(e=>e!==valueDomainExtension||parameters.some(p=>valueDomain(p)))}:{}),name:`${device.manufacturer} ${device.name}${parameterId?' / '+parameters[0].name:''}`.slice(0,200),devices:[{...device,parameters}],sources:Object.fromEntries(device.documentation.sources.map(id=>[id,doc.sources[id]])),...(doc.values?{values:doc.values.filter(v=>v.device===deviceId&&ids.has(v.parameter))}:{})})
 }
 export function withMapValue(doc:SysExMap,saved:SxmValue):SysExMap{
  return validateMap({...doc,values:[...(doc.values??[]).filter(v=>v.device!==saved.device||v.parameter!==saved.parameter),saved]})
