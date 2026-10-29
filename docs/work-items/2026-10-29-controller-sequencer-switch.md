@@ -1,6 +1,6 @@
 # Unify controller/sequencer page switching
 
-Status: export-based follow remains withdrawn. A replacement48/00 observer is implemented locally in0.46.0-alpha.12 and software-tested; paired physical mode replies are recorded. Physical return-to-CTRL and sustained key acceptance are still pending.
+Status: export-based follow remains withdrawn. A replacement48/00 observer is implemented locally in0.46.0-alpha.12 and software-tested; paired physical mode replies are recorded. Physical return-to-CTRL is now accepted in the bounded local1.0.3 test below; broader transfer/stress coverage is not claimed.
 
 ## Traceability
 
@@ -83,3 +83,11 @@ Verification: all57 test scripts, TypeScript and production build pass. The owne
 Firefox at `http://127.0.0.1:5187/editor/` was observed on Sequencer with a live pattern read at22:49:58 after local reload. The owner has been asked to return physically to CTRL, without clicking the editor. That physical acceptance and sustained key availability remain pending. No commit, push or production deployment of this replacement has occurred.
 
 Passive runtime check at22:55 CET: the input-only eight-second recorder saw six valid48 replies and no other packets in its observation window. The native listener was closed afterward. This verifies that the running local browser reader receives replies; it does not substitute for exercising the physical mode key. Generic publication scanning passed; the full private-denylist scanner still reports five existing file findings and five historical commit findings. No hook was bypassed and no push was attempted.
+
+## Physical return-to-CTRL acceptance — 23:05 CET
+
+Reviewed by Codex primary agent on2026-10-29 at23:05 CET; exact model identifier and reasoning effort are unavailable. Repository `bcr-studio-firmware-103`, full implementation commit `34b9ef798d3f985c60f40a36c242dfe84552644c`, branch `work/sxm-full-catalog`; worktree was clean before this documentation-only update. Outside Git: the owner's physical confirmation and native Firefox accessibility observations through the computer-use tool; no screenshot or additional MIDI write was taken for acceptance.
+
+The owner confirmed pressing the physical CTRL/ZQR key and reaching CTRL. The existing Firefox tab at `http://127.0.0.1:5187/editor/` was then selected through its browser tab only: the application toolbar showed **Contrôleur on / Séquenceur off**. No in-application mode button was clicked. This complements the earlier owner-confirmed ZQR and observed Sequencer view/live pattern read. Thus the bounded physical navigation test passes in both directions on firmware1.0.3, after the replacement reader had remained running between observations. The physical key is usable under this reader in this observed case; the export08 regression did not recur.
+
+The earlier pending return-to-CTRL statements are superseded for this exact case. This does not certify other firmware versions, all transfer boundaries, disconnect/reconnect stress or arbitrary device state. Existing software guards/tests cover busy/manual/timeout/disposal paths; a complete hardware endurance matrix remains a separate scope. No preset, clock routing, STORE or firmware setting was changed for this acceptance. No remote push or production deployment is claimed.

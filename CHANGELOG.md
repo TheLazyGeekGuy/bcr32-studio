@@ -5,7 +5,7 @@
 - Expand the manufacturer-backed SysEx catalogue to22 model entries and3,122 definitions, including JV-2080 Patch/Tone and separate MicrowaveII/XT scopes. Add section/parameter search, corrected model-specific wire encodings and documented coverage gaps; this is not exhaustive whole-instrument coverage.
 - Add the required SXM discrete-value-domain extension, independent TypeScript/Python examples, deterministic offline compilation and large-map roundtrip within the unchanged2MiB input budget. Unsupported native BCL domains/effects remain file-only.
 - Replace the rejected export-based mode follower with a firmware1.0.3-only48/00 state-availability observer, based on paired owner-confirmed physical CTRL/ZQR captures. Require repeated exact replies, share state requests with the sequencer, pause while busy and invalidate old observations after manual actions. Never infer mode from timeouts or other refusals.
-- Keep export08 revoked and received navigation free of echoed page commands. Unit/build/simulated-browser checks pass; physical return-to-CTRL and sustained front-panel acceptance remain pending.
+- Keep export08 revoked and received navigation free of echoed page commands. Unit/build/simulated-browser checks pass; owner-confirmed physical CTRL↔ZQR transitions and observed Firefox navigation pass on the tested1.0.3 device. Broader hardware endurance and other firmware remain unqualified.
 
 ## [0.46.0-alpha.11] — 2026-10-29
 
