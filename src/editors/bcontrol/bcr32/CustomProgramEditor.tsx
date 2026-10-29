@@ -6,7 +6,7 @@ import {controlProgramFile,importControlProgram,programSelector,withoutCustomPro
 import type {Encoder} from './profile'
 import type {ProgramTools} from './custom-program-transfer'
 
-export type CustomProgramActions={activate:()=>void;chooseRepresentation:(mode:'sysex'|'bcl')=>boolean}
+export type CustomProgramActions={draft:()=>ReturnType<typeof parseCustomAssignment>|null;activate:()=>void;chooseRepresentation:(mode:'sysex'|'bcl')=>boolean}
 const SynthCatalog=lazy(()=>import('../../../sysex-catalog/CatalogPicker'))
 const example='.minmax 0 127\n.default 0\n.tx $F0 $7D val $F7\n.showvalue on'
 const hex=(bytes:ArrayLike<number>)=>Array.from(bytes,b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')
@@ -61,8 +61,8 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
   }
   const changeMode=(next:typeof mode)=>{if(hexDraft!==null&&!hexValid){setNotice('Fix the hex draft before changing modes; it has not replaced the BCL source.');return false}setMode(next);setHexDraft(null);if(!importFailed)setNotice('');return true}
   useEffect(()=>{setMode(representation)},[representation])
-  useEffect(()=>{if(!actions)return;const api:CustomProgramActions={activate:()=>setEditRevision(n=>n+1),chooseRepresentation:next=>changeMode(next)};actions.current=api;return()=>{if(actions.current===api)actions.current=null}},[actions,hexDraft,hexValid,importFailed])
-  // Only direct edits schedule a live write. Opening/importing/reading/restoring a draft is inert.
+  useEffect(()=>{if(!actions)return;const api:CustomProgramActions={draft:()=>hexValid&&!importFailed&&!unsupportedDefault?p:null,activate:()=>setEditRevision(n=>n+1),chooseRepresentation:next=>changeMode(next)};actions.current=api;return()=>{if(actions.current===api)actions.current=null}},[actions,hexDraft,hexValid,importFailed,unsupportedDefault,p])
+  // Only direct edits or explicit Type activation schedule a live write. Opening/importing/reading/restoring a draft is inert.
   // Consume each revision once; re-enabling, rebinding or showing the view cannot replay old edits.
   const latest=useRef({locked,visible,hardware,autoSend,source,apply,hardwareAction})
   latest.current={locked,visible,hardware,autoSend,source,apply,hardwareAction}
