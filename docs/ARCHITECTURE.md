@@ -89,3 +89,7 @@ install; they inject a fake Web MIDI input and never touch a real device.
 `META_CSP=1` injects the Content-Security-Policy of `public/_headers` as a meta tag for GitHub Pages. Deployment:
 [DEPLOYMENT.md](DEPLOYMENT.md). Leak scan: `scripts/leak-gate.mjs` (CI rules plus a maintainer's private denylist
 kept outside the repository).
+
+## Physical acceptance of background queries
+
+A read operation may preserve preset bytes while still advancing an export cursor or blocking front-panel controls. BCR32 export08 polling failed this gate on2026-10-29 and was withdrawn. New background queries must prove that mode keys and normal controls remain available during sustained monitoring, including transfer boundaries and background-browser operation. Valid checksums, fake-MIDI tests and unchanged stored data do not establish this property. Unknown or failing queries remain outside the host grant and must not be retried in a loop as a status mechanism.

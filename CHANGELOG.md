@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.11] — 2026-10-29
+
+- Withdraw automatic export08 polling after physical acceptance showed it blocked the BCR32 mode key; the owner confirmed the physical key works again after polling stops.
+- Remove the automatic follower and revoke export08 from the host query validator. Keep only the inert captured-export parser for protocol evidence.
+- Preserve the working on-screen ZQR/CTRL and top Controller/Sequencer actions. Physical-key-to-UI following remains unavailable until a nonblocking status mechanism is qualified.
+- Add physical front-panel availability to the acceptance gate for any background read; checksum-valid replies and software tests alone do not qualify a polling operation.
+
 ## [0.46.0-alpha.10] — 2026-10-29
 
 - Unify the on-screen ZQR/CTRL key and the top Controller/Sequencer buttons through the same explicit hardware-page action.

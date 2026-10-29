@@ -1,6 +1,6 @@
 # Unify controller/sequencer page switching
 
-Status: implemented locally in0.46.0-alpha.10; software checks and two physical mode reads pass. Final physical UI acceptance pending.
+Status: automatic export-based follow withdrawn in0.46.0-alpha.11 after failed physical acceptance. Explicit UI page switching retained; physical-key-to-UI following remains unresolved.
 
 ## Traceability
 
@@ -39,3 +39,13 @@ Validation: strict parser/query/pending/timeout/pause/disposal tests pass; all57
 A real local Firefox session began sequencer pattern reads after observing the owner's ZQR state. Explicit visual acceptance of the final physical CTRL transition was requested and remains pending at this checkpoint. This is not a blanket firmware qualification or a claim of preserving another application's simultaneous legacy export cursor. Mode reads advance that cursor; exclusive port ownership and pauses during Studio transfers remain relevant.
 
 At20:08 CET, an additional bounded native probe sent130 known read08 requests at100ms intervals while the Studio follower remained active. It observed134 sequencer responses including concurrent Studio reads, and a complete export-cursor wrap. No page, assignment or STORE command was sent by this probe. This establishes continued replies across the cursor boundary for the captured1.0.3 case, not an isolated latency benchmark. The application remains limited to at most1Hz idle polling. Final57/57 tests/typecheck and the alpha.10 build pass; the extended browser follow scenario passes in both directions without page-command echo. User confirmation of the visible physical CTRL transition is still pending.
+
+## Physical acceptance failure and immediate withdrawal — 20:10–20:13 CET
+
+Codex primary, exact model/effort unavailable; read full commit `7c6790ca02db8df115e5f58f862252143c359231` plus the uncommitted withdrawal patch. The owner clarified that explicit UI mode selection works, while the physical mode key is blocked. Export08 polling was stopped immediately in the local runtime; the pending alpha.10 Pages publication40937690745 was cancelled. The owner then confirmed: the physical key becomes usable again, while physical changes no longer drive the UI. This is a failed hardware-acceptance gate for the export-based follower, irrespective of the passing fake-MIDI and checksum tests.
+
+The automatic follower implementation is removed, not merely hidden behind an option. Exact read08 is removed from the Studio query validator. The captured-export parser remains inert research evidence. The panel/toolbar explicit UI actions and read-only BCL/pattern behavior remain. No further hardware probing, new opcode, STORE or firmware action is used for this withdrawal. Physical-key-to-UI following is deliberately unavailable pending a genuinely nonblocking status mechanism. Previous claims that the repeated export was a qualified background status request are superseded by this observed side effect.
+
+Lesson: an operation that leaves presets unchanged can still monopolize a transfer/UI state or advance a cursor. A background read requires physical acceptance with the device mode key and ordinary controls exercised during sustained monitoring, as well as data integrity, bounded traffic and disposal checks. Repeat this gate across transfer boundaries and with the app idle/backgrounded. Never substitute valid replies or a software-only test for front-panel availability.
+
+Withdrawal completion at20:15 CET: all57 unit suites and TypeScript, production build, browser Controller/Sequencer/manual-panel/step/follow/import regression scenario, explicit zero automatic08 assertion, generic leak scan and whitespace checks pass. The alpha.10 Pages run is confirmed completed/cancelled, not just requested. The passive native recorder was closed after acceptance evidence was retained; no diagnostic output writer remains active. The owner confirmed recovery of the physical key after stopping exports. Physical-key-to-UI follow is not delivered by this correction.

@@ -1,4 +1,4 @@
-import {createPageFollower,type EditorPage} from './page-follow'
+import type {EditorPage} from './page-follow'
 import {assertWorkingPrograms} from './custom-program-transfer'
 import {createLiveControlQueue} from './live-control-queue'
 import {publicAsset} from '../../../deployment-base'
@@ -335,22 +335,11 @@ function loadWorkspace() {
   const outputs = useMemo(() => access ? Array.from(access.outputs.values()) : [], [access, portVersion])
   const output = outputs.find(port => port.id === outputId)
   const brightnessEnabled = !!access?.sysexEnabled && isBcrOutput(output) && isControllerPort(output) && inputs.some(p=>p.id===inputId && isControllerPort(p))
-  const pageFollower=useRef<ReturnType<typeof createPageFollower>|null>(null)
-  const pageReady=useRef(false)
-  pageReady.current=brightnessEnabled&&supportsZaqHost(liveFirmware)&&liveDeviceId!==null&&liveDeviceId!==127&&!presetBusy&&!deviceSettingsBusy&&!['pending','writing'].includes(assignmentWrite.status)
-  useEffect(()=>{
-    if(!brightnessEnabled||!supportsZaqHost(liveFirmware)||liveDeviceId===null||liveDeviceId===127||!output?.send)return
-    const follower=createPageFollower({ready:()=>pageReady.current,send:bytes=>output.send!(bytes),changed:mode=>{
-      // Hardware observation changes navigation only. Readers must not reselect a page.
-      setEditorMode(mode)
-    }})
-    pageFollower.current=follower
-    return()=>{follower.close();if(pageFollower.current===follower)pageFollower.current=null}
-  },[brightnessEnabled,inputId,outputId,portVersion,liveFirmware,liveDeviceId])
+  // Hardware-key following is unavailable: export08 polling blocked physical mode keys in acceptance.
+  // Keep explicit UI page commands; never run the legacy export as a background status request.
   const chooseEditorMode=(mode:EditorPage)=>{
     if(presetBusy||lockedRef.current)return
     if(brightnessEnabled&&supportsZaqHost(liveFirmware)&&liveDeviceId!==null){
-      pageFollower.current?.requested(mode)
       try{output?.send?.(hostPage(mode))}catch(e){setNotice(`Hardware mode: ${String(e)}`);return}
     }
     // Explicit UI navigation selects hardware once; the receive path never calls this action.
@@ -597,7 +586,6 @@ function loadWorkspace() {
     setValues(current => Object.fromEntries(Object.entries(current).map(([id, v]) => [id, { value: v.value, source: v.source }])))
     input.onmidimessage = (event) => {
       const data = Array.from(event.data)
-      if(pageFollower.current?.receive(data))return
       // Preserve arrival time and keep clock/transport off unrelated assignment/learn/render paths.
       if(data.length===1&&[248,250,251,252,254].includes(data[0])){sequencerReceive.current(data,event.timeStamp);return}
       // Clock (F8) and active sensing (FE) touch no React state: no activity pulse, no log line, no App render.
