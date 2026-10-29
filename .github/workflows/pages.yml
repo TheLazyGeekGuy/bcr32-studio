@@ -1,11 +1,14 @@
 name: Pages
 
-# Primary public deployment: every push to main is built and published on GitHub Pages
-# (https://thelazygeekguy.github.io/bcr32-studio/). No external service, no secret.
+# Production is explicit: a main push must never publish a development build.
+# The maintainer chooses the immutable source revision for a release or rollback.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full approved source commit (40 hexadecimal characters)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -18,14 +21,20 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.server_url == 'https://github.com' && github.repository == 'TheLazyGeekGuy/bcr32-studio'
+    if: github.server_url == 'https://github.com' && github.repository == 'TheLazyGeekGuy/bcr32-studio' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Validate immutable release source
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: '[[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]'
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.source_sha }}
       - uses: actions/setup-node@v7
         with:
           node-version: 22
