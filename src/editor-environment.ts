@@ -1,3 +1,4 @@
+import {deploymentStorage} from './deployment-storage'
 import type { DeviceDefinition } from './device-definition'
 import { sysexHeader, isDevicePort } from './device-definition'
 import * as profiles from './profile'
@@ -20,7 +21,7 @@ export function createEditorEnvironment(device: DeviceDefinition, instanceId?: s
   if (instanceId !== undefined && !/^[a-zA-Z0-9_-]{1,100}$/.test(instanceId)) throw Error('Invalid editor instance namespace')
   const key = (name: string) => instanceId ? `bcr-studio.instance.${instanceId}.${name}` :
     device.id === 'bcr32' ? name : name.replace(/^bcr32-studio\./, `bcr-studio.${device.id}.`)
-  const store = () => backing ?? window.localStorage
+  const store = () => backing ?? deploymentStorage()
   const storage: EditorStorage = { getItem: name => store().getItem(key(name)), setItem: (name, value) => store().setItem(key(name), value), removeItem: name => store().removeItem(key(name)) }
   const parseState = (value: unknown) => presets.parseControllerState(value, device)
   const createProfile = () => profiles.createProfile(device)

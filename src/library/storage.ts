@@ -1,3 +1,4 @@
+import {deploymentDatabaseName} from '../deployment-storage'
 import {readSoundDiverLib} from './sounddiver'
 import {createFileAdapters,type FileInventory} from './adapters'
 import {emptyMetadata,validateMetadata,mergeMetadata,type LibraryMetadata} from './metadata'
@@ -36,7 +37,7 @@ export async function importLibraryFile(storage:LibraryStorage,name:string,bytes
 /** Compatibility wrapper retains the explicit LIB-only contract. */
 export const importSoundDiver=(storage:LibraryStorage,name:string,bytes:Uint8Array)=>importLibraryFile(storage,name,bytes,readSoundDiverLib)
 /** Explicit lazy factory: imports and unopened tools have no storage/MIDI side effects. */
-export function openLibraryStorage(factory:IDBFactory=globalThis.indexedDB,name='midi-studio.library.v1'):Promise<LibraryStorage>{
+export function openLibraryStorage(factory:IDBFactory=globalThis.indexedDB,name=deploymentDatabaseName('midi-studio.library.v1')):Promise<LibraryStorage>{
   return new Promise((resolve,reject)=>{
     if(!factory){reject(Error('Local library storage unavailable'));return}
     const request=factory.open(name,2)

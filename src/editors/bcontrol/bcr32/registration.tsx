@@ -1,3 +1,4 @@
+import {deploymentStorage} from '../../../deployment-storage'
 import type {EditorViewRegistration,EditorViewContext,EditorViewProps} from '../../../editor-host/view-contract'
 import type {MidiAuthorization,MidiOperation} from '../../../editor-host/midi-broker'
 import {createMidiViewAccess} from '../../../editor-host/midi-view-access'
@@ -91,7 +92,7 @@ export const bcr32View:EditorViewRegistration={
   const env=createEditorEnvironment(bcr32,context.id),bridge=createWorkbenchBridge(context)
   env.seedLegacy()
   for(const key of ['bcr32-studio.controller-autoread','bcr32-studio.assignment-live','bcr32-studio.preset-cache']){
-   try{if(env.storage.getItem(key)===null){const legacy=window.localStorage.getItem(key);if(legacy!==null)env.storage.setItem(key,legacy)}}catch{/* Preference migration is optional; originals remain intact. */}
+   try{if(env.storage.getItem(key)===null){const legacy=deploymentStorage().getItem(key);if(legacy!==null)env.storage.setItem(key,legacy)}}catch{/* Preference migration is optional; originals remain intact. */}
   }
   const initial=parseControllerState(context.initial)
   const off=context.lifecycle?.onDispose(bridge.dispose)

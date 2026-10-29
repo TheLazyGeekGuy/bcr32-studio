@@ -24,3 +24,15 @@ Yesterday's last first-parent source: 78ab3a227d50ef13716e6aa45a19a58e92bd5e32, 
 ## Immediate containment
 
 Production Pages is changed to workflow_dispatch only, from main, with a mandatory validated full source SHA. This permits the explicitly requested rollback to 78ab3a227d50ef13716e6aa45a19a58e92bd5e32 while retaining all current code. The owner clarified that GitHub hosting is preferred when possible. Develop/staging will be separate subpaths in the same Pages artifact, with separate service-worker scopes and application storage namespaces. No Cloudflare resource is created or existing OAuth credential copied to GitHub.
+
+## GitHub-only implementation and local acceptance
+
+The owner explicitly chose GitHub hosting when feasible; no Cloudflare deployment/credential migration is performed. Production restoration succeeded (Pages 40919814496), and public HTTP independently returned 0.45.0-alpha.17. The production branch points at 78ab3a227d50ef13716e6aa45a19a58e92bd5e32. The immutable manual rollback was run after the containment commit 085be50768f1f0cedd4fee4ea495930969002747.
+
+The combined Pages workflow builds production only from its branch, plus develop and staging separately, then publishes one artifact with isolated subpaths. Successful preview CI triggers the workflow on default main; main pushes alone do not publish. GitHub environments develop/staging were created with exact main deployment policies (the orchestrator runs on main); existing production and github-pages rules are unchanged. Preview receipt jobs record their URLs after Pages publication. The obsolete disabled Cloudflare workflow is removed; external resources and legacy variables are untouched.
+
+Preview source adds scoped module storage, standalone instance/presentation recovery and library database names; production keys are unchanged. The default build keeps existing semantics. Nonproduction builds show a banner and emit environment/version/source metadata.
+
+55/55 test scripts and TypeScript passed, including new storage/path/database isolation. Separate develop and staging builds passed. The real-browser composite fixture uses the exact downloaded alpha.17 production artifact plus the two current builds: production/develop/staging retained CC17/CC23/CC45 independently after edits and reloads; all three worker scopes matched their paths; all three reopened offline. Only empty simulated MIDI ports were exposed; no hardware operation. Pages workflow YAML syntax was checked with Ruby YAML. An initial Python YAML check was unavailable (PyYAML missing), not a workflow syntax failure.
+
+Review: Codex primary, exact model/effort unavailable, 2026-10-29 18:25 CET, baseline 085be50768f1f0cedd4fee4ea495930969002747 plus these uncommitted workflow/build/storage/test/documentation files. Production publication evidence and actual preview URLs are checked after the implementation commit. New physical assignment defects reported during this work remain a separate development correction; staging/production will not receive that correction automatically.

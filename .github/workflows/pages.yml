@@ -1,14 +1,13 @@
 name: Pages
 
-# Production is explicit: a main push must never publish a development build.
-# The maintainer chooses the immutable source revision for a release or rollback.
+# One Pages artifact, three independent applications. Production is always built from
+# the explicit production branch; develop/staging pushes cannot replace its source.
 on:
   workflow_dispatch:
-    inputs:
-      source_sha:
-        description: Full approved source commit (40 hexadecimal characters)
-        required: true
-        type: string
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [develop, staging]
 
 permissions:
   contents: read
@@ -20,21 +19,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    if: github.server_url == 'https://github.com' && github.repository == 'TheLazyGeekGuy/bcr32-studio' && github.ref == 'refs/heads/main'
+  production-build:
+    if: >-
+      github.server_url == 'https://github.com' && github.repository == 'TheLazyGeekGuy/bcr32-studio' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository))
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Validate immutable release source
-        env:
-          SOURCE_SHA: ${{ inputs.source_sha }}
-        run: '[[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]'
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.source_sha }}
+          ref: production
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -42,15 +37,88 @@ jobs:
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq libasound2-dev
       - run: npm ci
       - run: npm test
-      # Pages sends no custom headers: the CSP of public/_headers is injected as a <meta> tag (META_CSP=1).
       - run: npm run build
         env:
           META_CSP: '1'
-      - name: Single-page fallback
-        run: cp dist/index.html dist/404.html
+      - name: Record immutable production source
+        run: node -e 'const fs=require("node:fs"),cp=require("node:child_process");fs.writeFileSync("dist/deployment.json",JSON.stringify({environment:"production",sourceRevision:cp.execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),version:require("./package.json").version})+"\n")'
+      - uses: actions/upload-artifact@v6
+        with:
+          name: site-production
+          path: dist
+          retention-days: 7
+
+  preview-build:
+    needs: production-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        environment: [develop, staging]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.environment }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq libasound2-dev
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          META_CSP: '1'
+          MIDI_STUDIO_DEPLOYMENT: ${{ matrix.environment }}
+      - uses: actions/upload-artifact@v6
+        with:
+          name: site-${{ matrix.environment }}
+          path: dist
+          retention-days: 7
+
+  deploy:
+    needs: [production-build, preview-build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: site-production
+          path: public
+      - uses: actions/download-artifact@v7
+        with:
+          name: site-develop
+          path: public/develop
+      - uses: actions/download-artifact@v7
+        with:
+          name: site-staging
+          path: public/staging
+      - name: Verify three sources and add fallback
+        run: |
+          node -e 'const fs=require("node:fs");for(const e of ["production","develop","staging"]){const dir=e==="production"?"public":`public/${e}`;if(!fs.existsSync(`${dir}/editor/index.html`))throw Error(`Missing ${e}`);const d=JSON.parse(fs.readFileSync(`${dir}/deployment.json`));if(d.environment!==e||!d.sourceRevision.match(/^[0-9a-f]{40}$/))throw Error(`Invalid ${e} provenance`);console.log(e,d.version,d.sourceRevision)}'
+          cp public/index.html public/404.html
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
+          path: public
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  preview-receipt:
+    needs: deploy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [develop, staging]
+    environment:
+      name: ${{ matrix.environment }}
+      url: https://thelazygeekguy.github.io/bcr32-studio/${{ matrix.environment }}/
+    steps:
+      - name: Verify published environment
+        env:
+          TARGET: ${{ matrix.environment }}
+        run: |
+          node -e 'const target=process.env.TARGET;for(let i=0;i<12;i++){const r=await fetch(`https://thelazygeekguy.github.io/bcr32-studio/${target}/deployment.json?run=${process.env.GITHUB_RUN_ID}`);if(r.ok&&(await r.json()).environment===target){console.log(`Published ${target}`);process.exit(0)}await new Promise(r=>setTimeout(r,5000))}throw Error("Published environment unavailable")' --input-type=module

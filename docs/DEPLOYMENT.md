@@ -1,62 +1,50 @@
-# Deployment
+# Deployment and isolated preview environments
 
-BCR32 Studio has two static HTML entry points (no server code): the presentation at `/` and the application at `/editor/`. The same build runs at a domain root or under a project subpath (Vite `base: './'`). Public assets and the service-worker scope stay at the project root. Do not deploy only one HTML file or move the editor without its shared `assets/` directory.
+The presentation lives at `/` and the editor at `/editor/` inside each deployment root. Relative assets and service-worker scopes follow that root. GitHub Pages hosts all three applications; Cloudflare is not required.
 
-## GitHub Pages (primary)
-
-Every push to `main` runs the tests, builds and publishes **https://thelazygeekguy.github.io/bcr32-studio/**
-(`.github/workflows/pages.yml`). No secret, no external service. GitHub Pages cannot send response headers, so the
-build injects the Content-Security-Policy of `public/_headers` into both HTML entries as a `<meta>` tag (`META_CSP=1`); `frame-ancestors` and
-`X-Frame-Options` are not available there. `404.html` is a copy of `index.html` for the single-page fallback.
-
-## Cloudflare Workers (optional, disabled by default)
-
-Kept for later use. The deploy jobs run only when the repository variable `DEPLOY_ENABLED` is `true` and the
-Cloudflare secrets below exist.
-
-| Environment | Worker | Deployed when | Approval |
+| Environment | URL | Source branch | Update |
 | --- | --- | --- | --- |
-| development | `bcr32-studio-dev` | every push to `main` (merged pull request) | none: CI must be green |
-| production | `bcr32-studio` | a GitHub release is published, or a manual run | required reviewer on the `production` environment |
+| Production | https://thelazygeekguy.github.io/bcr32-studio/ | `production` | explicit source promotion, then manual Pages run |
+| Develop | https://thelazygeekguy.github.io/bcr32-studio/develop/ | `develop` | successful CI after a develop push |
+| Staging | https://thelazygeekguy.github.io/bcr32-studio/staging/ | `staging` | push a selected candidate; successful CI republishes |
 
-Both jobs run the full test suite and the build before deploying, then a smoke test that checks the served bundle
-carries the version of `package.json`. Workflows: `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`.
+Append `editor/` to open an editor directly. Preview pages visibly identify DEVELOP or STAGING. `deployment.json` records each source's full commit and application version. The same version may appear in two environments; compare their source revisions as well.
 
-## Why it only runs on GitHub
+## Production rollback on 2026-10-29
 
-Every job is guarded by `github.server_url == 'https://github.com'`, and the deploy jobs also by
-`github.repository == 'bcr32-studio/bcr32-studio.github.io'` and `vars.DEPLOY_ENABLED == 'true'`. A Forgejo or Gitea mirror, which reads `.github/workflows` when
-it has no `.forgejo/workflows`, skips the jobs; a fork has no Cloudflare secret and skips the deploy jobs.
-Pull requests use the `pull_request` event, never `pull_request_target`, so code from a fork never runs with secrets.
+At the owner's request, production was restored to **0.45.0-alpha.17**, source **78ab3a227d50ef13716e6aa45a19a58e92bd5e32**, the last first-parent commit of 2026-10-28. GitHub Pages run 40919814496 succeeded and the public distribution manifest returned alpha.17. All 2026-10-29 development commits remain in Git. Production's branch was created at that older source; no history was rewritten and local main was untouched.
 
-## One-time setup (maintainer)
+## How publication works
 
-1. **Cloudflare API token**: in the Cloudflare dashboard, create a token with the "Edit Cloudflare Workers" template,
-   limited to the account that hosts the workers.
-2. **GitHub secrets** (Settings > Secrets and variables > Actions), entered by the maintainer:
-   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
-3. **GitHub variables**: `DEV_URL` and `PROD_URL`, the two `workers.dev` URLs, used by the smoke tests, and
-   `DEPLOY_ENABLED=true` once the secrets exist (until then the deploy jobs are skipped).
-4. **Environments** (Settings > Environments): `dev` (no rule) and `production` with "Required reviewers" set to the
-   maintainer, and "Deployment branches and tags" limited to tags `v*` and `main`.
-5. **Branch protection on `main`**: pull request required, CI (`CI / test`) must pass, review from code owners.
+`.github/workflows/ci.yml` validates pull requests and pushes to main, develop and staging. `.github/workflows/pages.yml` runs manually or after successful **CI** on develop/staging. Its workflow definition is taken from the default branch. It builds production separately from the `production` branch and both previews separately from their own branches, tests each, then assembles one Pages artifact:
 
-## Releasing
-
-1. Merge to `main`, check the development site.
-2. Bump the version (`npm version <x.y.z> --no-git-tag-version`, README and CHANGELOG lines), merge.
-3. Publish a GitHub release with tag `v<x.y.z>`. The production job waits for approval, then deploys.
-
-## Manual deployment
-
-```sh
-npm run build
-npx wrangler login                 # once
-npx wrangler deploy --env dev      # development
-npx wrangler deploy --env production   # production
+```text
+/                 production build
+/develop/         develop build
+/staging/         staging build
 ```
 
-## Running the workflows locally
+A failed build prevents publication of the complete artifact. A preview update cannot change the production source branch. There is no automatic production publication on a main push. GitHub environments `develop` and `staging` record the preview URLs after the complete Pages deployment. Their branch rules admit main, since the orchestrating workflow runs on the default branch even when CI was triggered by a preview branch. The existing `github-pages` main restriction and existing production review rules are preserved. No Cloudflare credential is needed or copied to Actions.
 
-`npm test`, `npm run build` and `node scripts/leak-gate.mjs` are exactly what CI runs. To execute the workflow files
-themselves, [act](https://github.com/nektos/act) works with the `pull_request` event; leave the deploy jobs to GitHub.
+GitHub Pages is a static host and publishes one artifact per repository. These are three applications at separate paths, not three independently hosted Pages sites. Building the root from the pinned production branch is mandatory on every combined deployment. Keep its source stable until an explicit release is approved.
+
+## Browser data isolation
+
+Paths on github.io share an origin; paths alone do not isolate localStorage. New preview code scopes editor drafts, module settings, instance recovery IDs and presentation state under `midi-studio.environment.develop.` or `.staging.`. The library database likewise gets an environment suffix. Production keys and database names remain unchanged, and preview startup never silently seeds a production draft. Use file export/import to move data deliberately. Service workers and Cache Storage use each deployment's distinct path/scope; the production inventory excludes preview files.
+
+Some general appearance/language preferences can remain shared. MIDI hardware ports are not isolated by URL: close or disconnect one editor before using another on the same device. The preview banner is an identification aid, not a browser sandbox.
+
+## Promotion
+
+1. Develop and test using `develop`, including physical MIDI acceptance when needed.
+2. Fast-forward `staging` to the chosen tested candidate and inspect the staging URL.
+3. After explicit acceptance, update `production` to that verified source and manually run **Pages** from main. Confirm `deployment.json`, editor version, CI and public assets.
+4. Record the previous production SHA before promotion. For a future rollback, preserve history using a reviewed restoration commit on production; do not force-push or reset another checkout.
+
+A merge to main alone is not a release. Do not move the production branch just to fix the deployment workflow. The old disabled Cloudflare workflow, which referenced an obsolete repository, has been removed; `wrangler.jsonc` remains available for separately authorized manual hosting, without activating it here.
+
+## Checks and provenance
+
+`npm test` covers path/storage/database isolation and deployment source invariants. Browser fixtures must also prove production/develop/staging draft separation and service-worker/offline navigation under their real subpaths. Each build retains its distribution manifest and exact source revision. GitHub Pages has no custom response headers, so the existing CSP is injected into both HTML entries with `META_CSP=1`.
+
+Review: Codex primary, exact model/effort unavailable, 2026-10-29 18:10 CET onward; baseline 7ae6833bbfec6cd27db9a8a927318e9b47829754 plus the explicitly identified environment workflow, storage, build, test and documentation edits in [the work item](work-items/2026-10-29-deployment-environments.md). This configuration does not establish physical MIDI acceptance of development features.

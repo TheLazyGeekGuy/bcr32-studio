@@ -7,6 +7,7 @@ import react from '@vitejs/plugin-react'
 import {offlineCachePlugin} from './build/offline.mts'
 import {nativePresencePlugin} from './build/native-presence.mts'
 import {distributionPlugin} from './build/distribution.mjs'
+import {deploymentPlugin} from './build/deployment.mts'
 
 // Hosts without response headers (GitHub Pages) get the Content-Security-Policy of public/_headers as a <meta> tag.
 // frame-ancestors is dropped there: browsers ignore it in a meta tag. Enabled with META_CSP=1 (see .github/workflows/pages.yml).
@@ -21,7 +22,7 @@ export default defineConfig({
   // Relative asset URLs: the same build works at a domain root (GitHub Pages, Cloudflare) and under any sub-path.
   base: './',
   build: {rollupOptions:{input:{site:fileURLToPath(new URL('./index.html',import.meta.url)),editor:fileURLToPath(new URL('./editor/index.html',import.meta.url))}}},
-  plugins: [distributionPlugin(),react(), ...(process.env.META_CSP === '1' ? [metaCsp()] : []),sysexDocsPlugin(),offlineCachePlugin(),nativePresencePlugin(),docsDevPlugin()],
+  plugins: [distributionPlugin(),deploymentPlugin(),react(), ...(process.env.META_CSP === '1' ? [metaCsp()] : []),sysexDocsPlugin(),offlineCachePlugin(),nativePresencePlugin(),docsDevPlugin()],
   server: {
     port: 5173,
     strictPort: true,
