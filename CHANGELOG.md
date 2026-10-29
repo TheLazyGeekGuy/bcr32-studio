@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.46.0-alpha.4] — 2026-10-29
+
+- Put SysEx and BCL in the Control tab's MIDI message Type selector for encoder rotations and pushes. Show the corresponding editor on selection and hide standard fields while editing a custom draft.
+- Preserve unapplied source when switching representations or returning to a standard type; reject representation changes with invalid hex. Remember the selected representation for applied custom programs.
+- Type selection and local editing do not send hardware commands; explicit transfer and STORE actions remain separate.
+
 ## [0.46.0-alpha.3] — 2026-10-29
 
 - Validate real firmware1.0.3 STORE → alternate preset → recall/read-back for custom encoder rotation and push assignments; restore all64 slots, globals and the working preset exactly.

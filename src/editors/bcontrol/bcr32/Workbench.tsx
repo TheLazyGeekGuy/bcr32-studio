@@ -41,7 +41,8 @@ import { buttonNames } from './panel-layout'
 import { ControlSearch } from './ControlSearch'
 import { LibraryList } from './LibraryList'
 import { SequencerView } from './SequencerView'
-import {CustomProgramEditor} from './CustomProgramEditor'
+import {CustomProgramEditor,type CustomProgramActions} from './CustomProgramEditor'
+import {programSelector,withoutCustomProgram} from './custom-program'
 import {supportsCustomProgram,type ProgramTools} from './custom-program-transfer'
 import {hostPage,supportsZaqHost} from './zaq-host'
 import { createBrightnessTransport } from './led-brightness'
@@ -350,6 +351,27 @@ function loadWorkspace() {
   const selectedItems = selectedControls(profile,selections)
   const multiple = selections.length>1
   const selectedKeys = new Set(selections.map(selectionKey))
+  const customProgramActions=useRef<CustomProgramActions|null>(null)
+  const [customView,setCustomView]=useState<'sysex'|'bcl'|null>(null)
+  const [customPreferences]=useState<Record<string,'sysex'|'bcl'>>(()=>{try{const v=JSON.parse(storage.getItem('bcr32-studio.custom-views.v1')??'{}');return Object.fromEntries(Object.entries(v).filter(([key,value])=>/^(encoders|pushes|buttons):\d+$/.test(key)&&['sysex','bcl'].includes(String(value)))) as Record<string,'sysex'|'bcl'>}catch{return {}}})
+  useEffect(()=>{setCustomView(selected.customAssignment?(customPreferences[selectionKey(selection)]??(selected.type==='bcl'?'bcl':'sysex')):null)},[selection.kind,selection.id,selected.type,selected.customAssignment?.sourceBcl])
+  const chooseCustomView=(view:'sysex'|'bcl')=>{customPreferences[selectionKey(selection)]=view;try{storage.setItem('bcr32-studio.custom-views.v1',JSON.stringify(customPreferences))}catch{/* Optional presentation preference. */}setCustomView(view)}
+  const chooseMessageType=(type:EncoderType)=>{
+    if(lockedRef.current)return
+    if(type==='sysex'||type==='bcl'){
+      if(multiple||!programSelector(selection))return
+      if(customView&&customProgramActions.current?.chooseRepresentation(type)===false)return
+      stopEmission();disarmLearn();chooseCustomView(type);return
+    }
+    if(selected.customAssignment){
+      if(multiple)return
+      stopEmission();disarmLearn()
+      const restored=withoutCustomProgram(selected),base={...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?restored:e)}
+      profileRef.current=base;setCustomView(null);commitChange([selection],{type});return
+    }
+    if(customView){stopEmission();disarmLearn()}
+    setCustomView(null);updateSelected({type})
+  }
   const batchType = sharedField(selectedItems.map(x=>x.control.type))
   const batchMode = sharedField(selectedItems.map(x=>x.control.mode))
   const commonTypes = typesFor(selection.kind==='encoders').filter(t=>selectedItems.every(x=>typesFor(x.selection.kind==='encoders').includes(t)))
@@ -1159,21 +1181,22 @@ function loadWorkspace() {
         {mouseMulti&&<p className="surface-help">Drag on the background: rectangle selection.</p>}
         {activeControls.length>0&&<ol className="activity-strip" aria-label="Active controls">{activeControls.slice(0,4).map(a=>{const value=a.control.kind==='encoders'?values[a.control.id]?.value:auxValues[a.control.kind][controlIndex(a.control.kind,a.control.id)];const source=a.control.kind==='encoders'?values[a.control.id]?.source:auxSources[`${a.control.kind}:${a.control.id}`];const percent=Math.round(a.share*100);return <li key={selectionKey(a.control)}><button aria-pressed={selectionKey(a.control)===selectionKey(selection)} onClick={()=>selectUi(a.control,{},true)}><span>{controlName(a.control)}</span><output>{value??'—'}</output><small>{source==='relative'?'relative estimate':source==='midi'?'MIDI received':'local preview'}</small><span className="activity-share" title={`${percent}% of pulses`}><span style={{width:`${percent}%`}} /></span></button></li>})}</ol>}
         {unsupportedRead && <p role="alert">Controller assignment cannot be represented. The fields below remain the local draft; inspect the raw replies.</p>}
-        {!multiple&&<CustomProgramEditor key={`${selection.kind}:${selection.id}`} target={selection} config={selected} firmware={liveFirmware} locked={locked} hardware={{tools:programAccess,available:!locked&&!presetBusy&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status)),begin:()=>{stopEmission();cancelLearn()}}} download={download} apply={control=>{
+        <h3 className="mock-h3">MIDI message</h3>
+        <label>Type<select aria-label="MIDI message type" disabled={multiple&&selectedItems.some(x=>!!x.control.customAssignment)} value={!multiple&&customView?customView:batchType} onChange={event=>chooseMessageType(event.target.value as EncoderType)}>
+          {batchType===''&&!customView&&<option value="" disabled>Mixed</option>}{Array.from(new Set([...commonTypes,...(multiple?[]:[selected.type])])).filter(type=>type!=='sysex'&&type!=='bcl').map(type=><option key={type} value={type}>{type.toUpperCase()}</option>)}
+          <option data-i18n-skip value="sysex" disabled={multiple||!programSelector(selection)}>SysEx</option><option data-i18n-skip value="bcl" disabled={multiple||!programSelector(selection)}>BCL</option>
+        </select></label>
+        {!multiple&&<CustomProgramEditor key={`${selection.kind}:${selection.id}`} visible={!!customView} representation={customView??'sysex'} actions={customProgramActions} onRepresentation={chooseCustomView} target={selection} config={selected} firmware={liveFirmware} locked={locked} hardware={{tools:programAccess,available:!locked&&!presetBusy&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status)),begin:()=>{stopEmission();cancelLearn()}}} download={download} apply={control=>{
           if(lockedRef.current)return
           stopEmission();disarmLearn()
           const next=parseProfile({...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?control:e)})
           profileRef.current=next;setProfile(next)
           setNotice('Custom program updated locally. MIDI sending stopped; no hardware assignment or STORE was sent.')
         }}/>}
-        <fieldset className="standard-assignment" disabled={selectedItems.some(x=>!!x.control.customAssignment)}>
-        <h3 className="mock-h3">MIDI message</h3>
-        <div className="fields two"><label>Type<select value={batchType} onChange={(event) => updateSelected({ type: event.target.value as EncoderType })}>
-          {batchType===''&&<option value="" disabled>Mixed</option>}{Array.from(new Set([...(multiple?[]:[selected.type]),...commonTypes])).map((type) => <option key={type} value={type}>{type.toUpperCase()}</option>)}
-        </select></label>
+        <fieldset className="standard-assignment" hidden={!multiple&&!!customView} disabled={selectedItems.some(x=>!!x.control.customAssignment)}>
         <label>Mode<select disabled={!commonModes.length} value={batchMode} onChange={(event) => updateSelected({ mode: event.target.value as EncoderMode })}>
           {batchMode===''&&<option value="" disabled>Mixed</option>}{Array.from(new Set([...(multiple?[]:[selected.mode]), ...commonModes])).map((mode) => <option key={mode} value={mode}>{selection.kind !== 'encoders' && mode === 'inc_dec' ? 'Inc' : modeText[mode]}</option>)}
-        </select></label></div>
+        </select></label>
         {selected.type !== 'mmc' && <div className="fields two"><label>Channel<input type="number" min="1" max="16" value={selected.channel} onChange={(event) => updateSelected({ channel: Number(event.target.value) })} /></label>
           <label>{selected.type === 'pc' ? 'Bank number' : selected.type === 'note' ? 'Note number' : 'CC / Parameter'}<input disabled={multiple || selected.type === 'pc' && !!selected.bankOff} title={multiple?'Parameter: individual editing only':undefined} type="number" min="0" max={selection.kind === 'encoders' ? parameterLimit(selected) : 127} value={selected.parameter} onClick={() => setParameterOpen(n => n + 1)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); setParameterOpen(n => n + 1) } }} onChange={(event) => { if (event.target.value !== '') updateSelected({ parameter: Number(event.target.value) }) }} /></label></div>}
         {selected.type !== 'mmc' && !multiple && !(selected.type === 'pc' && selected.bankOff) && <ParameterPicker config={selected} entries={parameterNames} save={saveParameterNames} choose={parameter => updateSelected({ parameter })} openSignal={parameterOpen} />}

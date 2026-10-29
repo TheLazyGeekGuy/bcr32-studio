@@ -6,11 +6,12 @@ import {controlProgramFile,importControlProgram,programSelector,withoutCustomPro
 import type {Encoder} from './profile'
 import type {ProgramTools} from './custom-program-transfer'
 
+export type CustomProgramActions={chooseRepresentation:(mode:'sysex'|'bcl')=>boolean}
 const example='.minmax 0 127\n.default 0\n.tx $F0 $7D val $F7\n.showvalue on'
 const hex=(bytes:ArrayLike<number>)=>Array.from(bytes,b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')
-export function CustomProgramEditor({target,config,locked,firmware,hardware,apply,download}:{hardware?:{tools:MutableRefObject<ProgramTools|null>;available:boolean;begin:()=>void};target:ProgramTarget;config:Encoder;locked:boolean;firmware:string|null;apply:(config:Encoder)=>void;download:(content:BlobPart,name:string,type?:string)=>void}){
+export function CustomProgramEditor({target,config,locked,firmware,hardware,representation='sysex',visible=true,actions,onRepresentation,apply,download}:{representation?:'sysex'|'bcl';visible?:boolean;actions?:MutableRefObject<CustomProgramActions|null>;onRepresentation?:(mode:'sysex'|'bcl')=>void;hardware?:{tools:MutableRefObject<ProgramTools|null>;available:boolean;begin:()=>void};target:ProgramTarget;config:Encoder;locked:boolean;firmware:string|null;apply:(config:Encoder)=>void;download:(content:BlobPart,name:string,type?:string)=>void}){
   const controlExample=target.kind==='encoders'?example:example.replace('.default 0\n','')
-  const [mode,setMode]=useState<'sysex'|'bcl'|'raw'>('sysex'),[source,setSource]=useState(config.customAssignment?.sourceBcl??controlExample)
+  const [mode,setMode]=useState<'sysex'|'bcl'|'raw'>(representation),[source,setSource]=useState(config.customAssignment?.sourceBcl??controlExample)
   const [hexDraft,setHexDraft]=useState<string|null>(null),[preview,setPreview]=useState(32),[notice,setNotice]=useState('')
   const [importFailed,setImportFailed]=useState(false)
   const [original,setOriginal]=useState<{text:string;raw:Uint8Array}|null>(null)
@@ -19,10 +20,10 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,appl
   async function hardwareAction(action:'read'|'write'|'restore'){
     const api=hardware?.tools.current;if(!api||!hardware?.available||hardwareBusy)return
     hardware.begin();setHardwareBusy(true);setNotice(action==='read'?'Reading the current hardware control…':action==='write'?'Backing up, replacing Type with OFF and sending this control…':'Restoring the backed-up hardware control…')
-    try{if(action==='read'){const body=await api.read(target);edit(body);setHexDraft(null);setMode('bcl');setNotice('Current control read from BCR32. Local draft not applied.')}else if(action==='write'){if(!p)throw Error('Invalid program');await api.write(target,p);apply(withCustomProgram(config,p));setNotice('Custom program independently read back on BCR32. Working memory only; not STORE.')}else{await api.restore(target);setNotice('Original hardware control restored and independently read back. Local draft retained.')}}catch(e){setNotice((e instanceof Error?e.message:String(e))+' Hardware may be partially changed if writing had begun; retain the backup.')}finally{setHardwareBusy(false)}
+    try{if(action==='read'){const body=await api.read(target);edit(body);setHexDraft(null);setMode('bcl');onRepresentation?.('bcl');setNotice('Current control read from BCR32. Local draft not applied.')}else if(action==='write'){if(!p)throw Error('Invalid program');await api.write(target,p);apply(withCustomProgram(config,p));setNotice('Custom program independently read back on BCR32. Working memory only; not STORE.')}else{await api.restore(target);setNotice('Original hardware control restored and independently read back. Local draft retained.')}}catch(e){setNotice((e instanceof Error?e.message:String(e))+' Hardware may be partially changed if writing had begun; retain the backup.')}finally{setHardwareBusy(false)}
   }
   const input=useRef<HTMLTextAreaElement>(null)
-  useEffect(()=>{const next=config.customAssignment?.sourceBcl??controlExample;setSource(next);setHexDraft(null);setImportFailed(false);history.arrive('text',next)},[config.customAssignment?.sourceBcl,history])
+  useEffect(()=>{const next=config.customAssignment?.sourceBcl;if(next===undefined)return;setSource(next);setHexDraft(null);setImportFailed(false);history.arrive('text',next)},[config.customAssignment?.sourceBcl,history])
   const checked=useMemo(()=>{try{return {program:parseCustomAssignment(source),error:''}}catch(e){return {program:null,error:e instanceof Error?e.message:String(e)}}},[source])
   const p=checked.program,selector=programSelector(target),counts=history.counts('text')
   const [form,setForm]=useState({minimum:'0',maximum:'127',defaultValue:'0'})
@@ -51,14 +52,16 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,appl
   const raw=useMemo(()=>mode!=='raw'?'':original?hex(original.raw):fragment?hex(bclFile(fragment)):'',[mode,original,fragment])
   async function importFile(file?:File){
     if(!file)return
-    try{if(file.size>1024*1024)throw Error('Control file exceeds 1 MiB');const bytes=new Uint8Array(await file.arrayBuffer());setOriginal({text:'',raw:bytes});const result=importControlProgram(bytes,target);setOriginal({text:result.original,raw:bytes});edit(result.program.sourceBcl);setHexDraft(null);setNotice('Selected control imported locally; other controls were not changed.');setMode('bcl')}catch(e){setImportFailed(true);setMode('raw');setNotice('Import not applied; original bytes retained read-only. '+(e instanceof Error?e.message:String(e)))}
+    try{if(file.size>1024*1024)throw Error('Control file exceeds 1 MiB');const bytes=new Uint8Array(await file.arrayBuffer());setOriginal({text:'',raw:bytes});const result=importControlProgram(bytes,target);setOriginal({text:result.original,raw:bytes});edit(result.program.sourceBcl);setHexDraft(null);setNotice('Selected control imported locally; other controls were not changed.');setMode('bcl');onRepresentation?.('bcl')}catch(e){setImportFailed(true);setMode('raw');setNotice('Import not applied; original bytes retained read-only. '+(e instanceof Error?e.message:String(e)))}
   }
-  const changeMode=(next:typeof mode)=>{if(hexDraft!==null&&!hexValid){setNotice('Fix the hex draft before changing modes; it has not replaced the BCL source.');return}setMode(next);setHexDraft(null);if(!importFailed)setNotice('')}
-  return <details className="adv custom-program" data-i18n-skip open={!!config.customAssignment}>
-    <summary>Custom SysEx / BCL{config.customAssignment?` · ${config.type.toUpperCase()} · local draft`:''}</summary>
+  const changeMode=(next:typeof mode)=>{if(hexDraft!==null&&!hexValid){setNotice('Fix the hex draft before changing modes; it has not replaced the BCL source.');return false}setMode(next);setHexDraft(null);if(!importFailed)setNotice('');return true}
+  useEffect(()=>{setMode(representation)},[representation])
+  useEffect(()=>{if(!actions)return;const api:CustomProgramActions={chooseRepresentation:next=>changeMode(next)};actions.current=api;return()=>{if(actions.current===api)actions.current=null}},[actions,hexDraft,hexValid,importFailed])
+  return <section className="custom-program" data-i18n-skip hidden={!visible} aria-label="Custom SysEx / BCL">
+    <h3 className="mock-h3">{representation==='sysex'?'SysEx template':'BCL program'} · local draft</h3>
     {!selector?<p role="status">This system control has no qualified programmable BCL selector.</p>:<fieldset disabled={locked||hardwareBusy}>
       <p><code>{selector}</code> · Local editing and simulation. Firmware {firmware??'unknown'}: custom output not hardware-validated.</p>
-      <div className="mock-seg" role="group" aria-label="Custom program representation">{(['sysex','bcl','raw'] as const).map(m=><button key={m} aria-pressed={mode===m} onClick={()=>changeMode(m)}>{m==='sysex'?'SysEx':m==='bcl'?'BCL':'Raw'}</button>)}</div>
+      <div className="mock-seg" role="group" aria-label="Custom program representation"><button aria-pressed={mode==='raw'} onClick={()=>changeMode(mode==='raw'?representation:'raw')}>{mode==='raw'?`Back to ${representation==='sysex'?'SysEx':'BCL'}`:'Raw'}</button></div>
       {mode==='sysex'&&<><label>SysEx template<textarea ref={input} rows={4} spellCheck={false} aria-label="SysEx template" value={shownHex} readOnly={!editable} onChange={e=>editHex(e.target.value)}/></label>{!editable&&<p role="status">Use BCL to preserve multiple messages, unknown statements or advanced tokens. Simplified editing is unavailable.</p>}</>}
       {mode==='bcl'&&<div className="bcl-editor"><ol className="bcl-gutter" aria-hidden="true">{source.split(/\r\n|\r|\n/).map((_,i)=><li key={i}>{i+1}</li>)}</ol><textarea ref={input} aria-label="Custom BCL control body" rows={9} spellCheck={false} value={source} onChange={e=>{setHexDraft(null);edit(e.target.value)}}/></div>}
       {mode==='raw'&&<><p>{original?'Original imported bytes (read-only), not a new hardware capture.':'Generated BCR32 command-20 file bytes (read-only), not captured or sent.'}</p><textarea rows={8} readOnly aria-label="Raw BCL file bytes" value={raw}/></>}
@@ -77,5 +80,5 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,appl
       </section>
       <p className="surface-help">Custom programs are preserved in local JSON presets and history, never exported as OFF. A SysEx destination can interpret messages as reset, memory write or firmware commands. Hardware sending is explicit and limited to supported simple programs. ControlTribe requires native Type OFF before adding .tx; Studio does not change hardware Type during local editing.</p>
     </fieldset>}
-  </details>
+  </section>
 }
