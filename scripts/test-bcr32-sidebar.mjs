@@ -65,7 +65,7 @@ assert.match(narrow,/\.studio\.standalone-editor>\.bcr32-workbench\{[^}]*overflo
 console.log('PASS BCR32 layout as in the mockup: DIN icon in the header; text tabs, SysEx warning only when needed, status bar summary; toolbar with history, CC and assignment switches, floating display, Display menu and panel toggle, all host-locked where they were; Control tab in mockup order; Files cards with one Advanced; help over the tab; sticky tabs and status bar on narrow screens')
 
 // Current preset in the toolbar: rename and store go through the existing save sheet (backup, write, read-back);
-// the ZQR / CTRL link only changes the editor view and is off by default.
+// the ZQR / CTRL key shares the toolbar action and cannot be disabled by an old preference.
 const presetsSrc=readFileSync('src/editors/bcontrol/bcr32/ControllerPresets.tsx','utf8')
 assert.match(presetsSrc,/if \(!storeRequest\?\.seq \|\| currentSlot === null\) return; autoStore\.current = !!storeRequest\.auto; setSource\('working'\); setDestination\(currentSlot - 1\);[^]*setSaveOpen\(true\)/,'store request opens the save sheet prefilled (in place: destination = current slot)')
 assert.match(presetsSrc,/if \(!autoStore\.current \|\| !saveOpen \|\| destination === null \|\| !name\.trim\(\)\) return; autoStore\.current = false; void store\(\)/,'Enter stores through store() and its checks, once')
@@ -73,6 +73,6 @@ assert.match(workbench,/if\(e\.key==='Enter'&&renaming\.trim\(\)\)requestStore\(
 assert.match(workbench,/onClick=\{\(\)=>requestStore\(renaming\?\?currentPreset\?\.name\?\?''\)\}>Store…<\/button>/,'Store… opens the sheet without writing')
 assert.match(workbench,/const requestStore=\(name:string,auto=false\)=>\{setTab\('presets'\);setHelpOpen\(false\);setPresetLocation\('hardware'\)/,'Store… and rename lead to Presets › BCR32')
 assert.ok(!/requestStore[^\n]*(sendWrite|transfer|output\.send)/.test(workbench),'the toolbar never writes by itself')
-assert.match(workbench,/storage\.getItem\('bcr32-studio\.mode-key-link'\)==='true'/,'ZQR / CTRL link off unless chosen')
-assert.match(workbench,/<FrontPanel onModeKey=\{modeKeyLink \? \(\) => setEditorMode\('sequencer'\) : undefined\}/,'the link only switches the editor view')
-console.log('PASS BCR32 toolbar preset: rename and Store… open the checked save sheet, ZQR / CTRL link is view-only and off by default')
+assert.ok(!workbench.includes('mode-key-link'),'old view-only preference cannot disable synchronized mode switching')
+assert.match(workbench,/<FrontPanel onModeKey=\{\(\) => chooseEditorMode\('sequencer'\)\}/,'panel key uses the toolbar hardware action')
+console.log('PASS BCR32 toolbar preset: rename and Store… open the checked save sheet, ZQR / CTRL shares the hardware-aware toolbar mode action')

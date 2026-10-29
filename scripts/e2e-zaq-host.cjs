@@ -30,6 +30,15 @@ if(require.main===module)(async()=>{const browser=await chromium.launch({headles
  await page.locator('a[href="./editor/"]').first().click();await page.waitForURL('**/editor/');console.log('Editor opened')
  // Disable the optional DEV native-inventory bridge: fake ports must never be compared to real macOS ports.
  await page.goto(base+'/editor/?native=0')
+ await page.getByRole('button',{name:'ZQR / CTRL',exact:true}).click()
+ await page.waitForFunction(()=>Array.from(document.querySelectorAll('.studio')).some(e=>e.dataset.mode==='sequencer'))
+ await page.waitForFunction(()=>window.__sent.some(b=>b.length===8&&b[6]===0x0b))
+ await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
+ await page.getByRole('button',{name:'Controller',exact:true}).click()
+ await page.waitForFunction(()=>Array.from(document.querySelectorAll('.studio')).some(e=>e.dataset.mode==='controller'))
+ await page.waitForFunction(()=>window.__sent.some(b=>b.length===8&&b[6]===0x0c))
+ // Begin the existing sequencer scenario with a fresh simulated trace.
+ await page.evaluate(()=>window.__sent.length=0)
  await page.getByRole('button',{name:'Sequencer',exact:true}).click()
  await page.getByText('Current pattern read · 4 tracks / 32 steps · no STORE sent',{exact:true}).waitFor()
  assert.equal(await page.locator('.seq-lane').count(),7,'all seven numeric lanes are present')
