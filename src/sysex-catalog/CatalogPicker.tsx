@@ -7,6 +7,7 @@ import {acceptsValue,valueDomain,decodeMap,maxMapBytes,parseMap,renderParameter,
 type Storage={getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void}
 type Download=(content:BlobPart,name:string,type?:string)=>void
 const storageKey='sysex-map.catalog.v1'
+const catalogOrder=new Intl.Collator('en',{numeric:true,sensitivity:'base'})
 export default function CatalogPicker({load,download,storage,close}:{close?:()=>void;load:(source:string,value:number,needsBcl:boolean)=>void;download?:Download;storage?:Storage}){
   const language=useLanguage(),dialog=useRef<HTMLDialogElement>(null)
   useEffect(()=>{const d=dialog.current;if(!d)return;const opener=d.ownerDocument.activeElement;d.showModal();d.querySelector<HTMLInputElement>('input[type=search]')?.focus();return()=>{d.close();if(opener instanceof HTMLElement&&opener.isConnected)opener.focus()}},[])
@@ -15,7 +16,7 @@ export default function CatalogPicker({load,download,storage,close}:{close?:()=>
   const [fields,setFields]=useState<Record<string,number>>({}),[value,setValue]=useState<number|null>(null),[notice,setNotice]=useState('')
   const importGeneration=useRef(0)
   useEffect(()=>()=>{importGeneration.current++},[])
-  const allModels=useMemo(()=>catalogModels(document),[document]),models=useMemo(()=>findCatalog(query,allModels),[query,allModels]),model=models.find(m=>m.id===modelId)??models[0]
+  const allModels=useMemo(()=>catalogModels(document).sort((a,b)=>catalogOrder.compare(a.manufacturer,b.manufacturer)||catalogOrder.compare(a.model,b.model)||a.id.localeCompare(b.id)),[document]),models=useMemo(()=>findCatalog(query,allModels),[query,allModels]),model=models.find(m=>m.id===modelId)??models[0]
   const sectionOf=(p:{extensions?:Record<string,unknown>})=>String((p.extensions?.['org.midistudio.catalogue'] as {section?:string}|undefined)?.section??'Common')
   const terms=query.toLowerCase().trim().split(/\s+/).filter(Boolean)
   const groupQuery=model?.commands.some(c=>sectionOf(c.parameter).toLowerCase()===query.toLowerCase().trim())

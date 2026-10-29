@@ -2,6 +2,7 @@
 
 ## [0.46.0-alpha.14] — 2026-10-29
 
+- Sort catalogue instruments alphabetically by manufacturer, then naturally by model name, without changing definitions or the selected instrument.
 - Promote the SysEx catalogue with a full-width accent button and book icon. Use icon-only Undo/Redo/Copy and secondary draft/hardware actions with translated accessible names and tooltips.
 - Separate local-draft tools, BCL/SYX files and hardware backup actions inside the advanced inspector. Preserve existing operations and automatic-edit/STORE policy.
 - Open the catalogue in a responsive native modal: one combined search, instrument selector, directly visible grouped parameter list and adjacent preview/addressing. Move file operations into one menu and references into one disclosure.
