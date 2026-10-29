@@ -21,7 +21,7 @@ const {fakeMidi}=require('./e2e-zaq-host.cjs'),{device}=require('./e2e-live-cust
  await page.getByRole('spinbutton',{name:'Channel',exact:true}).fill('3');await confirmed();await page.waitForFunction(()=>window.__bodies['$encoder 8'].includes('CC 3 24'))
  await type.selectOption('gs');await page.getByRole('spinbutton',{name:'CC / Parameter',exact:true}).fill('0');await confirmed();assert.match(await page.evaluate(()=>window.__bodies['$encoder 8']),/GS\/XG 3 cutoff/)
  await type.selectOption('sysex')
- await page.getByRole('status',{name:'Custom program synchronization',exact:true}).filter({hasText:'independently read back'}).waitFor()
+ await page.getByRole('status',{name:'Custom program synchronization',exact:true}).filter({hasText:'Control synchronized'}).waitFor()
  assert.match(await page.evaluate(()=>window.__bodies['$encoder 8']),/\.tx \$F0 \$7D val \$F7/,'Type selection applies the valid selected SysEx program without Apply/Send')
  assert.equal(await page.getByRole('button',{name:'Assignments → BCR32',exact:true}).getAttribute('aria-pressed'),'true')
  const beforeRx=await page.evaluate(()=>window.__sent.length)

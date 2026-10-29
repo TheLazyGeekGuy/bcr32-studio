@@ -1011,3 +1011,37 @@
 .mid-names{position:sticky;left:0;z-index:1;display:flex;flex-direction:column;background:var(--theme-surface,#1c1d20);border-right:1px solid var(--theme-line,#34363b);font-size:12px}
 .mid-rows{display:block;cursor:crosshair}
 .mid-rows text.mid-window-label{font-size:11px;font-weight:700;fill:#fff}
+
+/* Compact SysEx/BCL inspector: editor first, secondary tools disclosed on demand. */
+.bcr32-workbench .custom-program{position:relative}
+.bcr32-workbench .custom-program fieldset{gap:10px}
+.bcr32-workbench .custom-editor-header{display:flex;align-items:center;gap:8px;min-width:0;margin-top:8px}
+.bcr32-workbench .custom-editor-header h3{font-size:12px;font-weight:600;line-height:1.4;margin:0;flex:1;text-transform:uppercase;letter-spacing:.05em}
+.bcr32-workbench .custom-edit-state{font-size:11px;color:var(--theme-accent);white-space:nowrap}
+.bcr32-workbench .custom-source-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bcr32-workbench .custom-source-tools .mock-actions{display:flex;gap:4px;margin:0}
+.bcr32-workbench .custom-program .custom-source-tools button{font-size:12px;padding:5px 8px;min-height:30px}
+.bcr32-workbench .custom-source-label{display:block;margin:0}
+.bcr32-workbench .custom-program .custom-source-label textarea{display:block;min-height:86px;resize:vertical;font-size:13px;line-height:1.5}
+.bcr32-workbench .custom-value-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bcr32-workbench .custom-value-fields label{font-size:12px;min-width:0;margin:0}
+.bcr32-workbench .custom-value-fields input{box-sizing:border-box;width:100%;min-width:0;margin-top:4px}
+.bcr32-workbench .custom-program .custom-sync,.bcr32-workbench .custom-program .custom-warning{margin:0;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.bcr32-workbench .custom-program .custom-warning{color:var(--theme-accent)}
+.bcr32-workbench .custom-program .custom-sync{color:var(--theme-muted)}
+.bcr32-workbench .custom-preview,.bcr32-workbench .custom-advanced{border-top:1px solid var(--theme-line);padding-top:10px;min-width:0}
+.bcr32-workbench .custom-program summary{cursor:pointer;font-size:12px;font-weight:600;line-height:1.6;min-height:28px}
+.bcr32-workbench .custom-preview[open]>label,.bcr32-workbench .custom-advanced[open]>div,.bcr32-workbench .custom-advanced[open]>section,.bcr32-workbench .custom-advanced[open]>details{margin-top:10px}
+.bcr32-workbench .custom-program .custom-preview textarea{font-size:12px;line-height:1.5}
+.bcr32-workbench .custom-hardware{border-top:1px solid var(--theme-line);padding-top:10px}
+.bcr32-workbench .custom-hardware h4{display:flex;align-items:center;gap:6px;margin:0 0 8px;font-size:12px}
+.bcr32-workbench .custom-program .custom-hardware-unavailable{font-size:12px;color:var(--theme-muted);margin:6px 0}
+.bcr32-workbench .custom-program .custom-advanced .mock-actions{display:flex;flex-wrap:wrap;gap:6px}
+.bcr32-workbench .custom-program .custom-advanced button,.bcr32-workbench .custom-program .custom-advanced .file{font-size:12px;padding:6px 8px}
+.bcr32-workbench .custom-compatibility{font-size:12px;color:var(--theme-muted)}
+.bcr32-workbench .custom-help{display:inline-flex;align-items:center;font-size:12px;font-weight:400;letter-spacing:normal;text-transform:none}
+.bcr32-workbench .custom-program .custom-help button{display:inline-grid;place-items:center;width:22px;height:22px;min-height:22px;padding:0;border-radius:50%;border:1px solid var(--theme-line);background:transparent;color:var(--theme-muted);font:600 12px/1 sans-serif}
+.bcr32-workbench .custom-program .custom-help button:focus-visible{outline:2px solid var(--theme-accent);outline-offset:2px}
+.bcr32-workbench .custom-help [role=tooltip]{position:absolute;z-index:20;left:0;right:0;margin-top:32px;padding:10px 12px;border:1px solid var(--theme-line);border-radius:5px;background:var(--theme-surface,#202124);color:var(--theme-text);font:400 12px/1.6 system-ui,sans-serif;text-align:left;white-space:normal;box-shadow:0 6px 18px #0005}
+@media(max-width:420px){.bcr32-workbench .custom-value-fields {gap:6px}.bcr32-workbench .custom-editor-header {flex-wrap:wrap}.bcr32-workbench .custom-editor-header h3 {min-width:40%}}
+@media(max-width:760px){.bcr32-workbench .custom-program {padding-bottom:48px}}

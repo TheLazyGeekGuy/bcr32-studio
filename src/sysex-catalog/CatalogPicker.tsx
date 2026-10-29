@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
+import {translatedTree,useLanguage} from '../i18n'
 import {catalogueInfo,catalogModels,catalogProgram,findCatalog,hexBytes,starterMap} from './catalog'
 import {acceptsValue,valueDomain,decodeMap,maxMapBytes,parseMap,renderParameter,serializeMap,subsetMap,sysexMapSchema,withMapValue,type SysExMap} from '../sysex-map'
 
@@ -6,6 +7,7 @@ type Storage={getItem:(key:string)=>string|null;setItem:(key:string,value:string
 type Download=(content:BlobPart,name:string,type?:string)=>void
 const storageKey='sysex-map.catalog.v1'
 export default function CatalogPicker({load,download,storage}:{load:(source:string,value:number,needsBcl:boolean)=>void;download?:Download;storage?:Storage}){
+  const language=useLanguage()
   const [document,setDocument]=useState<SysExMap>(()=>{try{const saved=storage?.getItem(storageKey);return saved?parseMap(saved):starterMap}catch{return starterMap}})
   const [query,setQuery]=useState(''),[modelId,setModelId]=useState('microwave'),[commandId,setCommandId]=useState('cutoff')
   const [parameterQuery,setParameterQuery]=useState(''),[section,setSection]=useState('')
@@ -43,7 +45,7 @@ export default function CatalogPicker({load,download,storage}:{load:(source:stri
       download(serializeMap(selected),scope==='all'?'synth-catalogue.sxm.json':`${model.id}${scope==='parameter'?'-'+command.id:''}.sxm.json`,'application/json');setNotice('SXM exported with this preview value; no hardware state is inferred.')
     }catch(e){setNotice('Export refused: '+(e instanceof Error?e.message:String(e)))}
   }
-  return <section className="synth-sysex-catalog" aria-label="Synth SysEx catalogue">
+  return translatedTree(<section className="synth-sysex-catalog" aria-label="Synth SysEx catalogue">
     <h4>{document.devices.length} synths · {allModels.reduce((n,m)=>n+m.commands.length,0)} SysEx templates</h4>
     <div className="mock-actions"><label className="file">Import SXM<input type="file" aria-label="Import SysEx Map" accept=".json,.sxm.json,application/json" onChange={e=>{void importFile(e.target.files?.[0]);e.target.value=''}}/></label><button onClick={()=>activate(starterMap)}>Built-in catalogue</button></div>
     <div className="mock-actions"><button disabled={!download||!model||!command||!!built?.error} onClick={()=>exportFile('all')}>Export SXM catalogue</button><button disabled={!download||!model||!command||!!built?.error} onClick={()=>exportFile('device')}>Export SXM synth</button><button disabled={!download||!model||!command||!!built?.error} onClick={()=>exportFile('parameter')}>Export SXM parameter</button><button disabled={!download} onClick={()=>download?.(JSON.stringify(sysexMapSchema,null,2)+'\n','sysex-map-1.0.schema.json','application/schema+json')}>Export SXM schema</button></div>
@@ -57,7 +59,7 @@ export default function CatalogPicker({load,download,storage}:{load:(source:stri
       <label>SysEx parameter<select value={command.id} onChange={e=>{setCommandId(e.target.value);setFields({});setValue(null)}}>{commands.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
       <p>{commands.length} matching / {model.commands.length} parameters. Reserved indices are excluded; raw values follow the cited table.</p>
       <div className="fields two">{command.fields.map(f=><label key={f.name}>{f.label}<input type="number" min={f.minimum} max={f.maximum} value={configured[f.name]===undefined?f.default:Number.isFinite(configured[f.name])?configured[f.name]:''} onChange={e=>setFields({...fields,[f.name]:e.target.value===''?NaN:Number(e.target.value)})}/></label>)}</div>
-      <p>{model.notes}</p>
+      <details><summary>Model notes</summary><p data-i18n-skip>{model.notes}</p></details>
       {(()=>{const info=catalogueInfo(model.device);return info.scope?<details><summary>Documented coverage and limits</summary><p>{info.scope}</p>{info.inventoryOnly.map((item,i)=><p key={i}>{item.name}: {item.reason}</p>)}{!!info.notCovered.length&&<p>Not covered by this table: {info.notCovered.join(', ')}.</p>}</details>:null})()}
       <p>Effect: {command.effect==='request'?'request / response not decoded here':command.effect} · Range {command.minimum}–{command.maximum} · Evidence: {command.parameter.evidence}; not verified by import.</p>
       <label>Catalogue preview value{domain?.allowed?<select value={previewValue} onChange={e=>setValue(Number(e.target.value))}>{domain.allowed.map(v=><option key={v} value={v}>{command.parameter.value.labels?.[v]??v}</option>)}</select>:<input type="number" min={command.minimum} max={command.maximum} step={domain?.step??1} value={previewValue} onChange={e=>setValue(Number(e.target.value))}/>}</label>
@@ -69,5 +71,5 @@ export default function CatalogPicker({load,download,storage}:{load:(source:stri
       <p className="surface-help">Loading replaces this text draft only and is undoable. Nothing is applied or sent automatically. Channel and Device ID refer to the destination synth, not the BCR32. SXM is an open file-format draft, independent of BCL and MIDI transport.</p>
       </>}
     </>}
-  </section>
+  </section>,language)
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.46.0-alpha.13] — 2026-10-29
+
+- Simplify the SysEx/BCL inspector: retain source/range editing and compact live/local state; move simulation to Preview and file/manual-transfer/recovery tools to a collapsed section.
+- Replace long persistent explanations with keyboard/mouse contextual help, dismissible with Escape. Use concise visible control/read/send/recovery labels; retain source bytes, history, automatic-edit behavior and MIDI permissions.
+- Translate inspector/catalogue controls, help and routine synchronization messages into French through the shared language context. Other untranslated locales retain English fallback; technical source/manufacturer identifiers remain unchanged.
+- Avoid the generic unsupported-assignment banner when a custom BCL/SysEx descriptor is already recognized. Keep genuine unsupported standard assignments visible with contextual explanation.
+- Verify narrow-field layout, sticky-footer clearance, language/source preservation, import/export/Undo, simulated hardware read/write/restore/STORE and zero writes during local-only operations.
+
 ## [0.46.0-alpha.12] — 2026-10-29
 
 - Expand the manufacturer-backed SysEx catalogue to22 model entries and3,122 definitions, including JV-2080 Patch/Tone and separate MicrowaveII/XT scopes. Add section/parameter search, corrected model-specific wire encodings and documented coverage gaps; this is not exhaustive whole-instrument coverage.

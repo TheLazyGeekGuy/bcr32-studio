@@ -1,16 +1,25 @@
-import {lazy,Suspense,useEffect,useMemo,useRef,useState,type MutableRefObject} from 'react'
+import {lazy,Suspense,useEffect,useMemo,useRef,useState,useId,type MutableRefObject} from 'react'
 import {parseCustomAssignment,sysexToTx,txToSysex,evaluateAssignment} from '../../../bcl-tx'
 import {createHistory} from '../../../history'
 import {bclFile} from './bcl'
 import {controlProgramFile,importControlProgram,programSelector,withoutCustomProgram,withCustomProgram,type ProgramTarget} from './custom-program'
 import type {Encoder} from './profile'
 import type {ProgramTools} from './custom-program-transfer'
+import {translate,translatedTree,useLanguage} from './i18n'
 
+function HelpHint({label,text}:{label:string;text:string}){
+  const language=useLanguage(),id=useId(),[open,setOpen]=useState(false)
+  return <span className="custom-help" onMouseEnter={()=>setOpen(true)} onMouseLeave={()=>setOpen(false)}>
+    <button type="button" aria-label={translate(label,language)} aria-describedby={open?id:undefined} onFocus={()=>setOpen(true)} onBlur={()=>setOpen(false)} onClick={e=>{e.preventDefault();e.stopPropagation();setOpen(true)}} onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);e.stopPropagation()}}}>?</button>
+    {open&&<span id={id} role="tooltip">{translate(text,language)}</span>}
+  </span>
+}
 export type CustomProgramActions={draft:()=>ReturnType<typeof parseCustomAssignment>|null;activate:()=>void;chooseRepresentation:(mode:'sysex'|'bcl')=>boolean}
 const SynthCatalog=lazy(()=>import('../../../sysex-catalog/CatalogPicker'))
 const example='.minmax 0 127\n.default 0\n.tx $F0 $7D val $F7\n.showvalue on'
 const hex=(bytes:ArrayLike<number>)=>Array.from(bytes,b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')
 export function CustomProgramEditor({target,config,locked,firmware,hardware,autoSend=false,connectionKey='',representation='sysex',visible=true,actions,onRepresentation,apply,download,catalogStorage}:{autoSend?:boolean;connectionKey?:string;catalogStorage?:{getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void};representation?:'sysex'|'bcl';visible?:boolean;actions?:MutableRefObject<CustomProgramActions|null>;onRepresentation?:(mode:'sysex'|'bcl')=>void;hardware?:{tools:MutableRefObject<ProgramTools|null>;available:boolean;begin:()=>void};target:ProgramTarget;config:Encoder;locked:boolean;firmware:string|null;apply:(config:Encoder)=>void;download:(content:BlobPart,name:string,type?:string)=>void}){
+  const language=useLanguage()
   const controlExample=target.kind==='encoders'?example:example.replace('.default 0\n','')
   const [mode,setMode]=useState<'sysex'|'bcl'|'raw'>(representation),[source,setSource]=useState(config.customAssignment?.sourceBcl??controlExample)
   const [hexDraft,setHexDraft]=useState<string|null>(null),[preview,setPreview]=useState(32),[notice,setNotice]=useState('')
@@ -24,8 +33,8 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
   const [hardwareBusy,setHardwareBusy]=useState(false)
   async function hardwareAction(action:'read'|'write'|'restore'){
     const api=hardware?.tools.current;if(!api||!hardware?.available||hardwareBusy)return
-    hardware.begin();setHardwareBusy(true);setNotice(action==='read'?'Reading the current hardware control…':action==='write'?'Backing up, replacing Type with OFF and sending this control…':'Restoring the backed-up hardware control…')
-    try{if(action==='read'){const body=await api.read(target);edit(body,false,false);setHexDraft(null);setMode('bcl');onRepresentation?.('bcl');setNotice('Current control read from BCR32. Local draft not applied.')}else if(action==='write'){if(!p)throw Error('Invalid program');await api.write(target,p);apply(withCustomProgram(config,p));setNotice('Custom program independently read back on BCR32. Working memory only; not STORE.')}else{await api.restore(target);setNotice('Original hardware control restored and independently read back. Local draft retained.')}}catch(e){setNotice((e instanceof Error?e.message:String(e))+' Hardware may be partially changed if writing had begun; retain the backup.')}finally{setHardwareBusy(false)}
+    hardware.begin();setHardwareBusy(true);setNotice(action==='read'?'Reading control…':action==='write'?'Sending control…':'Restoring backup…')
+    try{if(action==='read'){const body=await api.read(target);edit(body,false,false);setHexDraft(null);setMode('bcl');onRepresentation?.('bcl');setNotice('Control read from BCR32.')}else if(action==='write'){if(!p)throw Error('Invalid program');await api.write(target,p);apply(withCustomProgram(config,p));setNotice('Control synchronized · not stored.')}else{await api.restore(target);setNotice('Hardware backup restored; local draft retained.')}}catch(e){setNotice((e instanceof Error?e.message:String(e))+' Hardware may be partially changed if writing had begun; retain the backup.')}finally{setHardwareBusy(false)}
   }
   const input=useRef<HTMLTextAreaElement>(null)
   useEffect(()=>{const next=config.customAssignment?.sourceBcl;if(next===undefined)return;setSource(next);setHexDraft(null);setImportFailed(false);history.arrive('text',next)},[config.customAssignment?.sourceBcl,history])
@@ -57,9 +66,9 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
   const raw=useMemo(()=>mode!=='raw'?'':original?hex(original.raw):fragment?hex(bclFile(fragment)):'',[mode,original,fragment])
   async function importFile(file?:File){
     if(!file)return
-    try{if(file.size>1024*1024)throw Error('Control file exceeds 1 MiB');const bytes=new Uint8Array(await file.arrayBuffer());setOriginal({text:'',raw:bytes});const result=importControlProgram(bytes,target);setOriginal({text:result.original,raw:bytes});edit(result.program.sourceBcl,false,false);setHexDraft(null);setNotice('Selected control imported locally; other controls were not changed.');setMode('bcl');onRepresentation?.('bcl')}catch(e){setImportFailed(true);setMode('raw');setNotice('Import not applied; original bytes retained read-only. '+(e instanceof Error?e.message:String(e)))}
+    try{if(file.size>1024*1024)throw Error('Control file exceeds 1 MiB');const bytes=new Uint8Array(await file.arrayBuffer());setOriginal({text:'',raw:bytes});const result=importControlProgram(bytes,target);setOriginal({text:result.original,raw:bytes});edit(result.program.sourceBcl,false,false);setHexDraft(null);setNotice('Control imported locally.');setMode('bcl');onRepresentation?.('bcl')}catch(e){setImportFailed(true);setMode('raw');setNotice('Import not applied; original bytes retained read-only. '+(e instanceof Error?e.message:String(e)))}
   }
-  const changeMode=(next:typeof mode)=>{if(hexDraft!==null&&!hexValid){setNotice('Fix the hex draft before changing modes; it has not replaced the BCL source.');return false}setMode(next);setHexDraft(null);if(!importFailed)setNotice('');return true}
+  const changeMode=(next:typeof mode)=>{if(hexDraft!==null&&!hexValid){setNotice('Fix the SysEx draft before changing modes.');return false}setMode(next);setHexDraft(null);if(!importFailed)setNotice('');return true}
   useEffect(()=>{setMode(representation)},[representation])
   useEffect(()=>{if(!actions)return;const api:CustomProgramActions={draft:()=>hexValid&&!importFailed&&!unsupportedDefault?p:null,activate:()=>setEditRevision(n=>n+1),chooseRepresentation:next=>changeMode(next)};actions.current=api;return()=>{if(actions.current===api)actions.current=null}},[actions,hexDraft,hexValid,importFailed,unsupportedDefault,p])
   // Only direct edits or explicit Type activation schedule a live write. Opening/importing/reading/restoring a draft is inert.
@@ -77,40 +86,54 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
       now.apply(withCustomProgram(config,program))
       if(program.conversionStatus==='exact'&&autoSend&&now.autoSend&&wasAvailable&&now.hardware?.available&&now.hardware.tools.current){
         void now.hardwareAction('write')
-      }else setNotice(program.conversionStatus!=='exact'?'Applied locally; unsupported/opaque BCL stays file-only.':autoSend?'Applied locally; live hardware unavailable. Edit again after connection/read completes, or use Send program.':'Applied locally. Assignments → BCR32 is off; nothing sent.')
+      }else setNotice(program.conversionStatus!=='exact'?'Local draft · BCL stays file-only.':autoSend?'Applied locally · controller unavailable.':'Applied locally · nothing sent.')
     },700)
     return()=>window.clearTimeout(timer)
   },[editRevision,source,hexValid,importFailed,locked,visible,connectionKey,autoSend])
-  return <section className="custom-program" data-i18n-skip hidden={!visible} aria-label="Custom SysEx / BCL">
-    <h3 className="mock-h3">{representation==='sysex'?'SysEx template':'BCL program'} · {autoSend?'live editing':'local draft'}</h3>
+  return translatedTree(<section className="custom-program" hidden={!visible} aria-label="Custom SysEx / BCL">
     {!selector?<p role="status">This system control has no qualified programmable BCL selector.</p>:<fieldset disabled={locked||hardwareBusy}>
-      <p><code>{selector}</code> · {autoSend?'Live edits: valid direct changes are sent after a short pause, with backup and read-back. No STORE.':'Local editing: Assignments → BCR32 is off.'} Simulation never sends. Firmware {firmware??'unknown'}: custom output not hardware-validated.</p>
-      <div className="mock-seg" role="group" aria-label="Custom program representation"><button aria-pressed={mode==='raw'} onClick={()=>changeMode(mode==='raw'?representation:'raw')}>{mode==='raw'?`Back to ${representation==='sysex'?'SysEx':'BCL'}`:'Raw'}</button></div>
-      <button aria-expanded={catalogOpen} onClick={()=>setCatalogOpen(open=>!open)}>Synth SysEx catalogue</button>
+      <header className="custom-editor-header">
+        <h3>{representation==='sysex'?'SysEx template':'BCL program'}</h3>
+        <span className="custom-edit-state">{autoSend?'Live editing':'Local draft'}</span>
+        <HelpHint label="Editing help" text={autoSend?'Valid direct edits are applied after a short pause. When the hardware is available, the control is backed up, sent and independently read back. STORE remains a separate action.':'Edits apply to the local draft. Enable Assignments → BCR32 to send subsequent direct edits to the controller. STORE remains a separate action.'}/>
+      </header>
+      <div className="custom-source-tools">
+        <div className="mock-actions"><button aria-label="Undo text" title="Undo text" disabled={!counts.undo} onClick={()=>{const v=history.undo('text');if(v!==null){setSource(v);setHexDraft(null);refresh(n=>n+1);setEditRevision(n=>n+1)}}}>Undo</button><button aria-label="Redo text" title="Redo text" disabled={!counts.redo} onClick={()=>{const v=history.redo('text');if(v!==null){setSource(v);setHexDraft(null);refresh(n=>n+1);setEditRevision(n=>n+1)}}}>Redo</button><button onClick={()=>{void navigator.clipboard?.writeText(mode==='sysex'?shownHex:mode==='raw'?raw:source).then(()=>setNotice('Copied')).catch(()=>setNotice('Copy unavailable; select the text and copy manually.'))}}>Copy</button></div>
+        <button aria-label="Synth SysEx catalogue" aria-expanded={catalogOpen} onClick={()=>setCatalogOpen(open=>!open)}>Catalogue</button>
+      </div>
       {catalogOpen&&<Suspense fallback={<p role="status">Loading offline catalogue…</p>}><SynthCatalog download={download} storage={catalogStorage} load={(next,value,needsBcl)=>{
         edit(next,true,false);setHexDraft(null);setPreview(value);setOriginal(null)
         const nextMode=needsBcl?'bcl':representation;setMode(nextMode);onRepresentation?.(nextMode)
         setCatalogOpen(false)
-        setNotice('Catalogue template loaded into this text draft only. Nothing applied or sent.')
+        setNotice('Template loaded locally · nothing sent.')
       }}/></Suspense>}
-      {mode==='sysex'&&<><label>SysEx template<textarea ref={input} rows={4} spellCheck={false} aria-label="SysEx template" value={shownHex} readOnly={!editable} onChange={e=>editHex(e.target.value)}/></label>{!editable&&<p role="status">Use BCL to preserve multiple messages, unknown statements or advanced tokens. Simplified editing is unavailable.</p>}</>}
+      {mode==='sysex'&&<label className="custom-source-label"><span className="sr-only">SysEx template</span><textarea ref={input} rows={4} spellCheck={false} aria-label="SysEx template" value={shownHex} readOnly={!editable} onChange={e=>editHex(e.target.value)}/></label>}
       {mode==='bcl'&&<div className="bcl-editor"><ol className="bcl-gutter" aria-hidden="true">{source.split(/\r\n|\r|\n/).map((_,i)=><li key={i}>{i+1}</li>)}</ol><textarea ref={input} aria-label="Custom BCL control body" rows={9} spellCheck={false} value={source} onChange={e=>{setHexDraft(null);edit(e.target.value)}}/></div>}
-      {mode==='raw'&&<><p>{original?'Original imported bytes (read-only), not a new hardware capture.':'Generated BCR32 command-20 file bytes (read-only), not captured or sent.'}</p><textarea rows={8} readOnly aria-label="Raw BCL file bytes" value={raw}/></>}
-      <div className="mock-actions"><button disabled={!counts.undo} onClick={()=>{const v=history.undo('text');if(v!==null){setSource(v);setHexDraft(null);refresh(n=>n+1);setEditRevision(n=>n+1)}}}>Undo text</button><button disabled={!counts.redo} onClick={()=>{const v=history.redo('text');if(v!==null){setSource(v);setHexDraft(null);refresh(n=>n+1);setEditRevision(n=>n+1)}}}>Redo text</button><button onClick={()=>{edit(controlExample,false,false);setHexDraft(null);setNotice('Example loaded locally, not applied or sent.')}}>Example</button><button onClick={()=>{void navigator.clipboard?.writeText(mode==='sysex'?shownHex:mode==='raw'?raw:source).then(()=>setNotice('Copied')).catch(()=>setNotice('Copy unavailable; select the text and copy manually.'))}}>Copy</button></div>
-      <div className="fields two"><label>BCL minimum<input aria-label="BCL minimum" inputMode="numeric" value={form.minimum} onChange={e=>{setForm({...form,minimum:e.target.value});setDirective('minmax',`${e.target.value} ${form.maximum}`)}}/></label><label>BCL maximum<input aria-label="BCL maximum" inputMode="numeric" value={form.maximum} onChange={e=>{setForm({...form,maximum:e.target.value});setDirective('minmax',`${form.minimum} ${e.target.value}`)}}/></label></div>{target.kind==='encoders'&&<label>BCL default<input aria-label="BCL default" value={form.defaultValue} onChange={e=>{setForm({...form,defaultValue:e.target.value});setDirective('default',e.target.value)}}/></label>}{unsupportedDefault&&<p role="alert">Remove .default in BCL before sending: the BCR32 does not export this encoder-only directive for pushes/buttons.</p>}
-      {p&&<label>Simulation value · {value}<input type="range" aria-label="SysEx simulation value" min={p.range[0]} max={p.range[1]} value={value} onChange={e=>setPreview(Number(e.target.value))}/></label>}
-      <label>Simulated MIDI — nothing sent<textarea aria-label="Simulated SysEx output" rows={3} readOnly value={hexValid?output:'Invalid SysEx draft — simulation unavailable'}/></label>
-      <p role="status">Conversion: {hexValid?p?.conversionStatus??'invalid':'invalid'}. {checked.error}</p>
-      {!!p?.diagnostics.length&&<ul>{p.diagnostics.map((d,i)=><li key={i}>{d}</li>)}</ul>}
-      <p role="status" aria-label="Custom program synchronization">{notice||'No custom program change sent.'}</p>
-      <div className="mock-actions"><button disabled={!p||!hexValid||importFailed} onClick={()=>{if(p){apply(withCustomProgram(config,p));setNotice('Custom program applied to this local control only. Save JSON to retain it; hardware STORE does not include this draft.')}}}>Apply custom program locally</button>{config.customAssignment&&<button onClick={()=>{apply(withoutCustomProgram(config));setNotice('Previous standard assignment restored locally; nothing sent.')}}>Restore standard assignment</button>}</div>
-      <div className="mock-actions"><label className="file">Import BCL / SYX<input aria-label="Import custom BCL or SYX" type="file" accept=".bcl,.bcr,.txt,.syx" onChange={e=>{void importFile(e.target.files?.[0]);e.target.value=''}}/></label><button disabled={!fragment} onClick={()=>download(fragment,'bcr32-control.bcl','text/plain')}>Export control BCL</button><button disabled={!fragment} onClick={()=>download(new Uint8Array(bclFile(fragment)),'bcr32-control.syx','application/octet-stream')}>Export control SYX</button>{original&&<button onClick={()=>download(new Uint8Array(original.raw),'bcr32-original-import.bin','application/octet-stream')}>Save original import</button>}</div>
-      <section className="mock-card" aria-label="Custom program hardware transfer"><b>BCR32 working control</b>
-        <p>Send replaces this control's native Type with OFF before installing .tx. The current preset is backed up first. Other controls and persistent presets must remain unchanged. Advanced/unknown programs stay file-only.</p>
-        <div className="mock-actions"><button disabled={!hardware?.available} onClick={()=>void hardwareAction('read')}>Read control BCL from BCR32</button><button disabled={!hardware?.available||!p||p.conversionStatus!=='exact'||!hexValid||importFailed||unsupportedDefault} onClick={()=>void hardwareAction('write')}>Back up, set Type OFF and send program</button><button disabled={!hardware?.available||!hardware.tools.current?.canRestore(target)} onClick={()=>void hardwareAction('restore')}>Restore original hardware control</button><button disabled={!hardware?.tools.current?.backup()} onClick={()=>{const b=hardware?.tools.current?.backup();if(b)download(JSON.stringify(b,null,2),'bcr32-before-custom-program.json','application/json')}}>Save hardware backup</button></div>
-        {!hardware?.available&&<p>Requires an unlocked, idle CTRL connection with live firmware1.0.2 or1.0.3.</p>}
-      </section>
-      <p className="surface-help">Custom programs are preserved in local JSON presets and history, never exported as OFF. A SysEx destination can interpret messages as reset, memory write or firmware commands. Hardware sending is explicit and limited to supported simple programs. ControlTribe requires native Type OFF before adding .tx; Studio does not change hardware Type during local editing.</p>
+      {mode==='sysex'&&!editable&&<p className="custom-warning" role="status">Use BCL for this program.</p>}
+      <div className="custom-value-fields">
+        <label>Minimum<input aria-label="BCL minimum" inputMode="numeric" value={form.minimum} onChange={e=>{setForm({...form,minimum:e.target.value});setDirective('minmax',`${e.target.value} ${form.maximum}`)}}/></label>
+        <label>Maximum<input aria-label="BCL maximum" inputMode="numeric" value={form.maximum} onChange={e=>{setForm({...form,maximum:e.target.value});setDirective('minmax',`${form.minimum} ${e.target.value}`)}}/></label>
+        {target.kind==='encoders'&&<label>Initial value<input aria-label="BCL default" value={form.defaultValue} onChange={e=>{setForm({...form,defaultValue:e.target.value});setDirective('default',e.target.value)}}/></label>}
+      </div>
+      {unsupportedDefault&&<p role="alert">Remove .default in BCL before sending: the BCR32 does not export this encoder-only directive for pushes/buttons.</p>}
+      {(!p||!hexValid)&&<p className="custom-warning" role="alert">{!hexValid?'Invalid SysEx draft':checked.error}</p>}
+      {notice&&<p className="custom-sync" role="status" aria-label="Custom program synchronization">{notice}</p>}
+      <details className="custom-preview"><summary>Preview <HelpHint label="Preview help" text="Simulation calculates MIDI bytes locally. Moving this slider never sends MIDI or moves hardware."/></summary>
+        {p&&<label>Simulation value · {value}<input type="range" aria-label="SysEx simulation value" min={p.range[0]} max={p.range[1]} value={value} onChange={e=>setPreview(Number(e.target.value))}/></label>}
+        <label>Simulated MIDI — nothing sent<textarea aria-label="Simulated SysEx output" rows={2} readOnly value={hexValid?output:translate('Invalid SysEx draft — simulation unavailable',language)}/></label>
+      </details>
+      <details className="custom-advanced" open={importFailed||mode==='raw'||undefined}><summary>Files and recovery</summary>
+        <div className="custom-local-tools mock-actions"><button disabled={!p||!hexValid||importFailed} onClick={()=>{if(p){apply(withCustomProgram(config,p));setNotice('Applied locally · save JSON to keep the draft.')}}}>Apply custom program locally</button>{config.customAssignment&&<button onClick={()=>{apply(withoutCustomProgram(config));setNotice('Standard assignment restored locally.')}}>Restore standard assignment</button>}<button onClick={()=>{edit(controlExample,false,false);setHexDraft(null);setNotice('Example loaded locally · nothing sent.')}}>Example</button></div>
+        <div className="mock-actions"><label className="file">Import BCL / SYX<input aria-label="Import custom BCL or SYX" type="file" accept=".bcl,.bcr,.txt,.syx" onChange={e=>{void importFile(e.target.files?.[0]);e.target.value=''}}/></label><button disabled={!fragment} onClick={()=>download(fragment,'bcr32-control.bcl','text/plain')}>Export control BCL</button><button disabled={!fragment} onClick={()=>download(new Uint8Array(bclFile(fragment)),'bcr32-control.syx','application/octet-stream')}>Export control SYX</button>{original&&<button onClick={()=>download(new Uint8Array(original.raw),'bcr32-original-import.bin','application/octet-stream')}>Save original import</button>}</div>
+        <section className="custom-hardware" aria-label="Custom program hardware transfer">
+          <h4>Controller <HelpHint label="Hardware transfer help" text="Read gets the selected control from BCR32. Send backs up the preset, replaces this control’s Type with OFF, installs the program and verifies it by an independent read. Other controls and stored presets are preserved. Advanced programs may remain file-only. Saving a preset with STORE is separate."/></h4>
+          <div className="mock-actions"><button aria-label="Read control BCL from BCR32" disabled={!hardware?.available} onClick={()=>void hardwareAction('read')}>Read control</button><button aria-label="Back up, set Type OFF and send program" disabled={!hardware?.available||!p||p.conversionStatus!=='exact'||!hexValid||importFailed||unsupportedDefault} onClick={()=>void hardwareAction('write')}>Send program</button><button aria-label="Restore original hardware control" disabled={!hardware?.available||!hardware.tools.current?.canRestore(target)} onClick={()=>void hardwareAction('restore')}>Restore backup</button><button aria-label="Save hardware backup" disabled={!hardware?.tools.current?.backup()} onClick={()=>{const b=hardware?.tools.current?.backup();if(b)download(JSON.stringify(b,null,2),'bcr32-before-custom-program.json','application/json')}}>Download backup</button></div>
+          {!hardware?.available&&<p className="custom-hardware-unavailable">Controller unavailable <HelpHint label="Connection requirements" text="Requires an unlocked, idle CTRL connection with live firmware1.0.2 or1.0.3."/></p>}
+        </section>
+        <div className="mock-seg" role="group" aria-label="Custom program representation"><button aria-pressed={mode==='raw'} onClick={()=>changeMode(mode==='raw'?representation:'raw')}>{mode==='raw'?'Back to editor':'File bytes'}</button></div>
+        {mode==='raw'&&<><p>{original?'Original imported bytes (read-only), not a new hardware capture.':'Generated BCR32 command-20 file bytes (read-only), not captured or sent.'}</p><textarea rows={5} readOnly aria-label="Raw BCL file bytes" value={raw}/></>}
+        <details className="custom-compatibility"><summary>Compatibility details</summary><code data-i18n-skip>{selector}</code><p>Firmware: <span data-i18n-skip>{firmware??'—'}</span></p><p>Conversion: {hexValid?p?.conversionStatus??'invalid':'invalid'}</p>{!!p?.diagnostics.length&&<ul data-i18n-skip>{p.diagnostics.map((d,i)=><li key={i}>{d}</li>)}</ul>}<p>Custom programs are kept in JSON presets and history. Imported and catalogue programs stay local until edited or sent. A destination device may interpret SysEx as a memory write or reset.</p></details>
+      </details>
     </fieldset>}
-  </section>
+  </section>,language)
 }
