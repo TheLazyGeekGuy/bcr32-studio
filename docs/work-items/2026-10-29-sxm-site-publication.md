@@ -1,6 +1,6 @@
 # Publish SXM documentation, site and editor to GitHub and Forgejo
 
-Status: implementation/validation in progress.
+Status: completed — published to both source repositories and GitHub Pages.
 
 Owner request on 2026-10-29 authorizes adding SXM to the public website documentation, committing and pushing to the existing GitHub and Forgejo repositories. Existing GitHub Pages publication is included. No hardware operation, forced push or modification of local main is needed.
 
@@ -27,3 +27,22 @@ Initial GitHub main: `55107e924d4da8988734a37975dffaaf1dfed506`. Initial Forgejo
 Fresh declared dependencies: 54/54 scripts, TypeScript, META_CSP production build/distribution and standalone SXM SDK/NodeNext consumer check passed. Browser tests passed for EN/FR site links, all four documentation pages, schema download and 20-model catalogue without MIDI access. The real-service-worker subpath test covers offline editor/catalogue/SXM exchange plus documentation root and architecture navigation. Documentation assets are generated from tracked sources and explicitly precached; the worker resolves only inventory-listed documentation pages, preserving application/root boundaries. Marked is a pinned build dependency only and is absent from browser application code.
 
 Source Markdown, HTML links, dependencies and offline routing were reviewed by Codex primary, exact model/effort unavailable, against the full baseline above plus the identified uncommitted candidate. No native hardware, local main or unrelated worktree was modified. Existing native dependency install scripts were not run by npm's current policy; no physical MIDI acceptance is claimed.
+
+## Isolated candidate and push receipts — 2026-10-29 10:57–10:59 CET
+
+Clean isolated candidate **`c79beb67d046cbd55141b7af8edec79bf5a2f921`** passed 54/54 tests, TypeScript, the production build/distribution, standalone SDK and four release browser fixtures (public documentation, SXM exchange, simulated custom-program STORE/restore and subpath/offline navigation).
+
+Generic privacy gate passed **421 files / 96 reachable commits** in the isolated graph. Full private gate returned five contextual file findings, matching the previously reviewed public manufacturer URLs and ordinary technical documentation substring; no new finding or historical identity finding was reported. The two older publication/transport work items carrying these findings were independently confirmed unchanged from the published baseline. No secret or private capture is included. The owner's prior permission for these nonconfidential source references applies; this nonzero scan is not called an automated pass. No hook, denylist or branch protection setting was changed.
+
+Ordinary fast-forward pushes succeeded:
+
+- GitHub main: `55107e924d4da8988734a37975dffaaf1dfed506` → `c79beb67d046cbd55141b7af8edec79bf5a2f921`.
+- Forgejo main: `f96c4c09ba08da71b13b54db35f2635f703ffcea` → the same candidate.
+
+GitHub reported its existing administrator exemption from PR/expected-status requirements. Local checks had passed first; no review/check was forged or protection disabled. GitHub CI run **40853836121** and Pages run **40853836250** were created. Their completion and public HTTP evidence are recorded below after verification. Optional Cloudflare deployment remains disabled/skipped. Forgejo is a source mirror here; a push is not a separate hosted-site deployment claim.
+
+## Public delivery verification — 2026-10-29 11:01 CET
+
+GitHub CI [40853836121](https://github.com/TheLazyGeekGuy/bcr32-studio/actions/runs/40853836121) and Pages [40853836250](https://github.com/TheLazyGeekGuy/bcr32-studio/actions/runs/40853836250) both completed successfully for the full candidate SHA above. Independent public HTTP requests returned 200 and byte-identical SHA-256 content against the isolated release distribution for the site, editor, all four documentation pages, schema, TX81Z example, standalone ES module and version manifest.
+
+Public documentation: https://thelazygeekguy.github.io/bcr32-studio/docs/sysex-map/ . Version: **0.46.0-alpha.7**. SXM 1.0 remains an open draft proposal, with no claim of official standardization or third-party adoption. This documentation-only delivery receipt is committed after the validated application candidate; it changes no runtime source or generated artifact. No device operation was performed.
