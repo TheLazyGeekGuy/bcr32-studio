@@ -746,3 +746,6 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .standalone-editor .language-icon-picker{margin-left:auto}.standalone-editor>.fireworx-module{min-width:0}
 
 .mock-inspector > .standard-assignment[hidden], .custom-program[hidden] {display:none}
+.synth-sysex-catalog {border:1px solid var(--border, #494740);padding:12px;display:grid;gap:12px;min-width:0}
+.synth-sysex-catalog h4,.synth-sysex-catalog p {margin:0}
+.synth-sysex-catalog a {color:var(--accent, #dda34d);text-decoration:underline}

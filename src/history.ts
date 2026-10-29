@@ -9,10 +9,10 @@ export function createHistory(limit = 100, coalesceMs = 600) {
     // A state seen for `key`. Arriving on a preset whose state is not the one its history ends with (reloaded from the
     // library, imported) starts its history over: steps would otherwise jump between unrelated versions.
     arrive(key: string, state: string) { const s = stacks.get(key); if (!s || s.current !== state) stacks.set(key, { undo: [], redo: [], current: state, lastAt: -Infinity }) },
-    record(key: string, state: string, now: number) {
+    record(key: string, state: string, now: number, separate = false) {
       const s = stack(key, state)
       if (s.current === state) return
-      if (now - s.lastAt >= coalesceMs || !s.undo.length) { s.undo.push(s.current); if (s.undo.length > limit) s.undo.shift() }
+      if (separate || now - s.lastAt >= coalesceMs || !s.undo.length) { s.undo.push(s.current); if (s.undo.length > limit) s.undo.shift() }
       s.current = state; s.redo = []; s.lastAt = now
     },
     undo(key: string): string | null { const s = stacks.get(key); if (!s?.undo.length) return null; s.redo.push(s.current); s.current = s.undo.pop()!; s.lastAt = -Infinity; return s.current },

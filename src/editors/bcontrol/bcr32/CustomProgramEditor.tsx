@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useRef,useState,type MutableRefObject} from 'react'
+import {lazy,Suspense,useEffect,useMemo,useRef,useState,type MutableRefObject} from 'react'
 import {parseCustomAssignment,sysexToTx,txToSysex,evaluateAssignment} from '../../../bcl-tx'
 import {createHistory} from '../../../history'
 import {bclFile} from './bcl'
@@ -7,6 +7,7 @@ import type {Encoder} from './profile'
 import type {ProgramTools} from './custom-program-transfer'
 
 export type CustomProgramActions={chooseRepresentation:(mode:'sysex'|'bcl')=>boolean}
+const SynthCatalog=lazy(()=>import('../../../sysex-catalog/CatalogPicker'))
 const example='.minmax 0 127\n.default 0\n.tx $F0 $7D val $F7\n.showvalue on'
 const hex=(bytes:ArrayLike<number>)=>Array.from(bytes,b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')
 export function CustomProgramEditor({target,config,locked,firmware,hardware,representation='sysex',visible=true,actions,onRepresentation,apply,download}:{representation?:'sysex'|'bcl';visible?:boolean;actions?:MutableRefObject<CustomProgramActions|null>;onRepresentation?:(mode:'sysex'|'bcl')=>void;hardware?:{tools:MutableRefObject<ProgramTools|null>;available:boolean;begin:()=>void};target:ProgramTarget;config:Encoder;locked:boolean;firmware:string|null;apply:(config:Encoder)=>void;download:(content:BlobPart,name:string,type?:string)=>void}){
@@ -14,6 +15,7 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,repr
   const [mode,setMode]=useState<'sysex'|'bcl'|'raw'>(representation),[source,setSource]=useState(config.customAssignment?.sourceBcl??controlExample)
   const [hexDraft,setHexDraft]=useState<string|null>(null),[preview,setPreview]=useState(32),[notice,setNotice]=useState('')
   const [importFailed,setImportFailed]=useState(false)
+  const [catalogOpen,setCatalogOpen]=useState(false)
   const [original,setOriginal]=useState<{text:string;raw:Uint8Array}|null>(null)
   const [history]=useState(()=>{const h=createHistory(40);h.arrive('text',source);return h}),[,refresh]=useState(0)
   const [hardwareBusy,setHardwareBusy]=useState(false)
@@ -33,7 +35,7 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,repr
   const shownHex=hexDraft??(p?.messages[0]?txToSysex(p.messages[0]):'')
   const value=p?Math.max(p.range[0],Math.min(p.range[1],preview)):preview
   const output=useMemo(()=>{if(!p)return '';try{return evaluateAssignment(p,value).map(hex).join('\n')}catch(e){return e instanceof Error?e.message:String(e)}},[p,value])
-  const edit=(next:string)=>{history.record('text',next,performance.now());setSource(next);setImportFailed(false);refresh(n=>n+1)}
+  const edit=(next:string,separate=false)=>{history.record('text',next,performance.now(),separate);setSource(next);setImportFailed(false);refresh(n=>n+1)}
   const setDirective=(name:string,args:string)=>{
     const lines=source.split(/\r\n|\r|\n/),indices=lines.flatMap((l,i)=>l.trim().split(/\s+/)[0]==='.'+name?[i]:[])
     if(indices.length){const i=indices.at(-1)!,comment=lines[i].includes(';')?lines[i].slice(lines[i].indexOf(';')):'';lines[i]=`.${name} ${args}${comment?' '+comment:''}`}else lines.unshift(`.${name} ${args}`)
@@ -62,6 +64,13 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,repr
     {!selector?<p role="status">This system control has no qualified programmable BCL selector.</p>:<fieldset disabled={locked||hardwareBusy}>
       <p><code>{selector}</code> · Local editing and simulation. Firmware {firmware??'unknown'}: custom output not hardware-validated.</p>
       <div className="mock-seg" role="group" aria-label="Custom program representation"><button aria-pressed={mode==='raw'} onClick={()=>changeMode(mode==='raw'?representation:'raw')}>{mode==='raw'?`Back to ${representation==='sysex'?'SysEx':'BCL'}`:'Raw'}</button></div>
+      <button aria-expanded={catalogOpen} onClick={()=>setCatalogOpen(open=>!open)}>Synth SysEx catalogue</button>
+      {catalogOpen&&<Suspense fallback={<p role="status">Loading offline catalogue…</p>}><SynthCatalog load={(next,value,needsBcl)=>{
+        edit(next,true);setHexDraft(null);setPreview(value);setOriginal(null)
+        const nextMode=needsBcl?'bcl':representation;setMode(nextMode);onRepresentation?.(nextMode)
+        setCatalogOpen(false)
+        setNotice('Catalogue template loaded into this text draft only. Nothing applied or sent.')
+      }}/></Suspense>}
       {mode==='sysex'&&<><label>SysEx template<textarea ref={input} rows={4} spellCheck={false} aria-label="SysEx template" value={shownHex} readOnly={!editable} onChange={e=>editHex(e.target.value)}/></label>{!editable&&<p role="status">Use BCL to preserve multiple messages, unknown statements or advanced tokens. Simplified editing is unavailable.</p>}</>}
       {mode==='bcl'&&<div className="bcl-editor"><ol className="bcl-gutter" aria-hidden="true">{source.split(/\r\n|\r|\n/).map((_,i)=><li key={i}>{i+1}</li>)}</ol><textarea ref={input} aria-label="Custom BCL control body" rows={9} spellCheck={false} value={source} onChange={e=>{setHexDraft(null);edit(e.target.value)}}/></div>}
       {mode==='raw'&&<><p>{original?'Original imported bytes (read-only), not a new hardware capture.':'Generated BCR32 command-20 file bytes (read-only), not captured or sent.'}</p><textarea rows={8} readOnly aria-label="Raw BCL file bytes" value={raw}/></>}

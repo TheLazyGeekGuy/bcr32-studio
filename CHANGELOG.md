@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.5] — 2026-10-29
+
+- Add an offline, searchable SysEx catalogue for 20 synth models and 46 parameter/request templates, including Microwave I/II, Blofeld, TX81Z, DX7, AN200, FS1R, Juno and DW models.
+- Configure destination channel, Device ID, scene and part where documented; preview bytes and load the selected template into the current rotation or push draft with a separate Undo step. Loading sends no MIDI.
+- Keep original Microwave checksum BCL file-only; preview its additive checksum locally without expanding native transfer permissions. Every model carries manufacturer sources and operating prerequisites.
+- Load the catalogue in a separate chunk only when opened. Standard CC/BCL editing remains independent of its data.
+
 ## [0.46.0-alpha.4] — 2026-10-29
 
 - Put SysEx and BCL in the Control tab's MIDI message Type selector for encoder rotations and pushes. Show the corresponding editor on selection and hide standard fields while editing a custom draft.

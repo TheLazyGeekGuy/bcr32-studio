@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-Version **0.46.0-alpha.4**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
+Version **0.46.0-alpha.5**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
 
 Read scope: existing root BCL/profile/forms/text components, BCR32 profile/read/write/CC transport/preset/store/Workbench, generic parameter state/history and actual host interfaces, build and browser fixtures. This standalone checkout lacks the upstream core-contract/onboarding documents listed by the integration skill; the checked source interfaces are authoritative, not historical SDK sketches. The initial alpha1 slice changed no permissions. Alpha2 reuses the same host SDK and grants, adding only a qualified selected-control fragment and addressed Type OFF operation on exact firmware1.0.2/1.0.3; existing preset/global/STORE gates remain unchanged. See the transfer ticket for the additive module policy.
 
@@ -70,3 +70,9 @@ Push/button custom programs expose `.mode down` and do not export `.default`. Ne
 In Control, choose **SysEx** or **BCL** from the MIDI message **Type** dropdown. The selected editor replaces the standard assignment fields for the current encoder rotation or push. The editor is hidden for standard types. Raw bytes remain a read-only view inside the custom editor.
 
 Selecting a type opens a local draft and sends nothing to hardware. Use **Apply custom program locally** to retain the definition in the profile; use the explicit hardware transfer action to install it. Returning to a standard type restores the standard assignment locally. Unapplied source remains available when switching back on the same control. Invalid hex must be fixed before switching between SysEx and BCL. The selected representation of an applied program survives reload independently of whether its syntax is exact or opaque. Custom programming remains unavailable for bulk selection and reserved system controls.
+
+## Built-in synth catalogue
+
+Select Type SysEx or BCL and open **Synth SysEx catalogue**. Search by manufacturer, model or parameter, select a command and configure its destination addressing. **Load into current control draft** replaces only the text for the selected rotation/push; Undo text restores the previous draft even if loading immediately followed typing. Apply and hardware transfer remain explicit. The catalogue does not change the BCR32 connection or automatically decode instrument replies.
+
+See [catalogue reference](SYNTH-SYSEX-CATALOG.md) for all 20 models, 46 commands, primary documents and checksum limitations. The original Microwave checksum templates select the BCL view and remain file-only. Browsing and previews work offline after the application has been cached.
