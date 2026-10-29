@@ -41,6 +41,7 @@ import { buttonNames } from './panel-layout'
 import { ControlSearch } from './ControlSearch'
 import { LibraryList } from './LibraryList'
 import { SequencerView } from './SequencerView'
+import {CustomProgramEditor} from './CustomProgramEditor'
 import {hostPage,supportsZaqHost} from './zaq-host'
 import { createBrightnessTransport } from './led-brightness'
 import { applySelectionChange, selectControls, selectedControls, selectionKey, sharedField, type SelectionGesture, type ControlChange } from './multi-selection'
@@ -1155,6 +1156,14 @@ function loadWorkspace() {
         {mouseMulti&&<p className="surface-help">Drag on the background: rectangle selection.</p>}
         {activeControls.length>0&&<ol className="activity-strip" aria-label="Active controls">{activeControls.slice(0,4).map(a=>{const value=a.control.kind==='encoders'?values[a.control.id]?.value:auxValues[a.control.kind][controlIndex(a.control.kind,a.control.id)];const source=a.control.kind==='encoders'?values[a.control.id]?.source:auxSources[`${a.control.kind}:${a.control.id}`];const percent=Math.round(a.share*100);return <li key={selectionKey(a.control)}><button aria-pressed={selectionKey(a.control)===selectionKey(selection)} onClick={()=>selectUi(a.control,{},true)}><span>{controlName(a.control)}</span><output>{value??'—'}</output><small>{source==='relative'?'relative estimate':source==='midi'?'MIDI received':'local preview'}</small><span className="activity-share" title={`${percent}% of pulses`}><span style={{width:`${percent}%`}} /></span></button></li>})}</ol>}
         {unsupportedRead && <p role="alert">Controller assignment cannot be represented. The fields below remain the local draft; inspect the raw replies.</p>}
+        {!multiple&&<CustomProgramEditor key={`${selection.kind}:${selection.id}`} target={selection} config={selected} firmware={liveFirmware} locked={locked} download={download} apply={control=>{
+          if(lockedRef.current)return
+          stopEmission();disarmLearn()
+          const next=parseProfile({...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?control:e)})
+          profileRef.current=next;setProfile(next)
+          setNotice('Custom program updated locally. MIDI sending stopped; no hardware assignment or STORE was sent.')
+        }}/>}
+        <fieldset className="standard-assignment" disabled={selectedItems.some(x=>!!x.control.customAssignment)}>
         <h3 className="mock-h3">MIDI message</h3>
         <div className="fields two"><label>Type<select value={batchType} onChange={(event) => updateSelected({ type: event.target.value as EncoderType })}>
           {batchType===''&&<option value="" disabled>Mixed</option>}{Array.from(new Set([...(multiple?[]:[selected.type]),...commonTypes])).map((type) => <option key={type} value={type}>{type.toUpperCase()}</option>)}
@@ -1203,6 +1212,7 @@ function loadWorkspace() {
           {selection.kind !== 'encoders' && <p className="surface-help">{selected.mode === 'momentary' ? 'Tog Off: Value 1 on press, Value 2 on release.' : selected.mode === 'toggle' ? 'Tog On: alternate Value 1 and Value 2 on each press.' : 'Inc: add the step on each press, clamped to the range.'} Clicking the panel only selects a control.</p>}
         <ControllerReadValues snapshot={selectedRead} />
         </details>
+        </fieldset>
       </section>
 
     <section className="lower">

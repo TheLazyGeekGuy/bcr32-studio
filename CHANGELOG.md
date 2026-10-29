@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.1] — 2026-10-29
+
+- Local BCL/SysEx programming in Control: structured templates, hex↔BCL, bounded value/slice simulation, min/max/default, original imported bytes, targeted BCL/SYX files, text history and existing preset/history integration. Unknown/advanced constructs stay opaque; no custom hardware sender is enabled.
+- Reuse the existing BCL document parser through a neutral shared module and its old exports. Add explicit BCR32 model64/revision/selector bounds without silently remapping historical BCR2000/BCF2000 files.
+- Preserve comments/source and custom/opaque JSON definitions. Custom programs are not OFF: standard assignment/OFF writes, CC emission and false Cubase bindings are refused; indexed hardware reads do not replace the local program.
+- ControlTribe1.12.4 static analysis confirms the app's BCL validator/framing and the native Type OFF prerequisite for tx. This is not physical execution proof; no firmware whitelist, grant, STORE, sequencer or global-writing capability is expanded.
+
 ## [0.45.0-alpha.17] — 2026-10-28
 
 - Correct high-tempo clock estimation: a rolling clock-index/time regression replaces the median of individual gaps. At 300 BPM, 9/9/7ms arrival intervals no longer misleadingly report 277.8; a slightly-above-300 measurement no longer freezes an old estimate.

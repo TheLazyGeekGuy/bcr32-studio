@@ -1,5 +1,6 @@
 import { validLedMode, type LedMode } from './led-modes'
-export type EncoderType = 'off' | 'cc' | 'nrpn' | 'pb' | 'at' | 'gs' | 'pc' | 'note' | 'mmc'
+import {validCustomAssignment,type CustomAssignment} from '../../../bcl-tx'
+export type EncoderType = 'off' | 'cc' | 'nrpn' | 'pb' | 'at' | 'gs' | 'pc' | 'note' | 'mmc' | 'sysex' | 'bcl'
 export const buttonIds = [...Array.from({ length: 20 }, (_, i) => i + 5), 65, 66, 67, 68, 74, 75]
 // Stored IDs follow the original panel/manual callouts; the top keys are visibly numbered 1–16.
 export const displayControlId = (kind: 'encoders' | 'pushes' | 'buttons', id: number) => kind === 'buttons' && id >= 5 && id <= 20 ? id - 4 : id
@@ -24,6 +25,8 @@ export const modesFor = (type: EncoderType, rotation: boolean): EncoderMode[] =>
 export const typesFor = (rotation: boolean): EncoderType[] => rotation ? ['off', 'pc', 'cc', 'nrpn', 'pb', 'at', 'gs'] : ['off', 'pc', 'cc', 'nrpn', 'note', 'at', 'gs', 'mmc']
 
 export interface Encoder {
+  customAssignment?:CustomAssignment
+  fallbackType?:Exclude<EncoderType,'sysex'|'bcl'>
   id: number
   type: EncoderType
   channel: number
@@ -80,7 +83,9 @@ export function parseProfile(value: unknown): Bcr32Profile {
   if(p.device?.model && p.device.model!=='BCR-32')throw Error('Profile for another controller model')
   if (Number(p.schemaVersion) !== 1 && p.schemaVersion !== 2) throw new Error('Unknown version')
   const valid = (list: Encoder[], ids: number[]) => Array.isArray(list) && list.length === ids.length && list.every((e, i) =>
-    e && e.id === ids[i] && ['off', 'cc', 'nrpn', 'pb', 'at', 'gs', 'pc', 'note', 'mmc'].includes(e.type) &&
+    e && e.id === ids[i] && ['sysex', 'bcl', 'off', 'cc', 'nrpn', 'pb', 'at', 'gs', 'pc', 'note', 'mmc'].includes(e.type) &&
+    (e.customAssignment === undefined ? !['sysex','bcl'].includes(e.type) : validCustomAssignment(e.customAssignment) && e.type === (e.customAssignment.kind === 'custom-sysex' ? 'sysex' : 'bcl')) &&
+    (e.fallbackType === undefined || ['off','cc','nrpn','pb','at','gs','pc','note','mmc'].includes(e.fallbackType)) &&
     [...rotationModes, 'toggle', 'momentary'].includes(e.mode) &&
     Number.isInteger(e.channel) && e.channel >= 1 && e.channel <= 16 &&
     Number.isInteger(e.parameter) && e.parameter >= 0 && e.parameter <= parameterLimit(e) &&

@@ -7,6 +7,7 @@ import { ledModes } from './led-modes'
 // CC/NRPN encoder assignments plus an explicit Type OFF (0) for indexed controller targets.
 // No globals, preset recall, STORE, BCL, sequencer or firmware operations enter this transport.
 export function encoderWireFields(encoder: Encoder): Record<TargetField, number> {
+  if(encoder.customAssignment)throw Error('Custom programs cannot enter the standard assignment writer')
   if (!['cc', 'nrpn'].includes(encoder.type) || encoder.parameterOff || encoder.minimumOff || encoder.aftertouchAll || encoder.mmc) throw Error('Live assignment writes support CC/NRPN encoders only')
   const mode = rotationModes.indexOf(encoder.mode), option = ledModes.indexOf(encoder.ledMode === 'dot' ? '1dot_in' : encoder.ledMode ?? 'bar')
   if (mode < 0 || option < 0) throw Error('Unsupported encoder mode')
@@ -87,6 +88,7 @@ export function createAssignmentWriter(send: (bytes: number[]) => void, device: 
 }
 
 export function changedEncoderFields(before: Encoder, after: Encoder) {
+  if(before.customAssignment||after.customAssignment||['sysex','bcl'].includes(before.type)||['sysex','bcl'].includes(after.type))throw Error('Custom BCL/SysEx is local-only; standard assignment writes are refused')
   if(after.type==='off')return before.type==='off'?[]:[{field:'type' as const,value:0}]
   if(before.type==='off'){const next=encoderWireFields(after);return [...targetFields.filter(f=>f!=='type'),'type' as const].map(field=>({field,value:next[field]}))}
   const old = encoderWireFields(before), next = encoderWireFields(after)
@@ -95,6 +97,7 @@ export function changedEncoderFields(before: Encoder, after: Encoder) {
 
 /** OFF is only the Type field: dormant channel, ranges, mode and LED fields must remain untouched. */
 export function changedControllerFields(before:Encoder,after:Encoder,snapshot:TargetSnapshot){
+ if(before.customAssignment||after.customAssignment||['sysex','bcl'].includes(before.type)||['sysex','bcl'].includes(after.type))throw Error('Custom BCL/SysEx must not be converted to a standard or OFF write')
  if(!controllerTargets[snapshot.index])throw Error('Unknown controller target')
  if(after.type==='off')return before.type==='off'?[]:[{field:'type' as const,value:0}]
  if(controllerTargets[snapshot.index].kind!=='encoders')throw Error('Live button/push assignment edits support Type OFF only')

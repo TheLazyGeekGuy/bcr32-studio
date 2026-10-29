@@ -36,6 +36,7 @@ export function applySelectionChange(profile: Bcr32Profile, selections: ControlS
   const next={...profile}
   for(const kind of ['encoders','pushes','buttons'] as const) next[kind]=profile[kind].map(e=>{
     if(!targets.has(selectionKey({kind,id:e.id})) || 'ledMode' in change && kind!=='encoders') return e
+    if(e.customAssignment)throw Error('Restore the standard assignment explicitly before editing standard fields')
     const {mmc,...flatChange}=change
     const n:Encoder={...e,...flatChange}
     if(mmc)n.mmc={...(e.mmc??{deviceId:'all',command:'Play',locate:[0,0,0,0],frameRate:'off'}),...mmc}

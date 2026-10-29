@@ -2,7 +2,9 @@
 
 Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support, **1.0.3 sequencer step editing**, and the shared MIDI Studio editor tools.
 
-Current version: **0.45.0-alpha.17** · [Changelog](CHANGELOG.md)
+Current version: **0.46.0-alpha.1** · [Changelog](CHANGELOG.md)
+
+Custom programming: open **Control → Custom SysEx / BCL** for local templates, simulation and targeted files. Programs are retained in JSON presets; custom hardware transmission is not enabled. See the [BCL/SysEx guide and safety limits](docs/BCL-SYSEX-EDITOR.md).
 
 The product presentation is at `/`; choose **Open editor** to enter `/editor/`. Existing local presets remain on the same origin. The presentation page never requests MIDI access.
 

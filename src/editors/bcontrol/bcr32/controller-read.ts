@@ -59,6 +59,7 @@ export function createControllerReader(send: (bytes: number[]) => void, changed:
 // Metadata differs from the legacy binary-dump hypothesis, especially NOTE/AT/GS/MMC.
 // Unrepresentable types (including custom SysEx 8), ALL channels and sentinels stay raw.
 export function assignmentFromRead(previous: Encoder, snapshot: TargetSnapshot): Encoder | null {
+  if(previous.customAssignment)return null // Raw indexed reads do not describe/replace a custom BCL draft.
   const f = snapshot.fields, target = controllerTargets[snapshot.index]
   // An explicit OFF type disables an old local assignment, while retaining its dormant local fields.
   if (target && f.type?.raw === 0 && targetFields.every(key => !!f[key] || snapshot.emptyFields?.includes(key))) return { ...previous, type: 'off' }

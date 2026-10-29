@@ -9,6 +9,7 @@ export function isBcrOutput(port?: MidiPort, device: DeviceDefinition = currentD
   return !!port?.send && isDevicePort(device, port)
 }
 export function encoderCC(encoder: Encoder, value: number): number[] | null {
+  if(encoder.customAssignment)return null
   if (encoder.type !== 'cc' || encoder.mode !== 'absolute' || !Number.isFinite(value) ||
     !Number.isInteger(encoder.channel) || encoder.channel < 1 || encoder.channel > 16 ||
     !Number.isInteger(encoder.parameter) || encoder.parameter < 0 || encoder.parameter > 127 ||
@@ -17,6 +18,7 @@ export function encoderCC(encoder: Encoder, value: number): number[] | null {
 }
 
 export function encoderMessages(encoder: Encoder, value: number, previous?: number, device: DeviceDefinition = currentDevice): number[][] | null {
+  if(encoder.customAssignment)return null
   if (encoder.parameterState?.opaque) return null
   if (device.protocol === 'bcl' && encoder.type === 'gs') {
     const assignment = gsAssignment(encoder)

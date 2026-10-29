@@ -1,8 +1,9 @@
 import { validLedMode, type LedMode } from './led-modes'
+import {validCustomAssignment,type CustomAssignment} from './bcl-tx'
 import { currentDevice } from './devices'
 import type { DeviceDefinition } from './device-definition'
 import { validParameterState, validProfileParameters, type ParameterState, type ProfileParameters } from './parameter-state'
-export type EncoderType = 'off' | 'cc' | 'nrpn' | 'pb' | 'at' | 'gs' | 'pc' | 'note' | 'mmc'
+export type EncoderType = 'off' | 'cc' | 'nrpn' | 'pb' | 'at' | 'gs' | 'pc' | 'note' | 'mmc' | 'sysex' | 'bcl'
 export const buttonIds = [...currentDevice.controls.buttonIds]
 export const mmcCommands = ['Play', 'Pause', 'Stop', 'Forward', 'Rewind', 'Location', 'In', 'Out'] as const
 export interface ControllerSettings {
@@ -25,6 +26,8 @@ export const modesFor = (type: EncoderType, rotation: boolean, device: DeviceDef
 export const typesFor = (rotation: boolean): EncoderType[] => rotation ? ['off', 'pc', 'cc', 'nrpn', 'pb', 'at', 'gs'] : ['off', 'pc', 'cc', 'nrpn', 'note', 'at', 'gs', 'mmc']
 
 export interface Encoder {
+  customAssignment?:CustomAssignment
+  fallbackType?:Exclude<EncoderType,'sysex'|'bcl'>
   parameterState?: ParameterState
   pc?: { bankMsb: number | 'off'; bankLsb: number | 'off'; program: number | 'off'; continuous?: boolean }
   gsParameter?: string
@@ -86,7 +89,9 @@ export function parseProfile(value: unknown, device: DeviceDefinition = currentD
   // A profile belongs to one model (absent model: an early BCR32 profile).
   if ((p.device?.model ?? 'BCR-32') !== device.profileModel) throw new Error('Profile for another controller model')
   const valid = (list: Encoder[], ids: number[]) => Array.isArray(list) && list.length === ids.length && list.every((e, i) =>
-    e && e.id === ids[i] && ['off', 'cc', 'nrpn', 'pb', 'at', 'gs', 'pc', 'note', 'mmc'].includes(e.type) &&
+    e && e.id === ids[i] && ['sysex', 'bcl', 'off', 'cc', 'nrpn', 'pb', 'at', 'gs', 'pc', 'note', 'mmc'].includes(e.type) &&
+    (e.customAssignment === undefined ? !['sysex','bcl'].includes(e.type) : validCustomAssignment(e.customAssignment) && e.type === (e.customAssignment.kind === 'custom-sysex' ? 'sysex' : 'bcl')) &&
+    (e.fallbackType === undefined || ['off','cc','nrpn','pb','at','gs','pc','note','mmc'].includes(e.fallbackType)) &&
     [...rotationModes, 'toggle', 'momentary'].includes(e.mode) &&
     Number.isInteger(e.channel) && e.channel >= 1 && e.channel <= 16 &&
     Number.isInteger(e.parameter) && e.parameter >= 0 && e.parameter <= parameterLimit(e) &&

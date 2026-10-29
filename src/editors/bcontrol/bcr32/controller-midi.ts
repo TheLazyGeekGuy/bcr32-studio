@@ -23,7 +23,7 @@ export function applyChange(e: Encoder, previous: LiveValue | undefined, change:
   return { value: Math.max(e.minimum, Math.min(e.maximum, (previous?.value ?? e.minimum) + (change.delta ?? 0))), source: 'relative' }
 }
 export function matchesCC(e: Encoder, data: number[]) {
-  return validCC(data) && e.type === 'cc' && !e.parameterOff && e.channel === (data[0] & 15) + 1 && e.mode !== 'inc_dec' &&
+  return validCC(data) && !e.customAssignment && e.type === 'cc' && !e.parameterOff && e.channel === (data[0] & 15) + 1 && e.mode !== 'inc_dec' &&
     (is14Bit(e) ? e.parameter <= 31 && [e.parameter, e.parameter + 32].includes(data[1]) : e.parameter === data[1])
 }
 export function receiveControlCC(e: Encoder, previous: LiveValue | undefined, data: number[]): LiveValue | undefined {
@@ -43,7 +43,7 @@ export function receiveControlCC(e: Encoder, previous: LiveValue | undefined, da
 }
 
 export function createMidiDecoder(profile: Bcr32Profile) {
-  const controls = (['encoders', 'pushes', 'buttons'] as const).flatMap(kind => profile[kind].map(e => ({ e, control: { kind, id: e.id } })))
+  const controls = (['encoders', 'pushes', 'buttons'] as const).flatMap(kind => profile[kind].filter(e=>!e.customAssignment).map(e => ({ e, control: { kind, id: e.id } })))
   const pending = new Map<string, LiveValue>()
   const nrpn = new Map<number, { msb?: number; lsb?: number; data?: number; active: boolean; freshMsb?: boolean; freshLsb?: boolean }>()
   return (data: number[]): Change[] => {
@@ -127,4 +127,4 @@ export function transportIssue(e: Encoder): string | null {
 // Labels, LED mode, display flags, MMC and settings are excluded so that editing
 // them does not reset the decoder (pending NRPN selector and 14-bit MSBs).
 export const decoderKey = (profile: Bcr32Profile) => JSON.stringify((['encoders', 'pushes', 'buttons'] as const).map(kind =>
-  profile[kind].map(e => [e.id, e.type, e.channel, e.parameter, e.mode, e.minimum, e.maximum, e.parameterOff ?? false])))
+  profile[kind].map(e => [e.id, e.type, e.channel, e.parameter, e.mode, e.minimum, e.maximum, e.parameterOff ?? false,!!e.customAssignment])))

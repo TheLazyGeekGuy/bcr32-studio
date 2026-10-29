@@ -32,6 +32,7 @@ const kindName = (kind: Kind) => kind === 'encoders' ? 'Encoder' : kind === 'pus
 const safe = (text: string) => text.replace(/[\r\n\u2028\u2029]+/g, ' ').replace(/\*\//g, '* /').trim()
 
 function plan(e: Encoder, rotation: boolean): Plan {
+  if(e.customAssignment||e.type==='sysex'||e.type==='bcl')return {skip:'Custom BCL/SysEx retained locally; no standard MIDI binding inferred'}
   const ch = e.channel - 1, p = e.parameter, range = (lo: number, hi: number) => e.minimum !== lo || e.maximum !== hi ? [`setValueRange(${e.minimum}, ${e.maximum})`] : []
   const cc = (bits: 7 | 14, type: string, verify?: string): Plan => bits === 14 && p > 31
     ? { skip: `CC ${p} as 14-bit: the MSB must be CC 0–31` }

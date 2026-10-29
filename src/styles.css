@@ -662,6 +662,11 @@ button:focus-visible { outline:2px solid #ffcf87; outline-offset:3px; }
 .inspector.text-mode > :not(h2, .inspector-view, .bcl-text, .control-search, .eyebrow) { display:none !important; }
 .inspector-view { margin:6px 0 8px; }
 .bcl-text { display:grid; gap:6px; }
+.mock-inspector > .standard-assignment {border:0;padding:0;margin:0;min-width:0;display:contents}
+.custom-program {min-width:0}
+.custom-program fieldset {border:0;padding:0;margin:8px 0;min-width:0;display:grid;gap:10px}
+.custom-program textarea {width:100%;box-sizing:border-box;font-family:ui-monospace,Menlo,monospace;font-size:12px;overflow:auto}
+.custom-program code {overflow-wrap:anywhere}
 .bcl-text-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .bcl-status { font:600 11px ui-monospace,Menlo,monospace; } .bcl-status.ok { color:#5cc58b; } .bcl-status.bad { color:#ff7b6e; }
 .bcl-editor { display:grid; grid-template-columns:auto minmax(0,1fr); border:1px solid var(--theme-line); font:12px/1.55 ui-monospace,Menlo,monospace; }

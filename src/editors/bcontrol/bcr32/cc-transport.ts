@@ -6,6 +6,7 @@ export function isBcrOutput(port?: MidiPort): port is MidiPort {
   return !!port && !!port.send && port.state === 'connected' && /BCR[- ]?32/i.test(port.name ?? '')
 }
 export function encoderCC(encoder: Encoder, value: number): number[] | null {
+  if(encoder.customAssignment)return null
   if (encoder.type !== 'cc' || encoder.mode !== 'absolute' || !Number.isFinite(value) ||
     !Number.isInteger(encoder.channel) || encoder.channel < 1 || encoder.channel > 16 ||
     !Number.isInteger(encoder.parameter) || encoder.parameter < 0 || encoder.parameter > 127 ||
@@ -14,6 +15,7 @@ export function encoderCC(encoder: Encoder, value: number): number[] | null {
 }
 
 export function encoderMessages(encoder: Encoder, value: number, previous?: number): number[][] | null {
+  if(encoder.customAssignment)return null
   if (encoder.type === 'cc' && encoder.parameterOff) return null
   if (!['cc', 'nrpn'].includes(encoder.type) || !Number.isFinite(value) ||
     !Number.isInteger(encoder.channel) || encoder.channel < 1 || encoder.channel > 16 ||
