@@ -55,3 +55,10 @@ const job=m.presetStorePlan(preset,62,'BCL fixture').lines.map((l,i)=>{const b=m
 assert.equal(m.plannedOperation(job),'preset-store');assert.ok(job.every(m.validatePresetStore),'native minmax/tx/down lines pass the exact prepared STORE path')
 assert.ok(m.supportsPresetStorage('1.0.2')&&m.supportsPresetStorage('1.0.3'));assert.equal(m.supportsPresetStorage('1.0.4'),false)
 console.log('PASS custom program transaction: selected fragment, durable backup before OFF, stale/change/backup refusal, ACK/verification failure retention, independent readback, original restoration, no STORE or guessed tokens')
+
+assert.doesNotThrow(()=>m.assertWorkingPrograms(working(program.sourceBcl.replace('.default 0','.default 63')+'\n.mode 1dot'),[{target,program}]),'native order/ring/runtime value do not change message semantics')
+for(const body of [original,program.sourceBcl.replace('$7D','$42'),program.sourceBcl.replace('0 127','0 63')])assert.throws(()=>m.assertWorkingPrograms(working(body),[{target,program}]),/STORE stopped/)
+let rejectedStoreWrites=0,rejectedStoreBackups=0
+await assert.rejects(()=>m.storeHardwarePreset({source:'working',slot:12,name:'Fixture',read:async request=>({status:'complete',request,names:{},frames:[],text:working(original)}),transfer:async()=>{rejectedStoreWrites++},backup:()=>{rejectedStoreBackups++},validateSource:text=>m.assertWorkingPrograms(text,[{target,program}])}),/STORE stopped/)
+assert.equal(rejectedStoreWrites,0);assert.equal(rejectedStoreBackups,0)
+console.log('PASS STORE consistency: missing/different custom programs refused before backup/write; canonical ring/default changes accepted')

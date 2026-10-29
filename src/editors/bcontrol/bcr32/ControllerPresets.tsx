@@ -2,7 +2,7 @@ import type {EditorStorage} from '../../../editor-environment'
 import { Icon } from './Icon'
 import {createTargetReader} from './firmware-codec'
 import {controllerTargets} from './controller-read'
-import {controlFromWorking,sendControlProgram,restoreControlProgram,type ProgramTools,type ProgramBackup} from './custom-program-transfer'
+import {controlFromWorking,sendControlProgram,sendStandardProgram,restoreControlProgram,type ProgramTools,type ProgramBackup} from './custom-program-transfer'
 import { applyControllerTracks, type ControllerTracks } from './controller-tracks'
 import { useEffect, useId, useRef, useState, type MutableRefObject } from 'react'
 import { createPresetReader, type PresetRead, type PresetReadResult } from './controller-presets'
@@ -11,8 +11,8 @@ import { bclFile } from './bcl'
 import { defaultPresetBcl } from './default-preset'
 import { createBclSender, presetStorageValidated, storeHardwarePreset, type HardwarePresetStorePlan } from './preset-store'
 
-type Props = { onProgramChanged?:()=>void; programAccess?:MutableRefObject<ProgramTools|null>; programAvailable?:boolean; programReadAvailable?:boolean; firmware?:string|null; setProgramTypeOff?:(index:number)=>void; onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string; auto?: boolean }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
-export function ControllerPresets({ onProgramChanged, programAccess, programAvailable=false, programReadAvailable=false, firmware, setProgramTypeOff, onCurrent, storeRequest, storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
+type Props = { validateWorkingPrograms?:(text:string)=>void; onProgramChanged?:()=>void; programAccess?:MutableRefObject<ProgramTools|null>; programAvailable?:boolean; programReadAvailable?:boolean; firmware?:string|null; setProgramTypeOff?:(index:number)=>void; onCurrent?: (current: { slot: number; name: string | null } | null) => void; storeRequest?: { seq: number; name: string; auto?: boolean }; storage:EditorStorage; authorizeTransfer:(frames:number[][])=>(()=>void); onStored?: (slot: number) => void; trackSelect?: MutableRefObject<((track: number) => void) | null>; watchAvailable?: boolean; tracks?: ControllerTracks | null; active: boolean; available: boolean; connectionKey: string; device: number | null; send: (bytes: number[]) => void; sendWrite: (bytes: number[]) => void; receive: MutableRefObject<(bytes: number[]) => void>; onBusy: (busy: boolean) => void; globalsRevision?: number; autoGlobals?: boolean; onGlobals?: (text: string) => void; download: (content: BlobPart, name: string, type?: string) => void }
+export function ControllerPresets({ validateWorkingPrograms, onProgramChanged, programAccess, programAvailable=false, programReadAvailable=false, firmware, setProgramTypeOff, onCurrent, storeRequest, storage, authorizeTransfer, onStored, trackSelect, watchAvailable = false, tracks, active, available, connectionKey, device, send, sendWrite, receive, onBusy, globalsRevision = 0, autoGlobals = true, onGlobals, download }: Props) {
   const language = useLanguage(), t = (s: string) => translate(s, language)
   const [menu,setMenu]=useState<'read'|'export'|null>(null),[saveOpen,setSaveOpen]=useState(false),[rawOpen,setRawOpen]=useState(false)
   const toolbar=useRef<HTMLDivElement>(null),menuId=useId()
@@ -55,21 +55,23 @@ export function ControllerPresets({ onProgramChanged, programAccess, programAvai
       const check=()=>{if(reader.current!==transport||writer.current!==sender)throw Error('BCR32 connection changed; backup retained')}
       try{return await action(transport,sender,check)}finally{programRunning.current=false;if(reader.current===transport)setStoreBusy(false)}
     }
+    const transaction=(target:Parameters<ProgramTools['write']>[0],transport:NonNullable<typeof reader.current>,sender:NonNullable<typeof writer.current>,check:()=>void)=>{
+        if(device===null||!firmware||!setProgramTypeOff||!targetReader.current)throw Error('Live BCR32 identity required')
+        const indexed=controllerTargets.find(t=>t.kind===target.kind&&t.id===target.id),targetTransport=targetReader.current
+        if(!indexed)throw Error('Unknown physical control')
+      return {target,read:()=>transport.read({kind:'working'}),transfer:(lines:readonly string[])=>sender.transfer(lines,setCount),check,
+          backup:(working:string,body:string,proposed:string)=>{const b:ProgramBackup={version:1,at:new Date().toISOString(),firmware,device,target,working,body,proposed};const json=JSON.stringify(b),key='bcr32-studio.before-custom-program.v1';storage.setItem(key,json);if(storage.getItem(key)!==json)throw Error('Backup unavailable; nothing written');programBackup.current=b;retainedProgramBackup.current=b;onProgramChanged?.()},
+          setOff:async()=>{check();const original=await targetTransport.read(indexed.index,'type');check();if(original.status!=='value'||!original.value||original.value.sentinel)throw Error('Native Type could not be read; nothing written');if(original.value.raw!==0){setProgramTypeOff(indexed.index);await new Promise(r=>setTimeout(r,160));check();const after=await targetTransport.read(indexed.index,'type');check();if(after.value?.raw!==0)throw Error('Type OFF read-back failed; backup retained')}},
+      }
+    }
     const api:ProgramTools={
       readWorking:()=>run(async(transport,_sender,check)=>{const r=await transport.read({kind:'working'});check();if(r.status!=='complete')throw Error('Complete current preset read required');return r.text},true),
       backup:()=>programBackup.current??retainedProgramBackup.current,
       canRestore:target=>!!programBackup.current&&programBackup.current.device===device&&programBackup.current.firmware===firmware&&JSON.stringify(programBackup.current.target)===JSON.stringify(target),
       read:target=>run(async(transport,_sender,check)=>{const r=await transport.read({kind:'working'});check();if(r.status!=='complete')throw Error('Complete current preset read required');return controlFromWorking(r.text,target)}),
-      write:(target,program)=>run(async(transport,sender,check)=>{
-        if(device===null||!firmware||!setProgramTypeOff||!targetReader.current)throw Error('Live BCR32 identity required')
-        const indexed=controllerTargets.find(t=>t.kind===target.kind&&t.id===target.id),targetTransport=targetReader.current
-        if(!indexed)throw Error('Unknown physical control')
-        await sendControlProgram({target,program,read:()=>transport.read({kind:'working'}),transfer:lines=>sender.transfer(lines,setCount),check,
-          backup:(working,body,proposed)=>{const b:ProgramBackup={version:1,at:new Date().toISOString(),firmware,device,target,working,body,proposed};const json=JSON.stringify(b),key='bcr32-studio.before-custom-program.v1';storage.setItem(key,json);if(storage.getItem(key)!==json)throw Error('Backup unavailable; nothing written');programBackup.current=b;retainedProgramBackup.current=b;onProgramChanged?.()},
-          setOff:async()=>{check();const original=await targetTransport.read(indexed.index,'type');check();if(original.status!=='value'||!original.value||original.value.sentinel)throw Error('Native Type could not be read; nothing written');if(original.value.raw!==0){setProgramTypeOff(indexed.index);await new Promise(r=>setTimeout(r,160));check();const after=await targetTransport.read(indexed.index,'type');check();if(after.value?.raw!==0)throw Error('Type OFF read-back failed; backup retained')}},
-        })
-      }),
-      restore:target=>run(async(transport,sender,check)=>{const b=programBackup.current;if(!b||b.device!==device||b.firmware!==firmware||JSON.stringify(b.target)!==JSON.stringify(target))throw Error('No matching backup from this connection');onProgramChanged?.();await restoreControlProgram({target,body:b.body,read:()=>transport.read({kind:'working'}),transfer:lines=>sender.transfer(lines,setCount),check})}),
+      write:(target,program)=>run(async(transport,sender,check)=>{await sendControlProgram({...transaction(target,transport,sender,check),program})}),
+      writeStandard:(target,control)=>run(async(transport,sender,check)=>{await sendStandardProgram({...transaction(target,transport,sender,check),control})}),
+      restore:target=>run(async(transport,sender,check)=>{const b=programBackup.current;if(!b||b.device!==device||b.firmware!==firmware||JSON.stringify(b.target)!==JSON.stringify(target))throw Error('No matching backup from this connection');onProgramChanged?.();await restoreControlProgram({...transaction(target,transport,sender,check),body:b.body})}),
     }
     programAccess.current=api;return()=>{if(programAccess.current===api)programAccess.current=null}
   },[programAccess,programAvailable,programReadAvailable,connectionKey,device,firmware,busy,storeBusy,setProgramTypeOff,storage,tracks,onProgramChanged])
@@ -97,7 +99,7 @@ export function ControllerPresets({ onProgramChanged, programAccess, programAvai
     if(!watchAvailable||!autoGlobals||!tracks||!onGlobals)return
     const timer=window.setInterval(async()=>{
       const transport=reader.current
-      if(!transport||busy||storeBusy||quiet.current||quietFailures.current>=3||document.hidden)return
+      if(!transport||busy||storeBusy||programRunning.current||quiet.current||quietFailures.current>=3||document.hidden)return
       quiet.current=true
       try{const result=await transport.read({kind:'global'},false);if(reader.current===transport&&result.status==='complete'){quietFailures.current=0;globalsRef.current?.(result.text)}else if(result.status!=='cancelled'){quietFailures.current++;if(quietFailures.current>=3)setNotice('Shortcut monitoring stopped after missing replies')}}
       finally{quiet.current=false}
@@ -126,7 +128,7 @@ export function ControllerPresets({ onProgramChanged, programAccess, programAvai
     setStoreBusy(true); setStoreError(''); setNotice('Saving complete controller preset…'); setCount(0)
     let acknowledged: HardwarePresetStorePlan | undefined
     try {
-      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name, template: defaultPresetBcl,
+      await storeHardwarePreset({ read: request => transport.read(request), transfer: lines => sender.transfer(lines, setCount), source: source === 'working' ? 'working' : Number(source), slot: destination, name, template: defaultPresetBcl, validateSource:source==='working'?validateWorkingPrograms:undefined,
         onAcknowledged: saved => {
           if(reader.current!==transport)return
           acknowledged=saved

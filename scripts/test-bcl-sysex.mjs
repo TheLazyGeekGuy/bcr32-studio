@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {build} from 'esbuild'
-const built=await build({stdin:{contents:`export * from './src/bcl-tx';export * from './src/bcl-document';export {presetToProfile,profileToBcl} from './src/bcl';export {createProfile as legacyProfile} from './src/profile';export * from './src/editors/bcontrol/bcr32/custom-program';export * from './src/editors/bcontrol/bcr32/profile';export * from './src/editors/bcontrol/bcr32/presets';export * from './src/editors/bcontrol/bcr32/controller-write';export * from './src/editors/bcontrol/bcr32/cc-transport';export * from './src/editors/bcontrol/bcr32/multi-selection';export * from './src/editors/bcontrol/bcr32/controller-read';export {targetFields} from './src/editors/bcontrol/bcr32/firmware-codec';export * from './src/editors/bcontrol/bcr32/bcl'`,resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node'})
+const built=await build({stdin:{contents:`export * from './src/bcl-tx';export {createMidiDecoder,decoderKey} from './src/editors/bcontrol/bcr32/controller-midi';export * from './src/bcl-document';export {presetToProfile,profileToBcl} from './src/bcl';export {createProfile as legacyProfile} from './src/profile';export * from './src/editors/bcontrol/bcr32/custom-program';export * from './src/editors/bcontrol/bcr32/profile';export * from './src/editors/bcontrol/bcr32/presets';export * from './src/editors/bcontrol/bcr32/controller-write';export * from './src/editors/bcontrol/bcr32/cc-transport';export * from './src/editors/bcontrol/bcr32/multi-selection';export * from './src/editors/bcontrol/bcr32/controller-read';export {targetFields} from './src/editors/bcontrol/bcr32/firmware-codec';export * from './src/editors/bcontrol/bcr32/bcl'`,resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node'})
 const mod={exports:{}};new Function('module','exports',built.outputFiles[0].text)(mod,mod.exports)
 const m=mod.exports
 const body='; keep this comment\n.minmax 0 127\n.default 0\n.tx $F0 $42 $31 $03 $41 $0F val $F7 ; inline comment\n.showvalue on'
@@ -72,3 +72,22 @@ const edited={...staleProfile,encoders:staleProfile.encoders.map(e=>e.id===32?{.
 assert.equal(m.mergeWorkingPrograms(edited,staleProfile,offBcl,[snapshot(0)]).profile.encoders[31].customAssignment.sourceBcl,body,'an edit made during reading wins')
 for(const bad of [offBcl.replace('$rev BCR32','$rev R1'),offBcl.replace('$preset','$global'),offBcl.replace('$end','$store 1\n$end'),offBcl.replace('$end','')])assert.throws(()=>m.mergeWorkingPrograms(staleProfile,staleProfile,bad,[snapshot(0)]))
 console.log('PASS reread: stale rotation32 custom→CC23, native OFF/.tx disambiguation, push32 selector48, concurrent local edit preservation and complete-current-preset requirement')
+
+// Received custom values must update the same encoder/push pipeline as CC.
+for(const value of [0,63,64,127])assert.equal(m.receiveAssignmentValue(p,[240,66,49,3,65,15,value,247]),value)
+for(const value of [0,127,128,8192,16383])assert.equal(m.receiveAssignmentValue(wide,m.evaluateAssignment(wide,value)[0]),value)
+for(const bytes of [[240,125,32,247],[240,66,49,3,65,15,128,247],[240,66,49,3,65,15,32],[240,66,49,3,65,15,NaN,247]])assert.equal(m.receiveAssignmentValue(p,bytes),null)
+assert.equal(m.receiveAssignmentValue(m.parseCustomAssignment('.minmax 0 127\n.tx $F0 $7D val0.3 $F7'),[240,125,3,247]),null,'incomplete slices do not invent an absolute value')
+assert.equal(m.receiveAssignmentValue(m.parseCustomAssignment('.tx $F0 $7D $42 $F7'),[240,125,66,247]),null,'fixed message contains no value')
+assert.equal(m.receiveAssignmentValue(m.parseCustomAssignment('.tx $F0 $7D val val $F7'),[240,125,3,4,247]),null,'repeated slices must agree')
+const rxProfile=m.createProfile()
+rxProfile.encoders[7]=m.withCustomProgram(rxProfile.encoders[7],m.parseCustomAssignment('.tx $F0 $7D $08 val $F7'))
+rxProfile.pushes[7]=m.withCustomProgram(rxProfile.pushes[7],m.parseCustomAssignment('.tx $F0 $7D $18 val $F7'))
+const decode=m.createMidiDecoder(rxProfile)
+assert.deepEqual(decode([240,125,8,42,247]),[{control:{kind:'encoders',id:8},value:42}])
+assert.deepEqual(decode([240,125,24,127,247]),[{control:{kind:'pushes',id:8},value:127}])
+assert.deepEqual(decode([240,125,24,0,247]),[{control:{kind:'pushes',id:8},value:0}])
+assert.deepEqual(decode([240,0,32,50,0,100,32,247]),[],'device-management SysEx is not a control value')
+const changed=structuredClone(rxProfile);changed.encoders[7]=m.withCustomProgram(changed.encoders[7],m.parseCustomAssignment('.tx $F0 $7D $09 val $F7'))
+assert.notEqual(m.decoderKey(rxProfile),m.decoderKey(changed),'editing template rebuilds receive matching')
+console.log('PASS passive SysEx values: exact 7/14-bit, matching constants, repeated slices, encoder/push/release, no partial/default guesses or MIDI output')

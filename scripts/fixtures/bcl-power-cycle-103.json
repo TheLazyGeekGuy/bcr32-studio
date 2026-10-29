@@ -1,0 +1,21 @@
+{
+  "kind": "physical-bcr32-store-power-cycle",
+  "firmware": "1.0.3",
+  "date": "2026-10-29",
+  "sourceBaseline": "b2720127a902d18371105d71a1acc35acfd211fc",
+  "uncommittedImplementation": true,
+  "slot": 13,
+  "target": {
+    "kind": "encoders",
+    "id": 8
+  },
+  "controlBcl": "$encoder 8\n  .minmax 0 127\n  .tx $F0 $7D val $F7\n  .showvalue on\n  .mode 1dot\n  .default 0",
+  "beforePowerPresetSha256": "180fba648d31e0fbcbf32931f7d61e7855e906a16f56e3f9936de9510100a884",
+  "afterPowerPresetSha256": "180fba648d31e0fbcbf32931f7d61e7855e906a16f56e3f9936de9510100a884",
+  "slotAndWorkingEqual": true,
+  "independentIdenticalReadsPerPhase": 2,
+  "storeVia": "Firefox local editor / Presets / Save to",
+  "powerCyclePerformedBy": "owner",
+  "scope": "One template/target/firmware; no blanket persistence claim",
+  "rawEvidence": "Ignored local output/hw; unrelated preset names and contents omitted"
+}

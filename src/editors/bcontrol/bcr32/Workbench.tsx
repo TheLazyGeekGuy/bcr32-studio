@@ -1,3 +1,5 @@
+import {assertWorkingPrograms} from './custom-program-transfer'
+import {createLiveControlQueue} from './live-control-queue'
 import {publicAsset} from '../../../deployment-base'
 import {Bcr32Help} from './Help'
 import {PresentationTools,usePresentationSettings,type EditorScreen} from '../../../editor-host/PresentationTools'
@@ -361,15 +363,15 @@ function loadWorkspace() {
     if(type==='sysex'||type==='bcl'){
       if(multiple||!programSelector(selection))return
       if(customView&&customProgramActions.current?.chooseRepresentation(type)===false)return
-      stopValueEmission();disarmLearn();chooseCustomView(type);return
+      standardQueue.current?.cancel();setAssignmentWrite({status:'idle',queued:0});stopValueEmission();disarmLearn();chooseCustomView(type);customProgramActions.current?.activate();return
     }
     if(selected.customAssignment){
       if(multiple)return
-      stopEmission();disarmLearn()
+      stopValueEmission();disarmLearn()
       const restored=withoutCustomProgram(selected),base={...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?restored:e)}
       profileRef.current=base;setCustomView(null);commitChange([selection],{type});return
     }
-    if(customView){stopEmission();disarmLearn()}
+    if(customView){stopValueEmission();disarmLearn()}
     setCustomView(null);updateSelected({type})
   }
   const batchType = sharedField(selectedItems.map(x=>x.control.type))
@@ -757,6 +759,19 @@ function loadWorkspace() {
     } catch (error) { setNotice(`Automatic probe failed: ${error instanceof Error ? error.message : String(error)}`) }
   }, [access, inputId, inputs, output, portVersion, probeRevision])
 
+  const standardContext=useRef({ready:false,api:null as ProgramTools|null})
+  standardContext.current={ready:!locked&&assignmentLive&&liveFirmware==='1.0.3'&&brightnessEnabled&&!presetBusy&&!deviceSettingsBusy&&controllerRead.status==='complete',api:programAccess.current}
+  const standardQueue=useRef<ReturnType<typeof createLiveControlQueue>|null>(null)
+  useEffect(()=>{
+    const queue=createLiveControlQueue({ready:()=>standardContext.current.ready,write:async(target,control)=>{
+      const api=programAccess.current;if(!api)throw Error('BCR32 assignment transport unavailable')
+      await api.writeStandard(target,control)
+    },changed:(status,target,error)=>{setAssignmentWrite({status,queued:status==='pending'?1:0,index:target?controllerTargets.find(t=>t.kind===target.kind&&t.id===target.id)?.index:undefined});if(error)setNotice(error);else if(status==='confirmed')setNotice('Assignment independently read back on BCR32; working memory only, no STORE.')}})
+    standardQueue.current=queue
+    return()=>{queue.close();if(standardQueue.current===queue)standardQueue.current=null}
+  },[inputId,outputId,portVersion,liveFirmware,locked,controllerTracks?.selected,controllerTracks?.presets.join(':')])
+  useEffect(()=>{if(!assignmentLive)standardQueue.current?.cancel()},[assignmentLive])
+
   // Single validation path for the inspector and MIDI Learn: applySelectionChange, then clamp live values of the targets.
   const commitChange = (targets: Selection[], change: ControlChange) => {
     if(lockedRef.current)throw Error('Editor configuration locked')
@@ -764,7 +779,9 @@ function loadWorkspace() {
     const before=profileRef.current
     const next=applySelectionChange(before,targets,change)
     setProfile(next)
-    if (assignmentWriter.current) {
+    if(assignmentLive&&liveFirmware==='1.0.3'){
+      try{for(const target of targets)standardQueue.current?.enqueue(target,next[target.kind].find(e=>e.id===target.id)!)}catch(error){setNotice(error instanceof Error?error.message:String(error))}
+    }else if (assignmentWriter.current) {
       try {
         const jobs = []
         for (const target of targets) {
@@ -1091,7 +1108,7 @@ function loadWorkspace() {
     const text=screenText({...screenControl,id:displayControlId(screenControl.kind,screenControl.id)},config,screenValue.value,screenValue.source,controlLabel(screenControl.kind,screenControl.id,customLabels));drawScreens(ctx,text,displayStyle)
   }}])
   function latestScreenList(list:EditorScreen[]){latestScreen.current=list[0];return list}
-  const assignmentAvailable = brightnessEnabled && liveFirmware === '1.0.2' && liveDeviceId !== null && liveDeviceId !== 127 && controllerRead.status === 'complete'
+  const assignmentAvailable = brightnessEnabled && supportsCustomProgram(liveFirmware) && liveDeviceId !== null && liveDeviceId !== 127 && controllerRead.status === 'complete'
   return translatedTree(<main className="studio compact" data-theme={theme} data-tools-collapsed={toolsCollapsed||undefined} data-mode={editorMode} onKeyDown={event=>{if(event.key!=='Escape')return;if(displayOpen){setDisplayOpen(false);event.preventDefault()}else if(learn.active){cancelLearn();event.preventDefault()}else if(multiple||mouseMulti){setMouseMulti(false);selectUi(selection,{},true);event.preventDefault()}}}>
     <section className="workspace">
       <section className="surface" aria-label="BCR-32 encoders">
@@ -1144,7 +1161,7 @@ function loadWorkspace() {
           </div>
           <div className="hardware-presets" hidden={presetLocation!=='hardware'}>
           <ControllerReadPanel cacheEnabled={presetCacheEnabled} setCacheEnabled={setPresetCacheEnabled} fromCache={fromPresetCache} groups={readGroups} setGroups={setReadGroups} canRead={brightnessEnabled && firmwareOne(liveFirmware)} state={controllerRead} read={() => { void readControllerAssignments() }} cancel={cancelControllerRead} />
-          <ControllerPresets onProgramChanged={()=>presetCache.current.clear()} programAccess={programAccess} programReadAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&!(['pending','writing'].includes(assignmentWrite.status))} programAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status))} firmware={liveFirmware} setProgramTypeOff={setProgramTypeOff} onCurrent={setCurrentPreset} storeRequest={storeRequest} storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && editorMode==='controller' && brightnessEnabled && !deviceSettingsBusy && supportsPresetStorage(liveFirmware) && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
+          <ControllerPresets validateWorkingPrograms={text=>assertWorkingPrograms(text,(['encoders','pushes','buttons'] as const).flatMap(kind=>profileRef.current[kind].flatMap(e=>e.customAssignment?[{target:{kind,id:e.id},program:e.customAssignment}]:[])))} onProgramChanged={()=>presetCache.current.clear()} programAccess={programAccess} programReadAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&!(['pending','writing'].includes(assignmentWrite.status))} programAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&(liveFirmware==='1.0.3'||!(['pending','writing'].includes(assignmentWrite.status)))} firmware={liveFirmware} setProgramTypeOff={setProgramTypeOff} onCurrent={setCurrentPreset} storeRequest={storeRequest} storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && editorMode==='controller' && brightnessEnabled && !deviceSettingsBusy && supportsPresetStorage(liveFirmware) && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
             if (lockedRef.current || !presetStorageValidated || !brightnessEnabled || !output?.send || !supportsCustomProgram(liveFirmware) || liveDeviceId === null || !isBclWrite(bytes, liveDeviceId)) throw Error('Preset write unavailable')
             output.send(bytes)
           }} onBusy={setPresetBusy} active={tab === 'presets' && presetLocation === 'hardware'} available={!locked && editorMode==='controller' && brightnessEnabled && !deviceSettingsBusy && supportsPresetStorage(liveFirmware) && controllerRead.status !== 'reading' && !['pending','writing'].includes(assignmentWrite.status)} connectionKey={`${inputId}:${outputId}:${portVersion}:${!!access}:${liveFirmware}`} device={liveDeviceId} receive={presetReceive} send={bytes => {

@@ -1,4 +1,5 @@
 import { buttonValues, is14Bit, isRelative, valueLimit, type Encoder, type Bcr32Profile } from './profile'
+import {receiveAssignmentValue} from '../../../bcl-tx'
 
 export type Control = { kind: 'encoders' | 'pushes' | 'buttons'; id: number }
 export type LiveValue = { value: number | null; source: 'local' | 'midi' | 'relative'; msb?: number; pairKey?: string }
@@ -43,10 +44,15 @@ export function receiveControlCC(e: Encoder, previous: LiveValue | undefined, da
 }
 
 export function createMidiDecoder(profile: Bcr32Profile) {
+  const customControls = (['encoders', 'pushes', 'buttons'] as const).flatMap(kind => profile[kind].filter(e=>!!e.customAssignment).map(e => ({ e, control: { kind, id: e.id } })))
   const controls = (['encoders', 'pushes', 'buttons'] as const).flatMap(kind => profile[kind].filter(e=>!e.customAssignment).map(e => ({ e, control: { kind, id: e.id } })))
   const pending = new Map<string, LiveValue>()
   const nrpn = new Map<number, { msb?: number; lsb?: number; data?: number; active: boolean; freshMsb?: boolean; freshLsb?: boolean }>()
   return (data: number[]): Change[] => {
+    if(data[0]===240)return customControls.flatMap(({e,control})=>{
+      const value=receiveAssignmentValue(e.customAssignment!,data)
+      return value===null?[]:[{control,value}]
+    })
     if (!validCC(data)) return []
     const channel = (data[0] & 15) + 1, cc = data[1], raw = data[2]
     const selected: { msb?: number; lsb?: number; data?: number; active: boolean; freshMsb?: boolean; freshLsb?: boolean } = nrpn.get(channel) ?? { active: false }
@@ -127,4 +133,4 @@ export function transportIssue(e: Encoder): string | null {
 // Labels, LED mode, display flags, MMC and settings are excluded so that editing
 // them does not reset the decoder (pending NRPN selector and 14-bit MSBs).
 export const decoderKey = (profile: Bcr32Profile) => JSON.stringify((['encoders', 'pushes', 'buttons'] as const).map(kind =>
-  profile[kind].map(e => [e.id, e.type, e.channel, e.parameter, e.mode, e.minimum, e.maximum, e.parameterOff ?? false,!!e.customAssignment])))
+  profile[kind].map(e => [e.id, e.type, e.channel, e.parameter, e.mode, e.minimum, e.maximum, e.parameterOff ?? false,e.customAssignment?.sourceBcl??null])))

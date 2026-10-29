@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.46.0-alpha.9] — 2026-10-29
+
+- Restore live standard assignment editing on BCR32 firmware1.0.3 through checked, targeted BCL transactions; preserve the1.0.2 indexed-write gate. OFF clears custom output. Native PC bank serialization remains refused.
+- Apply explicit SysEx/BCL Type selection automatically in live mode, retain assignment sending across view changes, and support native metadata-only OFF and button-down restoration bodies.
+- Decode received exact custom SysEx values into the existing encoder/push/button UI pipeline without echoing them. Validate constants, complete value slices and malformed inputs.
+- Refuse hardware STORE when a custom program shown in the editor differs from the native working source. Simulation remains inert and STORE remains explicit.
+- Physically verify encoder8 custom emission and UI reception, then UI STORE13 and independent byte-identical slot/working reads before and after an owner-performed power cycle. This qualifies that bounded1.0.3 case, not arbitrary programs or firmware.
+- Publish this correction to develop only; production and staging stay on their pinned revisions.
+
 ## [0.46.0-alpha.8] — 2026-10-29
 
 - Send valid direct SysEx/BCL text and range edits automatically after 700 ms in live assignment mode, through the existing backup, Type OFF, upload and independent read-back transaction. STORE remains explicit; opening/importing/loading a template or restoring a session never uploads it.

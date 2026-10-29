@@ -88,6 +88,29 @@ export function evaluateAssignment(program:CustomAssignment,value:number){
   if(program.conversionStatus!=='exact')throw Error('Opaque BCL cannot be simulated safely')
   return program.messages.map(tx=>evaluateTx(tx,value))
 }
+// Passive inverse of the supported value slices only. No sender, guessed byte,
+// checksum or default value. Incomplete value coverage cannot identify a value.
+export function receiveAssignmentValue(program:CustomAssignment,data:readonly number[]):number|null{
+  if(program.conversionStatus!=='exact'||data.length<3||data[0]!==240||data.at(-1)!==247||data.some((b,i)=>!Number.isInteger(b)||b<0||b>(i===0||i===data.length-1?255:127)))return null
+  const candidates=new Set<number>()
+  for(const message of program.messages){
+    if(message.tokens.length!==data.length)continue
+    let mask=0,value=0,valid=true
+    for(let i=0;i<data.length;i++){
+      const t=message.tokens[i],byte=data[i]
+      if(t.kind==='byte'){if(t.value!==byte){valid=false;break}}
+      else if(t.kind==='value'){
+        const bits=(1<<(t.high-t.low+1))-1,part=bits<<t.low,next=byte<<t.low
+        if(byte>bits||((value^next)&mask&part)!==0){valid=false;break}
+        value=(value&~part)|next;mask|=part
+      }else{valid=false;break}
+    }
+    // Every bit that could vary in this range must be represented on the wire.
+    const needed=program.range[1]===0?0:(1<<Math.ceil(Math.log2(program.range[1]+1)))-1
+    if(valid&&mask!==0&&(mask&needed)===needed&&value>=program.range[0]&&value<=program.range[1])candidates.add(value)
+  }
+  return candidates.size===1?[...candidates][0]:null
+}
 export function validCustomAssignment(value:unknown):value is CustomAssignment{
   try{if(!value||typeof value!=='object')return false;const v=value as CustomAssignment
     // Alpha1 drafts classified known .mode lines as opaque. Retain those exact old descriptors;

@@ -24,6 +24,6 @@ async function stable(request){let last=null;for(let i=0;i<8;i++){const r=await 
 try{
   const stored=await stable({kind:'slot',slot:slot-1}),working=await stable({kind:'working'})
   const name=t=>(t.match(/^\s*\.name '(.*)'$/m)??[])[1]
-  if (process.argv[3] === '--save') { const {writeFileSync,mkdirSync} = await import('node:fs'); mkdirSync('output/hw', {recursive: true}); writeFileSync(`output/hw/slot-${slot}.bcl`, stored); console.log('saved', `output/hw/slot-${slot}.bcl`) }
+  if (process.argv[3] === '--save') { const {writeFileSync,mkdirSync} = await import('node:fs'); mkdirSync('output/hw', {recursive: true}); writeFileSync(`output/hw/slot-${slot}.bcl`, stored); writeFileSync(`output/hw/slot-${slot}-working.bcl`, working); console.log('saved', `output/hw/slot-${slot}.bcl`) }
   console.log(JSON.stringify({slot,storedName:name(stored),storedLines:stored.split('\n').length,workingName:name(working),workingLines:working.split('\n').length,storedEqualsWorking:stored===working}))
 }finally{reader.close();input.closePort();output.closePort()}

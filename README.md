@@ -2,7 +2,7 @@
 
 Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support, **1.0.3 sequencer step editing**, and the shared MIDI Studio editor tools.
 
-Current version: **0.46.0-alpha.8** · [Changelog](CHANGELOG.md)
+Current version: **0.46.0-alpha.9** · [Changelog](CHANGELOG.md)
 
 Custom programming: open **Control → Custom SysEx / BCL** for local templates, simulation and targeted files. Programs are retained in JSON presets. Valid direct edits are sent automatically after a short pause when Assignments → BCR32 is enabled, with backup/Type-OFF/upload/read-back. Explicit reads, manual send and restoration are available on firmware1.0.2/1.0.3; advanced tokens remain file-only. Real1.0.3 rotation/push STORE, preset change, recall and full bank/global/working rollback passed. Emitted SysEx and power-cycle persistence still need physical acceptance. See the [BCL/SysEx guide and safety limits](docs/BCL-SYSEX-EDITOR.md).
 
