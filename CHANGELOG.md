@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.3] — 2026-10-29
+
+- Validate real firmware1.0.3 STORE → alternate preset → recall/read-back for custom encoder rotation and push assignments; restore all64 slots, globals and the working preset exactly.
+- Enable the existing backed-up preset STORE and shortcut-selection paths on exact firmware1.0.3, including native `.minmax` preset lines.
+- Fix push/button custom programs: omit encoder-only `.default` in the UI example, refuse it before sending, and preserve the observed native `.mode down`.
+- Keep STORE explicit. Actual emitted custom MIDI and power-cycle persistence remain separate acceptance gates.
+
 ## [0.46.0-alpha.2] — 2026-10-29
 
 - Add explicit selected-control BCL reads and custom SysEx uploads from the Control inspector on firmware1.0.2/1.0.3.

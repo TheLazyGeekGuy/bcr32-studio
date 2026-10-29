@@ -73,7 +73,7 @@ function parseAssignment(sourceBcl:string,knownRingModes:boolean):CustomAssignme
     if(/^\.showvalue (on|off)$/.test(line))continue
     // Known B-Control ring directives are source-preserved and do not alter the simulated MIDI payload.
     // BCR32 1.0.3 includes .mode in a custom control's independent export (physical fixture).
-    if(knownRingModes&&/^\.mode (off|1dot|1dot\/off|12dot|12dot\/off|bar|bar\/off|spread|pan|qual|cut|damp)$/.test(line))continue
+    if(knownRingModes&&/^\.mode (off|1dot|1dot\/off|12dot|12dot\/off|bar|bar\/off|spread|pan|qual|cut|damp|down)$/.test(line))continue
     diagnostics.push(`Statement preserved without simplified editing: ${line.split(/\s+/)[0]}`)
   }
   if(defaultValue!==null&&(defaultValue<range[0]||defaultValue>range[1]))throw Error('Default value outside .minmax')

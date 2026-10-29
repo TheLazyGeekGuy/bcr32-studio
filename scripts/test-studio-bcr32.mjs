@@ -59,7 +59,7 @@ input.onmidimessage({data:new Uint8Array([240,0,32,50,0,100,0,1,0,0,1,0,3,247])}
 port().send(hostRead);assert.deepEqual(sent.at(-1),hostRead)
 port().send(hostWrite);assert.deepEqual(sent.at(-1),hostWrite)
 port().send(m.midiFrame(11));assert.deepEqual(sent.at(-1),m.midiFrame(11),'sequencer hardware page command')
-assert.throws(()=>bridge.authorizeTransfer(frames),/unavailable/,'1.0.3 step support does not authorize old preset STORE')
+const store103=bridge.authorizeTransfer(frames);frames.forEach(b=>port().send(b));store103() // Qualified by the physical1.0.3 STORE/change/recall fixture; not inferred from step support.
 const custom=['$rev BCR32','$encoder 1','.minmax 0 127','.tx $F0 $7D val $F7','$end'].map((l,i)=>frame(i,l))
 bridge.setProgramTypeOff(50);assert.deepEqual(sent.at(-1),m.midiFrame(49,[50,0],0))
 assert.throws(()=>bridge.setProgramTypeOff(82))

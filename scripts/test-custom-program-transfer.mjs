@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {build} from 'esbuild'
-const result=await build({stdin:{contents:`export * from './src/editors/bcontrol/bcr32/custom-program-transfer';export * from './src/bcl-tx';export * from './src/editors/bcontrol/bcr32/host-policy';export * from './src/editors/bcontrol/bcr32/bcl';`,resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node'})
+const result=await build({stdin:{contents:`export * from './src/editors/bcontrol/bcr32/custom-program-transfer';export * from './src/bcl-tx';export * from './src/editors/bcontrol/bcr32/host-policy';export * from './src/editors/bcontrol/bcr32/bcl';export * from './src/editors/bcontrol/bcr32/preset-store';`,resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node'})
 const bundled={exports:{}};new Function('module','exports',result.outputFiles[0].text)(bundled,bundled.exports);const m=bundled.exports
 const target={kind:'encoders',id:1},original=".easypar CC 1 16 0 127 absolute\n.showvalue on\n.mode 12dot\n.default 0"
 const working=body=>`$rev BCR32\n$preset\n.name 'Fixture'\n.snapshot off\n$encoder 1\n${body}\n$encoder 2\n.easypar CC 1 17 0 127 absolute\n$end`
@@ -42,4 +42,16 @@ assert.equal(m.validCustomAssignment({...old,kind:'opaque-bcl',conversionStatus:
 assert.equal(m.validCustomAssignment({...old,hardwareValidated:true}),false)
 let named=working(original).replace("'Fixture'","'Same;One'")
 await assert.rejects(m.sendControlProgram({target,program,read:async()=>({status:'complete',text:named}),setOff:async()=>{},backup(){},check(){},transfer:async()=>{named=working(program.sourceBcl).replace("'Fixture'","'Same;Two'")}}),/differs/,'an unrelated quoted preset-name change cannot be hidden by comment stripping')
+const stored=JSON.parse(readFileSync(new URL('./fixtures/bcl-store-recall-103.json',import.meta.url)))
+assert.ok(stored.storePassed&&stored.recallEqual&&stored.alternatePresetEqual&&stored.workingRestored&&stored.globalsRestored)
+assert.equal(stored.bankDigests.length,64);assert.ok(stored.bankDigests.every(b=>b.before===b.after));assert.deepEqual(stored.bankDiffs,[])
+assert.deepEqual(stored.storeLines,['$store 63','$store 63']);assert.equal(stored.nonzeroAcks,0)
+for(const t of stored.targets){assert.equal(t.storedBody,t.recalledBody);assert.equal(t.beforeBody,t.restoredBody);assert.equal(m.parseCustomAssignment(t.recalledBody).conversionStatus,'exact');m.fragmentForBody(t,t.recalledBody)}
+let pushReads=0
+await assert.rejects(m.sendControlProgram({target:{kind:'pushes',id:1},program,read:async()=>{pushReads++;throw Error('must not read')},transfer:async()=>{throw Error('must not send')},setOff:async()=>{throw Error('must not mutate')},backup(){},check(){}}),/encoder-only/)
+assert.equal(pushReads,0,'unsupported push default fails before any hardware operation')
+const preset=['$rev BCR32','$preset',"  .name 'BCL fixture'",...stored.targets.flatMap(t=>[t.selector,...t.storedBody.split('\n')]),'$end'].join('\n')
+const job=m.presetStorePlan(preset,62,'BCL fixture').lines.map((l,i)=>{const b=m.bclLine(i,l);b[4]=0;return b})
+assert.equal(m.plannedOperation(job),'preset-store');assert.ok(job.every(m.validatePresetStore),'native minmax/tx/down lines pass the exact prepared STORE path')
+assert.ok(m.supportsPresetStorage('1.0.2')&&m.supportsPresetStorage('1.0.3'));assert.equal(m.supportsPresetStorage('1.0.4'),false)
 console.log('PASS custom program transaction: selected fragment, durable backup before OFF, stale/change/backup refusal, ACK/verification failure retention, independent readback, original restoration, no STORE or guessed tokens')

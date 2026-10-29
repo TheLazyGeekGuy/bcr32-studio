@@ -68,6 +68,7 @@ export async function sendControlProgram({target,program,read,transfer,setOff,ba
 }) {
   const p=parseCustomAssignment(program.sourceBcl),lines=fragmentForBody(target,p.sourceBcl)
   if(!programFragment(lines).hasTx)throw Error('A custom SysEx program is required')
+  if(target.kind!=='encoders'&&clean(p.sourceBcl).some(l=>l.startsWith('.default ')))throw Error('BCR32 push/button custom programs do not export .default; remove that encoder-only directive before sending')
   const complete=async()=>{check();const r=await read();check();if(r.status!=='complete')throw Error('Complete independent working-preset read required');return r.text}
   const before=await complete(),body=controlFromWorking(before,target)
   fragmentForBody(target,body) // Verify restoration feasibility before changing Type.

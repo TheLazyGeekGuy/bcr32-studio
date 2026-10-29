@@ -5,6 +5,8 @@ import type { PresetRead, PresetReadResult } from './controller-presets'
 // Physical 1.0.2: slot63 store + independent export matched; working contents restored, 2026-10-19.
 // Persistence across a power cycle has not been tested.
 export const presetStorageValidated = true
+//1.0.3: custom rotation+push STORE/change/recall and full bank/global/working rollback,2026-10-29.
+export const supportsPresetStorage = (firmware:string|null|undefined) => firmware==='1.0.2'||firmware==='1.0.3'
 export function isBclWrite(bytes: readonly number[], device: number) {
   if (device === 127 || !isFrame(bytes) || bytes[4] !== device || bytes[6] !== 32 || bytes.length < 10 || bytes.length > 610) return false
   try { return bclLine(bytes[7] * 128 + bytes[8], String.fromCharCode(...bytes.slice(9, -1))).every((v, i) => i === 4 || v === bytes[i]) } catch { return false }

@@ -178,3 +178,9 @@ node scripts/hw/bcr32-zaq-host.mjs /absolute/path/capture.json --test-note-and-r
 ```
 
 The tool selects exactly one matching BCR32 port, requires fresh 1.0.3 identity and writes a local capture before any optional edit. Do not run concurrent writers against the same hardware edit buffer.
+
+## BCL STORE/recall observation — 2026-10-29
+
+Native1.0.3 accepted two noncommercial-manufacturer7D custom definitions (rotation32 and push1), then a complete preset with `$store 63`. Independent memory-slot read, alternate-preset selection through the four-line `.tracks` path, and recall produced identical complete BCL, including both `.tx` definitions. The original destination, shortcuts/globals, working preset and all64 slots were subsequently restored and compared byte-identical.805 BCL ACKs all returned status0. The first attempt had safely stopped before STORE because the push export omitted `.default` and added `.mode down`; alpha3 reflects this evidence and rejects the encoder-only directive before sending a push/button program.
+
+This qualifies the existing exact1.0.3 prepared STORE/shortcut paths and native persistent `.minmax` lines. It does not qualify command72/global STORE, firmware operations, actual physical control emission or power-cycle persistence. Full source SHA, dirty inputs, reader/model limitations, captures/digests and acceptance limits: [BCL-10](work-items/2026-10-29-bcl-store-recall.md).

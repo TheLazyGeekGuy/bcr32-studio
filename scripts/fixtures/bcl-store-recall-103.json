@@ -1,0 +1,378 @@
+{
+  "capturedAt": "2026-10-29T08:08:36.929Z",
+  "completedAt": "2026-10-29T08:09:20.656Z",
+  "sourceCommit": "823d7e215d6c5e9987cfe75752e5d88ad185c1c7",
+  "uncommittedInputs": [
+    "src/bcl-tx.ts",
+    "src/editors/bcontrol/bcr32/custom-program-transfer.ts"
+  ],
+  "firmware": "1.0.3",
+  "device": 0,
+  "testSlot": 63,
+  "scope": "Native physical STORE/slot read/shortcut recall/rollback; full private preset data omitted; no actual emitted control messages or power-cycle qualification",
+  "targets": [
+    {
+      "kind": "encoders",
+      "id": 32,
+      "selector": "$encoder 32",
+      "storedBody": "  .minmax 0 127\n  .tx $F0 $7D $11 val $F7\n  .showvalue on\n  .mode 1dot\n  .default 0",
+      "recalledBody": "  .minmax 0 127\n  .tx $F0 $7D $11 val $F7\n  .showvalue on\n  .mode 1dot\n  .default 0",
+      "beforeBody": "  .easypar CC 1 104 0 127 absolute\n  .showvalue on\n  .mode 1dot\n  .default 0",
+      "restoredBody": "  .easypar CC 1 104 0 127 absolute\n  .showvalue on\n  .mode 1dot\n  .default 0"
+    },
+    {
+      "kind": "pushes",
+      "id": 1,
+      "selector": "$button 17",
+      "storedBody": "  .mode down\n  .minmax 0 127\n  .tx $F0 $7D $12 val $F7\n  .showvalue on",
+      "recalledBody": "  .mode down\n  .minmax 0 127\n  .tx $F0 $7D $12 val $F7\n  .showvalue on",
+      "beforeBody": "  .easypar CC 1 33 127 0 toggleon\n  .showvalue on",
+      "restoredBody": "  .easypar CC 1 33 127 0 toggleon\n  .showvalue on"
+    }
+  ],
+  "storePassed": true,
+  "recallEqual": true,
+  "alternatePresetEqual": true,
+  "workingRestored": true,
+  "globalsRestored": true,
+  "bankDiffs": [],
+  "bankDigests": [
+    {
+      "slot": 1,
+      "before": "70a219412a8f751ded509ec830c35a38ab13183f1ae9e7ba490b5dd4e022d098",
+      "after": "70a219412a8f751ded509ec830c35a38ab13183f1ae9e7ba490b5dd4e022d098"
+    },
+    {
+      "slot": 2,
+      "before": "454cd43480c1707534ccb10fdd3fc07c9edd640c1733b7e72899732431c0edea",
+      "after": "454cd43480c1707534ccb10fdd3fc07c9edd640c1733b7e72899732431c0edea"
+    },
+    {
+      "slot": 3,
+      "before": "a61002cf9306e45d4208aa7dd5dbd365dcac3a95dfd18ac6b77511cb923c3141",
+      "after": "a61002cf9306e45d4208aa7dd5dbd365dcac3a95dfd18ac6b77511cb923c3141"
+    },
+    {
+      "slot": 4,
+      "before": "dfab75b7f79e8e55d74f5232b2cd487586edf340fc483d0d5cce59ac1af5a01f",
+      "after": "dfab75b7f79e8e55d74f5232b2cd487586edf340fc483d0d5cce59ac1af5a01f"
+    },
+    {
+      "slot": 5,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 6,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 7,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 8,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 9,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 10,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 11,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 12,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 13,
+      "before": "bb63ca2585a817bb18fcc8ead30c1632744dbdf5e8cc624bb3590fe2c15ad8bb",
+      "after": "bb63ca2585a817bb18fcc8ead30c1632744dbdf5e8cc624bb3590fe2c15ad8bb"
+    },
+    {
+      "slot": 14,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 15,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 16,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 17,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 18,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 19,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 20,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 21,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 22,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 23,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 24,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 25,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 26,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 27,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 28,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 29,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 30,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 31,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 32,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 33,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 34,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 35,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 36,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 37,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 38,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 39,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 40,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 41,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 42,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 43,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 44,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 45,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 46,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 47,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 48,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 49,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 50,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 51,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 52,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 53,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 54,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 55,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 56,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 57,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 58,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 59,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 60,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 61,
+      "before": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0",
+      "after": "e5b587886e03d1b89e85457fdaaa5102fbd0ca08f00773c9299b09dae7e8eee0"
+    },
+    {
+      "slot": 62,
+      "before": "c8915691f80abe5109981e29b5150684b55639681af99b20e691bfd29db6013e",
+      "after": "c8915691f80abe5109981e29b5150684b55639681af99b20e691bfd29db6013e"
+    },
+    {
+      "slot": 63,
+      "before": "1a1a6b114fc889cf03bcfb7315de16cad23d6d0c5b2a0add2cf02ae271d605ab",
+      "after": "1a1a6b114fc889cf03bcfb7315de16cad23d6d0c5b2a0add2cf02ae271d605ab"
+    },
+    {
+      "slot": 64,
+      "before": "964ce50b6d0abf8c7fcf42e2b539b9e25269169768aafc7ff6546f9c729d1436",
+      "after": "964ce50b6d0abf8c7fcf42e2b539b9e25269169768aafc7ff6546f9c729d1436"
+    }
+  ],
+  "storedSha256": "5ea2af053ad0fb6d11b743f1c32369f32ab12454a0e23c0bf8abf40db213d97e",
+  "recalledSha256": "5ea2af053ad0fb6d11b743f1c32369f32ab12454a0e23c0bf8abf40db213d97e",
+  "workingBeforeSha256": "8b333eb3dc42e67c7b6160893f4b2f3553a9bfd77ccf5f141b233e093d842b0c",
+  "workingAfterSha256": "8b333eb3dc42e67c7b6160893f4b2f3553a9bfd77ccf5f141b233e093d842b0c",
+  "storeLines": [
+    "$store 63",
+    "$store 63"
+  ],
+  "ackCount": 805,
+  "nonzeroAcks": 0,
+  "firstAttempt": {
+    "storeSent": false,
+    "pushDefaultNotExported": true,
+    "allStateRestored": true
+  },
+  "captureSha256": "9afe7fececf6dafdc2029ff612be03766a5c627f63a54ccabb511a699f7f1b31",
+  "initialAttemptSha256": "12a5764f15b3587121f098f4ac8b62a5e6fe4b9d2c93c500005a1c9d5b06a97d"
+}

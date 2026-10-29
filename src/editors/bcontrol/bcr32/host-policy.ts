@@ -17,7 +17,7 @@ export function validateBclPacket(bytes:readonly number[],persistent:boolean) {
  if(!isBclWrite(bytes,bytes[4]))return false
  const line=String.fromCharCode(...bytes.slice(9,-1)).trim()
  if(line.startsWith('$'))return ['$rev BCR32','$preset','$end',...(!persistent?['$global']:[])].includes(line)||/^\$encoder (?:[1-9]|[12]\d|3[0-2])$/.test(line)||/^\$button (?:[1-9]|[1-4]\d|50)$/.test(line)||persistent&&/^\$store (?:[1-9]|[1-5]\d|6[0-4])$/.test(line)
- return /^\.(?:name|snapshot|request|init|easypar|showvalue|mode|default|tx)(?:\s|$)/.test(line)||!persistent&&(/^\.(?:minmax|resolution)(?:\s|$)/.test(line)||!line||line.startsWith(';')||/^\.tracks(?: \d+){5}$/.test(line))
+ return /^\.(?:name|snapshot|request|init|easypar|showvalue|mode|default|tx|minmax)(?:\s|$)/.test(line)||!persistent&&(/^\.(?:minmax|resolution)(?:\s|$)/.test(line)||!line||line.startsWith(';')||/^\.tracks(?: \d+){5}$/.test(line))
 }
 export function validateEditBuffer(bytes:readonly number[]) {return isHostPage(bytes)||isZaqHostWrite(bytes)||isEncoderAssignmentWrite(bytes,bytes[4])||validateBclPacket(bytes,false)}
 export function validatePresetStore(bytes:readonly number[]) {return validateBclPacket(bytes,true)}
