@@ -25,7 +25,7 @@ The owner's earlier explicit waiver for nonconfidential public manufacturer docu
 
 - [x] Isolated full tests/typecheck/build, browser application/EN-FR landing/offline checks.
 - [x] Isolated privacy/whitespace review, no unexpected data in the publication graph.
-- [ ] GitHub main fast-forward push, successful Pages run and served version0.46.0-alpha.3 at both routes.
+- [x] GitHub main fast-forward push, successful Pages run and served version0.46.0-alpha.3 at both routes.
 
 Delivery evidence is recorded below when available. No screenshot is needed for the text-only site update; browser checks use fake/disabled MIDI and never acquire physical ports.
 
@@ -36,3 +36,11 @@ Isolated clean source **`b1fa899ea18cdb697ac9579a8bf4a938ec5c5090`**, declared R
 Generic privacy gate: **390 files /90 reachable commits**, pass. Full private scan: five manually reviewed contextual file findings, no historical/identity finding in the isolated publication graph. They match the public manufacturer-source links and already reviewed technical documentation substring; there is no new unexplained finding. No hook configuration is set in this isolated release checkout; the full scan was run explicitly and its nonzero result is retained above rather than mislabeled as a pass. No hook/denylist/protection setting was changed.
 
 Reader: Codex primary; exact model/effort unavailable. This candidate record is a subsequent documentation-only change. Remote main was rechecked as the original ancestor before publication preparation; no forced push or unrelated-branch merge is needed.
+
+## Published result — 2026-10-29 09:26–09:29 CET
+
+Ordinary fast-forward push advanced GitHub main from `78ab3a227d50ef13716e6aa45a19a58e92bd5e32` to **`6e32e68bc5f56243fead0c0db42e93d4a30c2b05`**. GitHub reported the existing administrator exemption for pull-request/expected-status rules; no branch protection, hook, denylist or review was edited/forged. Local checks had already passed. The resulting remote [CI run40842159281](https://github.com/TheLazyGeekGuy/bcr32-studio/actions/runs/40842159281) and [Pages run40842159315](https://github.com/TheLazyGeekGuy/bcr32-studio/actions/runs/40842159315) both succeeded. Optional Cloudflare deployment remained skipped.
+
+Independent cache-bypassing HTTP verification returned200 for both [product site](https://thelazygeekguy.github.io/bcr32-studio/) and [editor](https://thelazygeekguy.github.io/bcr32-studio/editor/). The public build manifest reports **0.46.0-alpha.3** and only `bcr32-editor`. The served editor registration asset contains that version and the custom transfer UI; its SHA256 is **`75739f795b3281cabf5792bfdafec06daecd64702593ad363351159d26fa605e`**. The served site script contains the updated BCL/SysEx copy. The two HTML documents remain distinct, and all checked referenced assets returned200.
+
+This subsequent documentation-only record preserves the already completed deployment's proof; it introduces no runtime or hardware change. Existing offline tabs may retain their current build until the explicit update action is accepted; the published update policy is unchanged. No additional physical device operation was performed during publication.
