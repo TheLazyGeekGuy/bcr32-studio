@@ -1,6 +1,6 @@
 # Synth SysEx starter catalogue
 
-Version: **0.46.0-alpha.6**. Twenty curated hardware models, 46 templates. This is an editorial selection of familiar synths, not a measured popularity ranking or a full editor for each instrument.
+Version: **0.46.0-alpha.7**. Twenty curated hardware models, 46 templates. This is an editorial selection of familiar synths, not a measured popularity ranking or a full editor for each instrument.
 
 ## Use in the editor
 

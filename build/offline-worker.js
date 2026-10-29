@@ -66,8 +66,10 @@ self.addEventListener('fetch', event => {
   const request = event.request, url = new URL(request.url)
   if (request.method !== 'GET' || url.origin !== SCOPE.origin) return
   const editorNavigation = request.mode === 'navigate' && ['editor/','editor/index.html'].some(path=>new URL(path,SCOPE).pathname===url.pathname)
-  const navigation = editorNavigation || request.mode === 'navigate' && [SCOPE.pathname, new URL(INDEX).pathname].includes(url.pathname)
-  const documentURL = editorNavigation ? EDITOR : INDEX
+  const docsURL = new URL(url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname,SCOPE).href
+  const docsNavigation = request.mode === 'navigate' && url.pathname.startsWith(new URL('docs/sysex-map/',SCOPE).pathname) && URLS.has(docsURL)
+  const navigation = docsNavigation || editorNavigation || request.mode === 'navigate' && [SCOPE.pathname, new URL(INDEX).pathname].includes(url.pathname)
+  const documentURL = docsNavigation ? docsURL : editorNavigation ? EDITOR : INDEX
   if (!navigation && !URLS.has(url.href)) return // Never cache APIs, arbitrary requests, uploads or external sites.
   event.respondWith((async () => {
     const cache = await caches.open(CACHE), cached = await cache.match(navigation ? documentURL : url.href)

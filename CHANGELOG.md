@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.46.0-alpha.7] — 2026-10-29
+
+- Publish the SXM format reference at `/docs/sysex-map/`: specification, architecture, integration guide and 20-synth catalogue, rendered from the tracked Markdown sources.
+- Add site navigation/footer links and downloadable schema, examples, Python renderer and standalone ES module. Documentation pages and downloads are included in the offline build inventory.
+
 ## [0.46.0-alpha.6] — 2026-10-29
 
 - Specify the open SysEx Map (SXM) 1.0 draft: portable parameter definitions, destination fields, value slices, checksums, optional saved values/origins, source evidence and extension metadata in `.sxm.json`.

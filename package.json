@@ -1,6 +1,6 @@
 {
   "name": "bcr32-studio",
-  "version": "0.46.0-alpha.6",
+  "version": "0.46.0-alpha.7",
   "private": true,
   "description": "BCR32 editor with firmware 1.0.3 sequencer integration, shared MIDI Studio tools and preset library.",
   "scripts": {
@@ -32,7 +32,8 @@
     "typescript": "6.0.3",
     "vite": "8.3.4",
     "wrangler": "4.151.3",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "marked": "18.1.2"
   },
   "license": "MIT",
   "repository": {

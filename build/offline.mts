@@ -22,6 +22,6 @@ export function offlineCachePlugin():Plugin{
     // A pinned build must be complete: GitHub Pages deletes the previous build's files on every deployment, so a
     // lazy chunk that was never cached becomes a 404 and the whole app fails. All code is precached; images/fonts
     // stay cached on use (a missing picture does not break the app).
-    for(const entry of Object.values(bundle))if(entry.type==='chunk'||/\.(?:css|m?js)$/.test(entry.fileName))shell.add(entry.fileName)
+    for(const entry of Object.values(bundle))if(entry.type==='chunk'||/\.(?:css|m?js)$/.test(entry.fileName)||entry.fileName.startsWith('docs/sysex-map/'))shell.add(entry.fileName)
   },writeBundle(){buildOfflineCache(outDir,readFileSync(join(root,'build/offline-worker.js'),'utf8'),shell)}}
 }

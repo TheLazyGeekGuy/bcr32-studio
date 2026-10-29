@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import {docsDevPlugin} from './build/docs.mjs'
+import {sysexDocsPlugin} from './build/sysex-docs.mjs'
 import react from '@vitejs/plugin-react'
 import {offlineCachePlugin} from './build/offline.mts'
 import {nativePresencePlugin} from './build/native-presence.mts'
@@ -20,7 +21,7 @@ export default defineConfig({
   // Relative asset URLs: the same build works at a domain root (GitHub Pages, Cloudflare) and under any sub-path.
   base: './',
   build: {rollupOptions:{input:{site:fileURLToPath(new URL('./index.html',import.meta.url)),editor:fileURLToPath(new URL('./editor/index.html',import.meta.url))}}},
-  plugins: [distributionPlugin(),react(), ...(process.env.META_CSP === '1' ? [metaCsp()] : []),offlineCachePlugin(),nativePresencePlugin(),docsDevPlugin()],
+  plugins: [distributionPlugin(),react(), ...(process.env.META_CSP === '1' ? [metaCsp()] : []),sysexDocsPlugin(),offlineCachePlugin(),nativePresencePlugin(),docsDevPlugin()],
   server: {
     port: 5173,
     strictPort: true,
