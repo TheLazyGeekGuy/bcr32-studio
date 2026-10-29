@@ -59,7 +59,7 @@ function sameProgram(actual:string,expected:CustomAssignment) {
   return true
 }
 export type ProgramBackup={version:1;at:string;firmware:string;device:number;target:ProgramTarget;working:string;body:string;proposed:string}
-export type ProgramTools={read:(target:ProgramTarget)=>Promise<string>;write:(target:ProgramTarget,program:CustomAssignment)=>Promise<void>;restore:(target:ProgramTarget)=>Promise<void>;backup:()=>ProgramBackup|null;canRestore:(target:ProgramTarget)=>boolean}
+export type ProgramTools={readWorking:()=>Promise<string>;read:(target:ProgramTarget)=>Promise<string>;write:(target:ProgramTarget,program:CustomAssignment)=>Promise<void>;restore:(target:ProgramTarget)=>Promise<void>;backup:()=>ProgramBackup|null;canRestore:(target:ProgramTarget)=>boolean}
 
 /** Injected transaction: capture before mutation, independent GETs, no STORE and no automatic retry/rollback. */
 export async function sendControlProgram({target,program,read,transfer,setOff,backup,check}:{

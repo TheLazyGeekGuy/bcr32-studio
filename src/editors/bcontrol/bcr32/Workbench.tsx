@@ -57,7 +57,7 @@ import { applyRecord, decodeControllerDump, knownRecords, type ControllerDump, t
 import { ExportImport } from './ExportImport'
 import { FirmwareTools } from './FirmwareTools'
 import { firmwareOne, isFirmwareRead } from './firmware-codec'
-import { controllerGroups, controllerTargets, createControllerReader, emptyControllerRead, mergeControllerRead, assignmentFromRead, type ControllerGroup, type ControllerReadState } from './controller-read'
+import { controllerGroups, controllerTargets, createControllerReader, emptyControllerRead, mergeControllerRead, mergeWorkingPrograms, assignmentFromRead, type ControllerGroup, type ControllerReadState } from './controller-read'
 import { ControllerReadPanel, ControllerReadValues, FirmwareIdentity } from './ControllerReadPanel'
 import { changedControllerFields, createAssignmentWriter, isEncoderAssignmentWrite, type AssignmentWriteState } from './controller-write'
 import { AssignmentWriteStatus } from './AssignmentWritePanel'
@@ -361,7 +361,7 @@ function loadWorkspace() {
     if(type==='sysex'||type==='bcl'){
       if(multiple||!programSelector(selection))return
       if(customView&&customProgramActions.current?.chooseRepresentation(type)===false)return
-      stopEmission();disarmLearn();chooseCustomView(type);return
+      stopValueEmission();disarmLearn();chooseCustomView(type);return
     }
     if(selected.customAssignment){
       if(multiple)return
@@ -460,7 +460,8 @@ function loadWorkspace() {
   }, [theme])
 
 
-  const stopEmission = () => { sender.current?.close(); sender.current = null; heldButton.current = null; setSendCC(false); assignmentWriter.current?.close(); assignmentWriter.current = null; setAssignmentLive(false) }
+  const stopValueEmission = () => { sender.current?.close(); sender.current = null; heldButton.current = null; setSendCC(false) }
+  const stopEmission = () => { stopValueEmission(); assignmentWriter.current?.close(); assignmentWriter.current = null; setAssignmentLive(false) }
   const storeLibrary = (next: ControllerPreset[]) => {
     if(lockedRef.current)throw Error('Editor configuration locked')
     // Persist before updating state: a quota error must not pretend the save succeeded.
@@ -942,8 +943,11 @@ function loadWorkspace() {
     return () => { controllerReader.current?.close(); controllerReader.current = null; reader.close() }
   }, [access, inputId, output, brightnessEnabled, portVersion, liveFirmware, liveDeviceId, autoReadController, editorMode])
 
+  const controllerSync=useRef<ReturnType<typeof createControllerReader>|null>(null)
   async function readControllerAssignments(reader = controllerReader.current) {
-    if (!reader) return
+    if (!reader||controllerSync.current===reader) return
+    controllerSync.current=reader
+    try{
     cacheInitialized.current = false; setFromPresetCache(false)
     const tracksAtStart = controllerTracksRef.current
     if (tracksAtStart) presetCache.current.delete(tracksAtStart.presets[tracksAtStart.selected - 1])
@@ -951,6 +955,9 @@ function loadWorkspace() {
     const baseline = profileRef.current
     // Preserve the original draft before automatic synchronization can replace local assignments.
     try {
+      const latestBackup=JSON.stringify(baseline),latestKey='bcr32-studio.last-controller-read-draft.v1'
+      storage.setItem(latestKey,latestBackup)
+      if(storage.getItem(latestKey)!==latestBackup)throw Error('Latest draft backup verification failed')
       const key = 'bcr32-studio.before-controller-read.v1'
       const existing = storage.getItem(key)
       if (existing) parseProfile(JSON.parse(existing))
@@ -963,10 +970,22 @@ function loadWorkspace() {
     const result = await reader.read(readGroupsRef.current)
     if (controllerReader.current !== reader || result.status === 'cancelled') return
     if(lockedRef.current)return
-    const merged = mergeControllerRead(profileRef.current, baseline, result.targets).profile
+    let working:string|null=null
+    if(result.status==='complete'&&supportsCustomProgram(liveFirmware)&&programAccess.current){
+      try{working=await programAccess.current.readWorking()}
+      catch(error){setNotice(`Indexed assignments read; custom BCL synchronization unavailable: ${error instanceof Error?error.message:String(error)}`)}
+    }
+    // A connection or hardware track change invalidates the whole read, not just its last reply.
+    if(controllerReader.current!==reader||lockedRef.current||JSON.stringify(controllerTracksRef.current)!==JSON.stringify(tracksAtStart))return
+    let current=profileRef.current
+    if(working){
+      try{current=mergeWorkingPrograms(current,baseline,working,result.targets).profile}
+      catch(error){setNotice(error instanceof Error?error.message:String(error))}
+    }
+    const merged = mergeControllerRead(current, baseline, result.targets).profile
     profileRef.current = merged; setProfile(merged)
     cacheInitialized.current = result.status === 'complete' && result.total === controllerTargets.length * 8
-
+    }finally{if(controllerSync.current===reader)controllerSync.current=null}
   }
 
   function cancelControllerRead() {
@@ -1125,7 +1144,7 @@ function loadWorkspace() {
           </div>
           <div className="hardware-presets" hidden={presetLocation!=='hardware'}>
           <ControllerReadPanel cacheEnabled={presetCacheEnabled} setCacheEnabled={setPresetCacheEnabled} fromCache={fromPresetCache} groups={readGroups} setGroups={setReadGroups} canRead={brightnessEnabled && firmwareOne(liveFirmware)} state={controllerRead} read={() => { void readControllerAssignments() }} cancel={cancelControllerRead} />
-          <ControllerPresets onProgramChanged={()=>presetCache.current.clear()} programAccess={programAccess} programAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status))} firmware={liveFirmware} setProgramTypeOff={setProgramTypeOff} onCurrent={setCurrentPreset} storeRequest={storeRequest} storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && editorMode==='controller' && brightnessEnabled && !deviceSettingsBusy && supportsPresetStorage(liveFirmware) && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
+          <ControllerPresets onProgramChanged={()=>presetCache.current.clear()} programAccess={programAccess} programReadAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&!(['pending','writing'].includes(assignmentWrite.status))} programAvailable={!locked&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status))} firmware={liveFirmware} setProgramTypeOff={setProgramTypeOff} onCurrent={setCurrentPreset} storeRequest={storeRequest} storage={storage} authorizeTransfer={authorizeTransfer} onStored={slot => presetCache.current.delete(slot)} trackSelect={trackSelect} tracks={controllerTracks} watchAvailable={!locked && editorMode==='controller' && brightnessEnabled && !deviceSettingsBusy && supportsPresetStorage(liveFirmware) && !['pending','writing'].includes(assignmentWrite.status) && tab !== 'files'} autoGlobals={autoLoadDevice && tab !== 'files'} globalsRevision={globalsRevision} onGlobals={receiveGlobalBcl} sendWrite={bytes => {
             if (lockedRef.current || !presetStorageValidated || !brightnessEnabled || !output?.send || !supportsCustomProgram(liveFirmware) || liveDeviceId === null || !isBclWrite(bytes, liveDeviceId)) throw Error('Preset write unavailable')
             output.send(bytes)
           }} onBusy={setPresetBusy} active={tab === 'presets' && presetLocation === 'hardware'} available={!locked && editorMode==='controller' && brightnessEnabled && !deviceSettingsBusy && supportsPresetStorage(liveFirmware) && controllerRead.status !== 'reading' && !['pending','writing'].includes(assignmentWrite.status)} connectionKey={`${inputId}:${outputId}:${portVersion}:${!!access}:${liveFirmware}`} device={liveDeviceId} receive={presetReceive} send={bytes => {
@@ -1186,12 +1205,12 @@ function loadWorkspace() {
           {batchType===''&&!customView&&<option value="" disabled>Mixed</option>}{Array.from(new Set([...commonTypes,...(multiple?[]:[selected.type])])).filter(type=>type!=='sysex'&&type!=='bcl').map(type=><option key={type} value={type}>{type.toUpperCase()}</option>)}
           <option data-i18n-skip value="sysex" disabled={multiple||!programSelector(selection)}>SysEx</option><option data-i18n-skip value="bcl" disabled={multiple||!programSelector(selection)}>BCL</option>
         </select></label>
-        {!multiple&&<CustomProgramEditor catalogStorage={storage} key={`${selection.kind}:${selection.id}`} visible={!!customView} representation={customView??'sysex'} actions={customProgramActions} onRepresentation={chooseCustomView} target={selection} config={selected} firmware={liveFirmware} locked={locked} hardware={{tools:programAccess,available:!locked&&!presetBusy&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status)),begin:()=>{stopEmission();cancelLearn()}}} download={download} apply={control=>{
+        {!multiple&&<CustomProgramEditor catalogStorage={storage} key={`${selection.kind}:${selection.id}`} visible={!!customView} representation={customView??'sysex'} actions={customProgramActions} onRepresentation={chooseCustomView} target={selection} config={selected} autoSend={assignmentLive} connectionKey={`${inputId}:${outputId}:${portVersion}:${liveFirmware}:${controllerTracks?.selected}:${controllerTracks?.presets.join(':')}`} firmware={liveFirmware} locked={locked} hardware={{tools:programAccess,available:!locked&&!presetBusy&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status)),begin:()=>{stopValueEmission();cancelLearn()}}} download={download} apply={control=>{
           if(lockedRef.current)return
-          stopEmission();disarmLearn()
+          stopValueEmission();disarmLearn()
           const next=parseProfile({...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?control:e)})
           profileRef.current=next;setProfile(next)
-          setNotice('Custom program updated locally. MIDI sending stopped; no hardware assignment or STORE was sent.')
+          setNotice('Custom program updated. See custom synchronization status for hardware read-back; STORE remains separate.')
         }}/>}
         <fieldset className="standard-assignment" hidden={!multiple&&!!customView} disabled={selectedItems.some(x=>!!x.control.customAssignment)}>
         <label>Mode<select disabled={!commonModes.length} value={batchMode} onChange={(event) => updateSelected({ mode: event.target.value as EncoderMode })}>

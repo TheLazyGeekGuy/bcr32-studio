@@ -1,6 +1,8 @@
 import { createTargetReader, targetFields, type TargetField, type TargetValue } from './firmware-codec'
 import { modesFor, parseProfile, rotationModes, type Bcr32Profile, type Encoder, type EncoderType } from './profile'
 import { ledModes } from './led-modes'
+import {parseBcl} from '../../../bcl-document'
+import {parseCustomAssignment} from '../../../bcl-tx'
 
 // Target order from the 1.0.2 parameter inventory. Panel IDs are deliberately separate.
 export const controllerGroups = ['buttons', 'pushes', 'footswitches', 'encoders'] as const
@@ -59,8 +61,9 @@ export function createControllerReader(send: (bytes: number[]) => void, changed:
 // Metadata differs from the legacy binary-dump hypothesis, especially NOTE/AT/GS/MMC.
 // Unrepresentable types (including custom SysEx 8), ALL channels and sentinels stay raw.
 export function assignmentFromRead(previous: Encoder, snapshot: TargetSnapshot): Encoder | null {
-  if(previous.customAssignment)return null // Raw indexed reads do not describe/replace a custom BCL draft.
   const f = snapshot.fields, target = controllerTargets[snapshot.index]
+  // Native Type OFF may still carry .tx. Only working-preset BCL can disambiguate it.
+  if(previous.customAssignment && (f.type?.raw===0 || f.type?.raw===8))return null
   // An explicit OFF type disables an old local assignment, while retaining its dormant local fields.
   if (target && f.type?.raw === 0 && targetFields.every(key => !!f[key] || snapshot.emptyFields?.includes(key))) return { ...previous, type: 'off' }
   if (!target || !f.type || f.type.sentinel) return null
@@ -74,7 +77,7 @@ export function assignmentFromRead(previous: Encoder, snapshot: TargetSnapshot):
   const mode = rotation ? rotationModes[f.mode!.raw] : (['toggle', 'momentary', 'inc_dec'] as const)[f.mode!.raw]
   if (!mode || !modesFor(type, rotation).includes(mode)) return null
   if (rotation && !ledModes[f.option!.raw]) return null
-  const { mmc: _mmc, ...base } = previous
+  const { mmc: _mmc, customAssignment: _custom, fallbackType: _fallback, ...base } = previous
   const next: Encoder = { ...base, type, channel: f.channel!.raw + 1, parameter: bankOff ? 0 : f.parameter!.raw, minimum: f.value1!.raw, maximum: f.value2!.raw, mode,
     display: !!f.display!.raw, bankOff, parameterOff: false, minimumOff: false, aftertouchAll: false,
     ...(rotation ? { ledMode: ledModes[f.option!.raw] } : { increment: f.option!.signed }) }
@@ -102,4 +105,34 @@ export function mergeControllerRead(current: Bcr32Profile, baseline: Bcr32Profil
     try { next = parseProfile(candidate); applied++ } catch { /* Preserve incompatible originals. */ }
   }
   return { profile: next, applied }
+}
+
+/** Reconcile .tx from a complete current-preset GET, never from a stored slot or a partial fragment.
+ * Indexed reads are authoritative for standard fields. The native BCL source resolves Type OFF/.tx
+ * without mistaking a stale local custom draft for the current hardware assignment.
+ */
+export function mergeWorkingPrograms(current:Bcr32Profile,baseline:Bcr32Profile,text:string,snapshots:TargetSnapshot[]){
+  const lines=text.split(/\r?\n/),doc=parseBcl(text)
+  if(lines[0]!=='$rev BCR32'||lines[1]!=='$preset'||lines.at(-1)!=='$end'||doc.modelId!=='bcr32'||doc.issues.length||doc.presets.length!==1||doc.global||doc.presets[0].slot!==null)throw Error('Complete current BCR32 preset required for assignment synchronization')
+  let next=current,applied=0
+  for(const target of controllerTargets){
+    if(!snapshots.some(snapshot=>snapshot.index===target.index))continue
+    const old=current[target.kind].find(e=>e.id===target.id),before=baseline[target.kind].find(e=>e.id===target.id)
+    if(!old||JSON.stringify(old)!==JSON.stringify(before))continue
+    const kind=target.kind==='encoders'?'encoder':'button',id=target.kind==='encoders'?target.id:target.index+1
+    const element=doc.presets[0].elements.find(e=>e.kind===kind&&e.id===id)
+    if(!element)continue // Absence is not proof of OFF.
+    let assignment:Encoder|null=null
+    if(element.custom){
+      try{const program=parseCustomAssignment((element.sourceLines??[]).join('\n'));assignment={...old,type:program.kind==='custom-sysex'?'sysex':'bcl',fallbackType:old.fallbackType??(old.type==='sysex'||old.type==='bcl'?'off':old.type),customAssignment:program}}catch{continue}
+    }else if(old.customAssignment){
+      const {customAssignment:_custom,fallbackType,...rest}=old
+      const standard={...rest,type:fallbackType??'off'} as Encoder
+      const snapshot=snapshots.find(s=>s.index===target.index)
+      if(snapshot)assignment=assignmentFromRead(standard,snapshot)
+    }
+    if(!assignment)continue
+    try{next=parseProfile({...next,[target.kind]:next[target.kind].map(e=>e.id===target.id?assignment!:e)});applied++}catch{/* Keep incompatible originals and their raw source. */}
+  }
+  return {profile:next,applied}
 }

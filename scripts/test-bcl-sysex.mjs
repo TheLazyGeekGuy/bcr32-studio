@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {build} from 'esbuild'
-const built=await build({stdin:{contents:`export * from './src/bcl-tx';export * from './src/bcl-document';export {presetToProfile,profileToBcl} from './src/bcl';export {createProfile as legacyProfile} from './src/profile';export * from './src/editors/bcontrol/bcr32/custom-program';export * from './src/editors/bcontrol/bcr32/profile';export * from './src/editors/bcontrol/bcr32/presets';export * from './src/editors/bcontrol/bcr32/controller-write';export * from './src/editors/bcontrol/bcr32/cc-transport';export * from './src/editors/bcontrol/bcr32/multi-selection';export * from './src/editors/bcontrol/bcr32/controller-read';export * from './src/editors/bcontrol/bcr32/bcl'`,resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node'})
+const built=await build({stdin:{contents:`export * from './src/bcl-tx';export * from './src/bcl-document';export {presetToProfile,profileToBcl} from './src/bcl';export {createProfile as legacyProfile} from './src/profile';export * from './src/editors/bcontrol/bcr32/custom-program';export * from './src/editors/bcontrol/bcr32/profile';export * from './src/editors/bcontrol/bcr32/presets';export * from './src/editors/bcontrol/bcr32/controller-write';export * from './src/editors/bcontrol/bcr32/cc-transport';export * from './src/editors/bcontrol/bcr32/multi-selection';export * from './src/editors/bcontrol/bcr32/controller-read';export {targetFields} from './src/editors/bcontrol/bcr32/firmware-codec';export * from './src/editors/bcontrol/bcr32/bcl'`,resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node'})
 const mod={exports:{}};new Function('module','exports',built.outputFiles[0].text)(mod,mod.exports)
 const m=mod.exports
 const body='; keep this comment\n.minmax 0 127\n.default 0\n.tx $F0 $42 $31 $03 $41 $0F val $F7 ; inline comment\n.showvalue on'
@@ -54,3 +54,21 @@ assert.equal(m.parseBcl('$rev BCR32\n$preset\n$button 50\n'+body+'\n$store 64\n$
 for(const selector of ['$encoder 33','$button 51','$fader 1'])assert.ok(m.parseBcl('$rev BCR32\n'+selector+'\n'+body+'\n$end').issues.length,selector)
 assert.ok(m.parseBcl('$rev BCR32\n$rev R1').issues.length,'BCR32 and BCR2000 model identity remains distinct')
 console.log('PASS BCL/SysEx: model64 + historical files, exact source/comments/unknown retention, 7/14-bit simulation, malformed/opaque refusal, JSON/history-compatible descriptors, selected target mapping, no OFF coercion, no standard sender and no hardware access')
+
+const snapshot=(type,index=81,parameter=23)=>({index,fields:Object.fromEntries(m.targetFields.map((field,i)=>[field,{index,field,raw:[type,0,parameter,0,127,0,5,1][i],signed:[type,0,parameter,0,127,0,5,1][i],sentinel:false}]))})
+const stale=m.withCustomProgram({...baseline.encoders[31],type:'cc',parameter:99},p)
+const cc=m.assignmentFromRead(stale,snapshot(2))
+assert.equal(cc.type,'cc');assert.equal(cc.parameter,23);assert.equal(cc.customAssignment,undefined)
+assert.equal(m.assignmentFromRead(stale,snapshot(0)),null,'OFF is ambiguous until working BCL is read')
+const staleProfile={...baseline,encoders:baseline.encoders.map(e=>e.id===32?stale:e)}
+const offBcl='$rev BCR32\n$preset\n$encoder 32\n.showvalue on\n.mode bar\n$end'
+const off=m.mergeWorkingPrograms(staleProfile,staleProfile,offBcl,[snapshot(0)]).profile
+assert.equal(off.encoders[31].type,'off');assert.equal(off.encoders[31].customAssignment,undefined)
+const nativeBcl='$rev BCR32\n$preset\n$encoder 32\n'+body+'\n$button 48\n.minmax 0 127\n.tx $F0 $7D val $F7\n$end'
+const native=m.mergeWorkingPrograms(baseline,baseline,nativeBcl,[snapshot(0),snapshot(0,47)]).profile
+assert.equal(native.encoders[31].customAssignment.sourceBcl,body)
+assert.equal(native.pushes[31].type,'sysex');assert.equal(native.pushes[0].customAssignment,undefined,'native BCR32 selector48 maps to push32, not push1')
+const edited={...staleProfile,encoders:staleProfile.encoders.map(e=>e.id===32?{...e,display:false}:e)}
+assert.equal(m.mergeWorkingPrograms(edited,staleProfile,offBcl,[snapshot(0)]).profile.encoders[31].customAssignment.sourceBcl,body,'an edit made during reading wins')
+for(const bad of [offBcl.replace('$rev BCR32','$rev R1'),offBcl.replace('$preset','$global'),offBcl.replace('$end','$store 1\n$end'),offBcl.replace('$end','')])assert.throws(()=>m.mergeWorkingPrograms(staleProfile,staleProfile,bad,[snapshot(0)]))
+console.log('PASS reread: stale rotation32 custom→CC23, native OFF/.tx disambiguation, push32 selector48, concurrent local edit preservation and complete-current-preset requirement')

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.8] — 2026-10-29
+
+- Send valid direct SysEx/BCL text and range edits automatically after 700 ms in live assignment mode, through the existing backup, Type OFF, upload and independent read-back transaction. STORE remains explicit; opening/importing/loading a template or restoring a session never uploads it.
+- Keep the assignment sending switch enabled when choosing SysEx/BCL or applying its local draft. Invalid and unsupported programs stay local with visible synchronization status.
+- Let a complete indexed standard assignment reread replace an unchanged stale local custom assignment. Follow the indexed read with working-preset BCL to distinguish native custom programs from plain OFF, using BCR32 rotation/push selectors.
+- Preserve drafts edited during reading, cancel stale merges on connection/track changes, and retain both the original and most recent pre-read local draft backups.
+
 ## [0.46.0-alpha.7] — 2026-10-29
 
 - Publish the SXM format reference at `/docs/sysex-map/`: specification, architecture, integration guide and 20-synth catalogue, rendered from the tracked Markdown sources.

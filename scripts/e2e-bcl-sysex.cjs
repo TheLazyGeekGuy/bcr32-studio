@@ -6,7 +6,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs')
  const browser=await chromium.launch({headless:true})
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)))
-  await page.addInitScript(fakeMidi,{sync:true})
+  await page.addInitScript(fakeMidi,{sync:true});await page.addInitScript(()=>localStorage.setItem('bcr32-studio.assignment-live','false'))
   await page.goto((process.argv[2]??'http://127.0.0.1:5187')+'/editor/?native=0')
   const pane=page.locator('.custom-program'),type=page.getByRole('combobox',{name:'MIDI message type',exact:true});await type.waitFor();assert.equal(await pane.isVisible(),false);assert.equal(await page.locator('.standard-assignment').isVisible(),true);await type.selectOption('sysex');assert.equal(await pane.isVisible(),true);assert.equal(await page.locator('.standard-assignment').isVisible(),false)
   const group=page.getByRole('group',{name:'Custom program representation'}),template=page.getByRole('textbox',{name:'SysEx template',exact:true})
