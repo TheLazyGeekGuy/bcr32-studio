@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.46.0-alpha.17] — 2026-10-30
+
+- Refresh unchanged saved copies of the built-in catalogue when new models are added, so an older22-model snapshot no longer hides A3000 V2. Preserve saved preview values/provenance and never overwrite modified or scoped imported definitions.
+- Keep storage bytes untouched during browsing; customized catalogues retain the explicit Built-in catalogue action.
+
 ## [0.46.0-alpha.16] — 2026-10-30
 
 - Add Yamaha A3000 V2 to the shared SXM catalogue:103 manufacturer-table Program/Sample definitions, V2 address overrides, high-first nibble encoding and explicit selected-object context. Catalogue totals23 models /3,225 definitions.

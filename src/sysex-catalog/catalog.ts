@@ -15,6 +15,15 @@ export function catalogModels(doc:SysExMap):CatalogModel[]{
 }
 export const synthCatalog:readonly CatalogModel[]=catalogModels(starterMap)
 export const catalogSources=starterMap.sources
+/** Refresh only an unchanged previous built-in inventory; never rewrite imported/custom definitions. */
+export function refreshBuiltinCatalogue(saved:SysExMap):SysExMap{
+ if(saved.id!==starterMap.id||saved.name!==starterMap.name||saved.devices.length!==starterMap.devices.length-1)return saved
+ const current=new Map(starterMap.devices.map(d=>[d.id,d]))
+ if(!saved.devices.every(d=>current.has(d.id)&&JSON.stringify(d)===JSON.stringify(current.get(d.id))))return saved
+ if(!Object.entries(saved.sources).every(([id,source])=>!starterMap.sources[id]||JSON.stringify(source)===JSON.stringify(starterMap.sources[id])))return saved
+ // Keep saved preview values, provenance and optional metadata, adding only new built-in definitions/sources.
+ return validateMap({...saved,devices:starterMap.devices,sources:{...saved.sources,...starterMap.sources}})
+}
 export function catalogueContext(parameter:SxmParameter):string|null{
  const x=parameter.extensions?.['org.midistudio.catalogue']
  const context=x&&typeof x==='object'&&!Array.isArray(x)?(x as Record<string,unknown>).objectContext:null

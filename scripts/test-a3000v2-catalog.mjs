@@ -38,4 +38,11 @@ for(const id of ['sample-22-0','program-14-0','sample-9-0','sample-20-0']){
 }
 const scoped=m.subsetMap(m.starterMap,'a3000v2'),roundtrip=m.parseMap(m.serializeMap(scoped));assert.equal(roundtrip.devices[0].parameters.length,103)
 assert.equal(m.catalogueContext({...command('sample-22-0').parameter,extensions:{'org.midistudio.catalogue':{objectContext:123}}}),null)
+const previous=structuredClone(m.starterMap);previous.devices=previous.devices.filter(d=>d.id!=='a3000v2');delete previous.sources.a3000;delete previous.sources.a3000v2
+previous.values=[{device:'tx81z',parameter:'algorithm',value:3,fields:{channel:8},origin:'observed'}]
+const refreshed=m.refreshBuiltinCatalogue(previous);assert.equal(refreshed.devices.length,23);assert.deepEqual(refreshed.values,previous.values);assert.equal(previous.devices.length,22,'refresh leaves saved bytes untouched')
+const custom=structuredClone(previous);custom.devices[0].notes+=' User changes';assert.equal(m.refreshBuiltinCatalogue(custom),custom,'custom catalogue is never overwritten')
+assert.equal(m.refreshBuiltinCatalogue(scoped),scoped,'scoped imports remain scoped')
+const partial=structuredClone(previous);partial.devices=partial.devices.slice(0,20);delete partial.values;assert.equal(m.refreshBuiltinCatalogue(partial),partial,'partial multi-model imports remain scoped')
+assert.equal(m.refreshBuiltinCatalogue(m.starterMap),m.starterMap)
 console.log('PASS A3000 V2: 103 scoped definitions, independent nibble vectors, V2 overrides, contextual object requirement, signed BCL refusal, Python parity and SXM roundtrip; no hardware exercised.')

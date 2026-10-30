@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {translatedTree,useLanguage} from '../i18n'
 import {Icon} from '../Icon'
-import {catalogueContext,catalogueInfo,catalogModels,catalogProgram,findCatalog,hexBytes,starterMap} from './catalog'
+import {catalogueContext,catalogueInfo,catalogModels,catalogProgram,findCatalog,hexBytes,refreshBuiltinCatalogue,starterMap} from './catalog'
 import {acceptsValue,valueDomain,decodeMap,maxMapBytes,parseMap,renderParameter,serializeMap,subsetMap,sysexMapSchema,withMapValue,type SysExMap} from '../sysex-map'
 
 type Storage={getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void}
@@ -11,7 +11,7 @@ const catalogOrder=new Intl.Collator('en',{numeric:true,sensitivity:'base'})
 export default function CatalogPicker({load,download,storage,close}:{close?:()=>void;load:(source:string,value:number,needsBcl:boolean)=>void;download?:Download;storage?:Storage}){
   const language=useLanguage(),dialog=useRef<HTMLDialogElement>(null)
   useEffect(()=>{const d=dialog.current;if(!d)return;const opener=d.ownerDocument.activeElement;d.showModal();d.querySelector<HTMLInputElement>('input[type=search]')?.focus();return()=>{d.close();if(opener instanceof HTMLElement&&opener.isConnected)opener.focus()}},[])
-  const [document,setDocument]=useState<SysExMap>(()=>{try{const saved=storage?.getItem(storageKey);return saved?parseMap(saved):starterMap}catch{return starterMap}})
+  const [document,setDocument]=useState<SysExMap>(()=>{try{const saved=storage?.getItem(storageKey);return saved?refreshBuiltinCatalogue(parseMap(saved)):starterMap}catch{return starterMap}})
   const [query,setQuery]=useState(''),[modelId,setModelId]=useState('microwave'),[commandId,setCommandId]=useState('cutoff')
   const [fields,setFields]=useState<Record<string,number>>({}),[value,setValue]=useState<number|null>(null),[notice,setNotice]=useState('')
   const importGeneration=useRef(0)
