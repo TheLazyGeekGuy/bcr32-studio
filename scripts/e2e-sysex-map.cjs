@@ -31,8 +31,8 @@ const {fakeMidi}=require('./e2e-zaq-host.cjs'),assert=require('node:assert/stric
  assert.equal((await dl('Export SXM catalogue')).devices[0].parameters.length,10)
  const risky=JSON.parse(JSON.stringify(encoding));risky.devices[0].parameters[0].value={minimum:0,maximum:127};risky.devices[0].parameters[0].effect='persistent-write'
  await file.setInputFiles({name:'write-definition.sxm.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(risky))})
- await picker.getByText('File-only definition',{exact:true}).waitFor();assert.match(await picker.getByText('File-only definition',{exact:true}).getAttribute('title'),/effect persistent-write/);assert.equal(await picker.getByRole('button',{name:'Load into current control draft'}).isEnabled(),false)
- await picker.getByRole('button',{name:'Built-in catalogue',exact:true}).click();assert.equal(await picker.getByRole('combobox',{name:'Synth',exact:true}).locator('option').count(),22)
+ await picker.locator('.catalog-limit[title*="effect persistent-write"]').waitFor();assert.match(await picker.getByText('File-only definition',{exact:true}).getAttribute('title'),/effect persistent-write/);assert.equal(await picker.getByRole('button',{name:'Load into current control draft'}).isEnabled(),false)
+ await picker.getByRole('button',{name:'Built-in catalogue',exact:true}).click();assert.equal(await picker.getByRole('combobox',{name:'Synth',exact:true}).locator('option').count(),23)
  const writes=await page.evaluate(()=>window.__sent.filter(b=>b[0]!==240||b[1]!==0||b[2]!==32||b[3]!==50||b[6]===32||b[6]===114||b[6]===119||b[6]>=49&&b[6]<=56&&b.length>8))
  assert.deepEqual(writes,[]);assert.deepEqual(errors,[])
  console.log('PASS browser SXM: import/export parameter/synth/catalogue/schema, saved addressing/value/origin/extensions, invalid import retention, persistence/reload, unsupported BCL/effect refusals, built-in restore and zero hardware writes')

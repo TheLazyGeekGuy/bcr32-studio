@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.46.0-alpha.16] — 2026-10-30
+
+- Add Yamaha A3000 V2 to the shared SXM catalogue:103 manufacturer-table Program/Sample definitions, V2 address overrides, high-first nibble encoding and explicit selected-object context. Catalogue totals23 models /3,225 definitions.
+- Preserve signed definitions for software rendering/export, without extending native BCL permissions. List ambiguous, structural and algorithm-dependent parameters as out of scope.
+- Document the open demo firmware audit and a proposed optional desktop MIDI provider. Neither a desktop binary nor new commercial-firmware capabilities are delivered by this release.
+
 ## [0.46.0-alpha.15] — 2026-10-29
 
 - Explicitly label unsupported checksum/advanced BCL drafts as file-only rather than live editing. Show that native transfer is unavailable and a previously installed hardware assignment may remain active.

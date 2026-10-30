@@ -152,6 +152,22 @@ for(const id of ['jx8p','alpha-juno2','juno106','dw8000','dw6000']){
 // Keep established IDs and initial choices stable for stored editor drafts.
 const original=read('src/sysex-catalog/starter.sxm.json')
 for(const d of doc.devices){const ids=original.devices.find(x=>x.id===d.id)?.parameters.map(p=>p.id)??[];d.parameters.sort((a,b)=>(ids.includes(a.id)?ids.indexOf(a.id):Number.MAX_SAFE_INTEGER)-(ids.includes(b.id)?ids.indexOf(b.id):Number.MAX_SAFE_INTEGER))}
+{
+ const table=read('src/sysex-catalog/tables/a3000v2.json')
+ Object.assign(doc.sources,table.sources)
+ const d={id:'a3000v2',manufacturer:'Yamaha',name:'A3000 V2',
+  notes:'Object-edit messages require the intended Program or Sample to have been selected on the A3000 first. No automatic object selection, request, STORE or transmission. V2 addresses replace several V1 meanings. Signed values are SXM file-only; no physical qualification.',
+  documentation:{sources:['a3000v2','a3000'],section:table.scope},parameters:[],
+  extensions:{'org.midistudio.catalogue':{scope:table.scope,mapped:table.rows.length,inventoryOnly:table.inventoryOnly,notCovered:table.notCovered}}}
+ d.parameters=table.rows.map(r=>({id:r.id,name:`${r.block==='program'?'Program':'Sample'} / ${r.name}`,
+  value:{minimum:r.minimum,maximum:r.maximum},
+  fields:{device:{name:'Device number',minimum:1,maximum:16,default:1},...copy(r.fields)},
+  messages:[{bytes:[240,67,{field:'device',add:15},88,1,...copy(r.address),
+   ...Array.from({length:r.size*2},(_,i)=>{const shift=(r.size*2-1-i)*4;return {value:{shift,bits:r.size===2&&i===0&&r.maximum<=16383?2:4,add:0}}}),247]}],
+  effect:'edit-buffer',evidence:'manufacturer-documented',
+  extensions:{'org.midistudio.catalogue':{section:r.block==='program'?'Program':'Sample',reference:table.scope,objectContext:r.block}}}))
+ doc.devices.push(d)
+}
 for(const d of doc.devices){const info=d.extensions?.['org.midistudio.catalogue'];if(info?.scope)d.documentation.section=info.scope}
 doc.requiredExtensions=[extension]
 const file='src/sysex-catalog/expanded.sxm.json',generated=JSON.stringify(doc)+'\n'

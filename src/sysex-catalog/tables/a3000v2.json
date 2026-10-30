@@ -1,0 +1,2059 @@
+{
+  "scope": "A3000 V2 object-edit scalar Program/Sample parameters; base printed356,359-360 / PDF358,361-362; V2 printed45-47 / PDF45-47",
+  "sources": {
+    "a3000": {
+      "title": "Yamaha A3000 Owner's Manual / MIDI data format",
+      "url": "https://usa.yamaha.com/files/download/other_assets/3/328693/A3000E.PDF",
+      "sha256": "00153408e64428d22bac2702880449687723cf1450d1a484f6070b765a883f37",
+      "retrieved": "2026-10-30",
+      "bytes": 2717606
+    },
+    "a3000v2": {
+      "title": "Yamaha A3000 Upgrade Guide for Version 2 / MIDI data format",
+      "url": "https://usa.yamaha.com/files/download/other_assets/9/328709/A3000V2E.pdf",
+      "sha256": "d43de4abf0e4de88007e8e18ecad1b21ca0e2491b254a7f28bd7f8becc949ff0",
+      "retrieved": "2026-10-30",
+      "bytes": 410238
+    }
+  },
+  "rows": [
+    {
+      "id": "program-1-0",
+      "name": "controller reset",
+      "block": "program",
+      "address": [
+        1,
+        1,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 15,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "program-3-0",
+      "name": "AD in on",
+      "block": "program",
+      "address": [
+        1,
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "program-4-0",
+      "name": "AD in source",
+      "block": "program",
+      "address": [
+        1,
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 2,
+      "size": 1
+    },
+    {
+      "id": "program-5-0",
+      "name": "AD in pan",
+      "block": "program",
+      "address": [
+        1,
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "program-6-0",
+      "name": "AD in main output",
+      "block": "program",
+      "address": [
+        1,
+        6,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 4,
+      "size": 1
+    },
+    {
+      "id": "program-7-0",
+      "name": "AD in level",
+      "block": "program",
+      "address": [
+        1,
+        7,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-8-0",
+      "name": "AD in assignable output",
+      "block": "program",
+      "address": [
+        1,
+        8,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 4,
+      "size": 1
+    },
+    {
+      "id": "program-9-0",
+      "name": "AD in assignable level",
+      "block": "program",
+      "address": [
+        1,
+        9,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-10-0",
+      "name": "program level",
+      "block": "program",
+      "address": [
+        1,
+        10,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-13-0",
+      "name": "transpose",
+      "block": "program",
+      "address": [
+        1,
+        13,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -127,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-17-0",
+      "name": "portamento rate",
+      "block": "program",
+      "address": [
+        1,
+        17,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-18-0",
+      "name": "portamento time",
+      "block": "program",
+      "address": [
+        1,
+        18,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-19-0",
+      "name": "S/H speed",
+      "block": "program",
+      "address": [
+        1,
+        19,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-21-0",
+      "name": "effect bypass",
+      "block": "program",
+      "address": [
+        1,
+        21,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "program-21-1",
+      "name": "effect input level",
+      "block": "program",
+      "address": [
+        1,
+        21,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        1,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-21-2",
+      "name": "effect output level",
+      "block": "program",
+      "address": [
+        1,
+        21,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        2,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "program-21-3",
+      "name": "effect pan",
+      "block": "program",
+      "address": [
+        1,
+        21,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        3,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "program-22-0",
+      "name": "control device 1-4",
+      "block": "program",
+      "address": [
+        1,
+        22,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 125,
+      "size": 1
+    },
+    {
+      "id": "program-22-1",
+      "name": "control function 1-4",
+      "block": "program",
+      "address": [
+        1,
+        22,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        1,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "program-22-2",
+      "name": "control type 1-4",
+      "block": "program",
+      "address": [
+        1,
+        22,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        2,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 3,
+      "size": 1
+    },
+    {
+      "id": "program-22-3",
+      "name": "control range 1-4",
+      "block": "program",
+      "address": [
+        1,
+        22,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        3,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0
+        }
+      },
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "program-23-0",
+      "name": "effect connection",
+      "block": "program",
+      "address": [
+        1,
+        23,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 4,
+      "size": 1
+    },
+    {
+      "id": "sample-3-0",
+      "name": "MIDI receive channel",
+      "block": "sample",
+      "address": [
+        2,
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 16,
+      "size": 1
+    },
+    {
+      "id": "sample-4-0",
+      "name": "pitch bend type",
+      "block": "sample",
+      "address": [
+        2,
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 13,
+      "size": 1
+    },
+    {
+      "id": "sample-5-0",
+      "name": "pitch bend range",
+      "block": "sample",
+      "address": [
+        2,
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 24,
+      "size": 1
+    },
+    {
+      "id": "sample-6-0",
+      "name": "original key L,R",
+      "block": "sample",
+      "address": [
+        2,
+        6,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-8-0",
+      "name": "fine tune L,R",
+      "block": "sample",
+      "address": [
+        2,
+        8,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        }
+      },
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-9-0",
+      "name": "coarse tune",
+      "block": "sample",
+      "address": [
+        2,
+        9,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-10-0",
+      "name": "key range high",
+      "block": "sample",
+      "address": [
+        2,
+        10,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 128,
+      "size": 1
+    },
+    {
+      "id": "sample-12-0",
+      "name": "loop mode",
+      "block": "sample",
+      "address": [
+        2,
+        12,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 5,
+      "size": 1
+    },
+    {
+      "id": "sample-19-0",
+      "name": "start address velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        19,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-20-0",
+      "name": "sample tempo",
+      "block": "sample",
+      "address": [
+        2,
+        20,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 8000,
+      "maximum": 15999,
+      "size": 2
+    },
+    {
+      "id": "sample-21-0",
+      "name": "filter type",
+      "block": "sample",
+      "address": [
+        2,
+        21,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 16,
+      "size": 1
+    },
+    {
+      "id": "sample-22-0",
+      "name": "filter cutoff frequency",
+      "block": "sample",
+      "address": [
+        2,
+        22,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-23-0",
+      "name": "filter Q/width",
+      "block": "sample",
+      "address": [
+        2,
+        23,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-24-0",
+      "name": "cutoff key scaling break point 1,2",
+      "block": "sample",
+      "address": [
+        2,
+        24,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-26-0",
+      "name": "cutoff velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        26,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 68,
+      "size": 1
+    },
+    {
+      "id": "sample-27-0",
+      "name": "Q/width velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        27,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 68,
+      "size": 1
+    },
+    {
+      "id": "sample-28-0",
+      "name": "fixed pitch on/off",
+      "block": "sample",
+      "address": [
+        2,
+        28,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-29-0",
+      "name": "detune",
+      "block": "sample",
+      "address": [
+        2,
+        29,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -7,
+      "maximum": 7,
+      "size": 1
+    },
+    {
+      "id": "sample-30-0",
+      "name": "dephase",
+      "block": "sample",
+      "address": [
+        2,
+        30,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-31-0",
+      "name": "expand width",
+      "block": "sample",
+      "address": [
+        2,
+        31,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-32-0",
+      "name": "random pitch",
+      "block": "sample",
+      "address": [
+        2,
+        32,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-33-0",
+      "name": "sample level",
+      "block": "sample",
+      "address": [
+        2,
+        33,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-34-0",
+      "name": "pan",
+      "block": "sample",
+      "address": [
+        2,
+        34,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-35-0",
+      "name": "velocity low limit",
+      "block": "sample",
+      "address": [
+        2,
+        35,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-36-0",
+      "name": "velocity offset",
+      "block": "sample",
+      "address": [
+        2,
+        36,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -127,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-37-0",
+      "name": "velocity range high",
+      "block": "sample",
+      "address": [
+        2,
+        37,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-38-0",
+      "name": "velocity range low",
+      "block": "sample",
+      "address": [
+        2,
+        38,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-39-0",
+      "name": "level key scaling break point 1,2",
+      "block": "sample",
+      "address": [
+        2,
+        39,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-40-0",
+      "name": "level key scaling level 1,2",
+      "block": "sample",
+      "address": [
+        2,
+        40,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-41-0",
+      "name": "key velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        41,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -127,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-42-0",
+      "name": "portamento on",
+      "block": "sample",
+      "address": [
+        2,
+        42,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-43-0",
+      "name": "mono mode",
+      "block": "sample",
+      "address": [
+        2,
+        43,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-44-0",
+      "name": "key x-fade on",
+      "block": "sample",
+      "address": [
+        2,
+        44,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-45-0",
+      "name": "velocity x-fade on",
+      "block": "sample",
+      "address": [
+        2,
+        45,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-48-0",
+      "name": "alternate group number",
+      "block": "sample",
+      "address": [
+        2,
+        48,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 16,
+      "size": 1
+    },
+    {
+      "id": "sample-49-0",
+      "name": "EQ frequency",
+      "block": "sample",
+      "address": [
+        2,
+        49,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-50-0",
+      "name": "EQ gain",
+      "block": "sample",
+      "address": [
+        2,
+        50,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-51-0",
+      "name": "EQ width",
+      "block": "sample",
+      "address": [
+        2,
+        51,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-53-0",
+      "name": "FEG rate attack,decay,release",
+      "block": "sample",
+      "address": [
+        2,
+        53,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-54-0",
+      "name": "FEG level init, attack, sustain, release",
+      "block": "sample",
+      "address": [
+        2,
+        54,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0
+        }
+      },
+      "minimum": -127,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-55-0",
+      "name": "FEG rate key scaling",
+      "block": "sample",
+      "address": [
+        2,
+        55,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -7,
+      "maximum": 7,
+      "size": 1
+    },
+    {
+      "id": "sample-56-0",
+      "name": "FEG rate velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        56,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-57-0",
+      "name": "FEG attack level velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        57,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-58-0",
+      "name": "FEG level velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        58,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-59-0",
+      "name": "PEG rate attack,decay,release",
+      "block": "sample",
+      "address": [
+        2,
+        59,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-60-0",
+      "name": "PEG level init,attack,sustain, release",
+      "block": "sample",
+      "address": [
+        2,
+        60,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0
+        }
+      },
+      "minimum": -127,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-61-0",
+      "name": "PEG rate key scaling",
+      "block": "sample",
+      "address": [
+        2,
+        61,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -7,
+      "maximum": 7,
+      "size": 1
+    },
+    {
+      "id": "sample-62-0",
+      "name": "PEG rate velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        62,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-63-0",
+      "name": "PEG level velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        63,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-64-0",
+      "name": "PEG range",
+      "block": "sample",
+      "address": [
+        2,
+        64,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-65-0",
+      "name": "AEG rate attack,decay,release",
+      "block": "sample",
+      "address": [
+        2,
+        65,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-66-0",
+      "name": "AEG sustain level",
+      "block": "sample",
+      "address": [
+        2,
+        66,
+        2,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-67-0",
+      "name": "AEG rate key scaling",
+      "block": "sample",
+      "address": [
+        2,
+        67,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -7,
+      "maximum": 7,
+      "size": 1
+    },
+    {
+      "id": "sample-68-0",
+      "name": "AEG rate velocity sensitivity",
+      "block": "sample",
+      "address": [
+        2,
+        68,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "sample-69-0",
+      "name": "AEG attack mode",
+      "block": "sample",
+      "address": [
+        2,
+        69,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-70-0",
+      "name": "LFO wave",
+      "block": "sample",
+      "address": [
+        2,
+        70,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 4,
+      "size": 1
+    },
+    {
+      "id": "sample-71-0",
+      "name": "LFO speed",
+      "block": "sample",
+      "address": [
+        2,
+        71,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-72-0",
+      "name": "LFO delay time",
+      "block": "sample",
+      "address": [
+        2,
+        72,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-73-0",
+      "name": "LFO sync on",
+      "block": "sample",
+      "address": [
+        2,
+        73,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-74-0",
+      "name": "LFO pitch mod phase invert",
+      "block": "sample",
+      "address": [
+        2,
+        74,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-75-0",
+      "name": "LFO cutoff mod phase invert",
+      "block": "sample",
+      "address": [
+        2,
+        75,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "sample-76-0",
+      "name": "cutoff mod depth",
+      "block": "sample",
+      "address": [
+        2,
+        76,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-77-0",
+      "name": "pitch mod depth",
+      "block": "sample",
+      "address": [
+        2,
+        77,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-78-0",
+      "name": "amplitude mod depth",
+      "block": "sample",
+      "address": [
+        2,
+        78,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-79-0",
+      "name": "main output",
+      "block": "sample",
+      "address": [
+        2,
+        79,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 4,
+      "size": 1
+    },
+    {
+      "id": "sample-80-0",
+      "name": "main output level",
+      "block": "sample",
+      "address": [
+        2,
+        80,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-81-0",
+      "name": "assignable output",
+      "block": "sample",
+      "address": [
+        2,
+        81,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 4,
+      "size": 1
+    },
+    {
+      "id": "sample-82-0",
+      "name": "assignable output level",
+      "block": "sample",
+      "address": [
+        2,
+        82,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 127,
+      "size": 1
+    },
+    {
+      "id": "sample-83-0",
+      "name": "control device 1-6",
+      "block": "sample",
+      "address": [
+        2,
+        83,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 125,
+      "size": 1
+    },
+    {
+      "id": "sample-83-1",
+      "name": "control function 1-6",
+      "block": "sample",
+      "address": [
+        2,
+        83,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        1,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 21,
+      "size": 1
+    },
+    {
+      "id": "sample-83-2",
+      "name": "control type 1-6",
+      "block": "sample",
+      "address": [
+        2,
+        83,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        2,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 3,
+      "size": 1
+    },
+    {
+      "id": "sample-83-3",
+      "name": "control range 1-6",
+      "block": "sample",
+      "address": [
+        2,
+        83,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        3,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 0
+        }
+      },
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    },
+    {
+      "id": "program-2-0",
+      "name": "Note on normal / toggle",
+      "block": "program",
+      "address": [
+        1,
+        2,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        0,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 15,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "program-11-0",
+      "name": "Program LFO cycle",
+      "block": "program",
+      "address": [
+        1,
+        11,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 6,
+      "size": 1
+    },
+    {
+      "id": "program-12-0",
+      "name": "Program LFO sync",
+      "block": "program",
+      "address": [
+        1,
+        12,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 1,
+      "size": 1
+    },
+    {
+      "id": "program-14-0",
+      "name": "Program LFO tempo",
+      "block": "program",
+      "address": [
+        1,
+        14,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 25,
+      "maximum": 250,
+      "size": 1
+    },
+    {
+      "id": "program-16-0",
+      "name": "Program LFO wave",
+      "block": "program",
+      "address": [
+        1,
+        16,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 5,
+      "size": 1
+    },
+    {
+      "id": "program-24-0",
+      "name": "Program LFO initial phase",
+      "block": "program",
+      "address": [
+        1,
+        24,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": 0,
+      "maximum": 3,
+      "size": 1
+    },
+    {
+      "id": "program-21-6",
+      "name": "Effect output",
+      "block": "program",
+      "address": [
+        1,
+        21,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        6,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": 0,
+      "maximum": 5,
+      "size": 1
+    },
+    {
+      "id": "program-21-7",
+      "name": "Effect width",
+      "block": "program",
+      "address": [
+        1,
+        21,
+        {
+          "field": "p3",
+          "add": 0
+        },
+        7,
+        0,
+        0
+      ],
+      "fields": {
+        "p3": {
+          "name": "P3 index (zero-based)",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0
+        }
+      },
+      "minimum": -126,
+      "maximum": 0,
+      "size": 1
+    },
+    {
+      "id": "sample-52-0",
+      "name": "Filter distance",
+      "block": "sample",
+      "address": [
+        2,
+        52,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fields": {},
+      "minimum": -63,
+      "maximum": 63,
+      "size": 1
+    }
+  ],
+  "inventoryOnly": [
+    {
+      "name": "Object selection and read requests",
+      "reason": "Select the intended object by its 16-byte name and type before using an object-edit frame. No implicit object switch or query is issued."
+    },
+    {
+      "name": "Sample key range low / V2 sentinel",
+      "reason": "V2 prints P2=10 for both high and low, conflicting with the original P2=11. The low write is omitted, not guessed."
+    },
+    {
+      "name": "Program LFO reset channel / note",
+      "reason": "V2 change table labels signed sentinel values as UC; exact wire representation is not inferred from the bulk table."
+    },
+    {
+      "name": "Program effect type and algorithm parameters",
+      "reason": "V2 expands the effect inventory; no replacement type maximum or universal parameter domain is given in the selected change table."
+    },
+    {
+      "name": "Wave addresses, lengths and sample count / links",
+      "reason": "Structural edits are outside this controller-assignment catalogue."
+    }
+  ],
+  "notCovered": [
+    "System/global changes, bulk sample/wave transfers, persistent storage and switch-remote commands.",
+    "Easy Edit per-member offsets, names and object-link commands are documented but not projected into scalar assignments.",
+    "No physical A3000 V2 or BCR32 execution qualification."
+  ]
+}

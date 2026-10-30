@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react'
 import {translatedTree,useLanguage} from '../i18n'
 import {Icon} from '../Icon'
-import {catalogueInfo,catalogModels,catalogProgram,findCatalog,hexBytes,starterMap} from './catalog'
+import {catalogueContext,catalogueInfo,catalogModels,catalogProgram,findCatalog,hexBytes,starterMap} from './catalog'
 import {acceptsValue,valueDomain,decodeMap,maxMapBytes,parseMap,renderParameter,serializeMap,subsetMap,sysexMapSchema,withMapValue,type SysExMap} from '../sysex-map'
 
 type Storage={getItem:(key:string)=>string|null;setItem:(key:string,value:string)=>void}
@@ -75,6 +75,7 @@ export default function CatalogPicker({load,download,storage,close}:{close?:()=>
         <div className="catalog-definition">
           {!command||!model?<p role="status">No matching parameter. Change the search.</p>:<>
             <h4 data-i18n-skip>{command.label}</h4>
+            {catalogueContext(command.parameter)&&<p className="catalog-limit" title="Select the intended object on the instrument first. This definition does not select an object automatically.">Requires a selected object: <span data-i18n-skip>{catalogueContext(command.parameter)}</span></p>}
             <div className="fields two">{command.fields.map(f=><label key={f.name}>{f.label}<input type="number" min={f.minimum} max={f.maximum} value={configured[f.name]===undefined?f.default:Number.isFinite(configured[f.name])?configured[f.name]:''} onChange={e=>setFields({...fields,[f.name]:e.target.value===''?NaN:Number(e.target.value)})}/></label>)}</div>
             <label>Catalogue preview value{domain?.allowed?<select value={previewValue} onChange={e=>setValue(Number(e.target.value))}>{domain.allowed.map(v=><option key={v} value={v}>{command.parameter.value.labels?.[v]??v}</option>)}</select>:<input type="number" min={command.minimum} max={command.maximum} step={domain?.step??1} value={previewValue} onChange={e=>setValue(Number(e.target.value))}/>}</label>
             <label>Catalogue SysEx preview<textarea rows={3} readOnly value={built?.hex??''}/></label>

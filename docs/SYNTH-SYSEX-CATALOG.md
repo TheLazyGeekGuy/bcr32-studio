@@ -1,6 +1,6 @@
 # Synthesizer SysEx catalogue
 
-The built-in catalogue contains **22 model entries and 3,122 definitions**. The original20 models are retained; the MicrowaveII and XT variants are separated, and the Roland JV-2080 is added. This is coverage of the scopes below, **not a claim that every MIDI feature or bulk format of each instrument is implemented**.
+The built-in catalogue contains **23 model entries and 3,225 definitions**. The original20 models are retained; the MicrowaveII and XT variants are separated, and the Roland JV-2080 and Yamaha A3000 V2 are added. This is coverage of the scopes below, **not a claim that every MIDI feature or bulk format of each instrument is implemented**.
 
 The accent Catalogue button opens a responsive modal. One search filters instruments, parameter names and exact section names; the instrument selector and visible parameter list lead directly to addressing and preview. Definitions can be exported as SXM or loaded into an encoder rotation/push draft when the BCL adapter supports them. File operations share one folder menu; sources and coverage share one reference disclosure. Import, preview, browsing and export never send MIDI. Native BCR32 execution and physical synth qualification remain separate.
 
@@ -12,6 +12,7 @@ The accent Catalogue button opens a responsive modal. One search filters instrum
 | Waldorf Microwave II | 218 | SDATA |
 | Waldorf Microwave XT / XTk | 219 | SDATA |
 | Waldorf Blofeld | 305 | SDATA |
+| Yamaha A3000 V2 | 103 | Program/Sample object-edit scalar table, V2 replacements; selected-object context, high-first value nibbles; [scope and exclusions](A3000-V2-CATALOGUE.md) |
 | Yamaha TX81Z | 110 | System Exclusive Data Format, printed pp.67,71-73 / PDF68,72-74; VCED and ACED |
 | Yamaha DX7 | 170 | MIDI Data Format, printed pp.30-31 / PDF31-32; voice and function parameter tables |
 | Yamaha DX7II FD / D | 157 | DX7II MIDI Data Format 5-1 VCED / PDF102 |
@@ -32,6 +33,9 @@ The accent Catalogue button opens a responsive modal. One search filters instrum
 | Roland JV-2080 | 585 | JV-2080 Owner Manual MIDI Implementation1.3 Patch Common and Patch Tone / PDF188-190; temporary Patch Mode only |
 
 ## Explicit boundaries
+
+- A3000 V2 requires the intended Program or Sample to be selected first. The catalogue never silently selects an object. V2 conflicting addresses and structural/algorithm-dependent edits are explicitly excluded; see the dedicated integration guide.
+
 
 - The largest expansions cover sound/voice tables. System, performance, rhythm, sequencer, effect-algorithm and bulk tables are included only where the scope explicitly says so. A large count does not imply whole-instrument completeness.
 - M1 parameter41 uses **page/position8-15**, matching EDIT PROGRAM mode and its Single/Double layout. Memory offsets are not wire addresses. Packed switch/polarity fields and algorithm-specific effect positions remain inventory-only.
@@ -175,3 +179,7 @@ The2MiB SXM input budget remains. For large valid maps the deterministic seriali
 ## Review trace
 
 Codex primary agent,2026-10-29 20:29 CET onward; repository `bcr-studio-firmware-103`, branch `work/sxm-full-catalog`, baseline `e9c85468f8f3c6f275c7d870f88d8f809e1e62dd`. Exact model identifier/effort are unavailable, so that provenance field remains incomplete. Tables/compiler, SDK, picker, examples, tests and this document were uncommitted during review. Manufacturer PDFs/text/OCR are outside Git under the ignored local research directory; source URLs/hashes above identify them. No physical synth test or production deployment is claimed.
+
+### Yamaha A3000 V2 — manufacturer sources
+
+See [A3000 V2 integration](A3000-V2-CATALOGUE.md) for the two manufacturer URLs, exact PDF hashes, page mapping, V2 overlay decisions and validation scope.

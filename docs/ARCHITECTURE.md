@@ -1,5 +1,9 @@
 # Architecture
 
+## Optional desktop transport study (0.46.0-alpha.16)
+
+The web editor remains independently static-hostable. The existing runtime supports an injectable MIDI access factory; the optional native inventory helper only enumerates ports. A full desktop RX/TX provider is proposed, not implemented. See [desktop architecture and acceptance plan](DESKTOP-APPLICATION-STUDY.md), [open demo firmware capability audit](BCR32-OPEN-FIRMWARE-AUDIT.md) and [A3000 V2 catalogue integration](A3000-V2-CATALOGUE.md). No shared contract or hardware permission was expanded by this catalogue/documentation change. The historical foundation below must be read alongside newer protocol/transfer documents.
+
 ## Current standalone routing and sequencer extension (0.45.0-alpha.12)
 
 The product site is `index.html` with isolated `site/` CSS/JavaScript and static artwork in `public/site/assets/`. The application entry is `editor/index.html` → `src/main.tsx`. The landing page does not import the editor or request Web MIDI. Vite builds both HTML entries; the same output supports a domain root or GitHub Pages project subpath. `deployment-base.ts` resolves public assets, documentation and the service worker from the project root, not the editor directory. The offline worker distinguishes the two HTML documents and never serves the landing page as an editor session.

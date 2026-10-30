@@ -2,7 +2,7 @@
 
 Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support, **1.0.3 sequencer step editing**, and the shared MIDI Studio editor tools.
 
-Current version: **0.46.0-alpha.15** · [Changelog](CHANGELOG.md)
+Current version: **0.46.0-alpha.16** · [Changelog](CHANGELOG.md)
 
 Custom programming: select **SysEx** or **BCL** in **Control → MIDI message → Type** for local templates, simulation and targeted files. Programs are retained in JSON presets. Valid direct edits are sent automatically after a short pause when Assignments → BCR32 is enabled, with backup/Type-OFF/upload/read-back. Explicit reads, manual send and restoration are available on firmware1.0.2/1.0.3; advanced tokens remain file-only. Real1.0.3 rotation/push STORE, preset change, recall and full bank/global/working rollback passed. Emitted SysEx and power-cycle persistence still need physical acceptance. See the [BCL/SysEx guide and safety limits](docs/BCL-SYSEX-EDITOR.md).
 
@@ -58,3 +58,9 @@ The Control inspector includes a [synth SysEx catalogue](docs/SYNTH-SYSEX-CATALO
 Portable definitions use the open [SysEx Map (SXM) 1.0 draft](docs/formats/sysex-map-v1/SPECIFICATION.md). The catalogue imports/exports `.sxm.json` files, including individual synths/parameters and explicit values, without coupling the file to BCL or a MIDI port. See [architecture and integration](docs/formats/sysex-map-v1/ARCHITECTURE.md).
 
 Published format reference: [SysEx Map documentation and downloads](https://thelazygeekguy.github.io/bcr32-studio/docs/sysex-map/).
+
+### Additional integration references
+
+- [Yamaha A3000 V2 catalogue scope](docs/A3000-V2-CATALOGUE.md)
+- [Open BCR32 demo firmware audit](docs/BCR32-OPEN-FIRMWARE-AUDIT.md)
+- [Optional desktop application and MIDI feedback study](docs/DESKTOP-APPLICATION-STUDY.md)

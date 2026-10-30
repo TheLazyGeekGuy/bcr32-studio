@@ -15,6 +15,11 @@ export function catalogModels(doc:SysExMap):CatalogModel[]{
 }
 export const synthCatalog:readonly CatalogModel[]=catalogModels(starterMap)
 export const catalogSources=starterMap.sources
+export function catalogueContext(parameter:SxmParameter):string|null{
+ const x=parameter.extensions?.['org.midistudio.catalogue']
+ const context=x&&typeof x==='object'&&!Array.isArray(x)?(x as Record<string,unknown>).objectContext:null
+ return typeof context==='string'&&context.length>0&&context.length<=64?context:null
+}
 export function catalogueInfo(device:SxmDevice):{scope:string;inventoryOnly:{name:string;reason:string}[];notCovered:string[]}{
  const x=device.extensions?.['org.midistudio.catalogue']
  const info=x&&typeof x==='object'&&!Array.isArray(x)?x as Record<string,unknown>:{}
