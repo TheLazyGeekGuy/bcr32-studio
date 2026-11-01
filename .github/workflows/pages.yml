@@ -42,7 +42,7 @@ jobs:
           META_CSP: '1'
       - name: Record immutable production source
         run: node -e 'const fs=require("node:fs"),cp=require("node:child_process");fs.writeFileSync("dist/deployment.json",JSON.stringify({environment:"production",sourceRevision:cp.execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),version:require("./package.json").version})+"\n")'
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: site-production
           path: dist
@@ -70,7 +70,7 @@ jobs:
         env:
           META_CSP: '1'
           MIDI_STUDIO_DEPLOYMENT: ${{ matrix.environment }}
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: site-${{ matrix.environment }}
           path: dist
@@ -84,15 +84,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: site-production
           path: public
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: site-develop
           path: public/develop
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: site-staging
           path: public/staging
