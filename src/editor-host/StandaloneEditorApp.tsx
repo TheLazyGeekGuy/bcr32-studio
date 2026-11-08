@@ -14,10 +14,11 @@ import {loadTheme,themes,themeStorageKey,type Theme} from '../themes'
 import {validDisplayStyle,displayStyleKey,type DisplayStyle} from '../display-styles'
 import type {PresetExchange} from './preset-exchange'
 import {DocumentationProvider} from './DocumentationLink'
+import {useHostNotice} from './useHostNotice'
 
 /** Mount any installed editor alone, with the same module/session/view and host policy as the workspace. */
 export function StandaloneEditorApp({installation,nativePresence,tools,presetExchange,automaticMidi=true}:{installation:EditorInstallation;nativePresence?:NativePresenceProvider;tools?:ReactNode;presetExchange?:PresetExchange;automaticMidi?:boolean}){
-  const [runtime,setRuntime]=useState<EditorRuntime|null>(null),[,render]=useState(0),[error,setError]=useState('')
+  const [runtime,setRuntime]=useState<EditorRuntime|null>(null),[,render]=useState(0),[error,setError]=useHostNotice()
   const [theme,setTheme]=useState<Theme>(loadTheme)
   const permission=useRef<ReturnType<typeof automaticMidiAccess>|null>(null),language=useLanguage(),t=(s:string)=>translate(s,language)
   useEffect(()=>{

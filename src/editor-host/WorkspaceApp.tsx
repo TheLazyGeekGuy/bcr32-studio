@@ -20,6 +20,7 @@ import './workspace.css'
 import type {TranslatorService} from '../translator/service'
 import {midiTranslatorModule} from '../translator/module'
 import type {PresetExchange} from './preset-exchange'
+import {useHostNotice} from './useHostNotice'
 
 const savedKey = 'bcr-studio.multi-workspace.v1'
 type Runtime=EditorRuntime&{translator:TranslatorService}
@@ -29,7 +30,7 @@ export default function WorkspaceApp({installation,nativePresence,tools,presetEx
   const {registry,views:editorViews,catalog:editorCatalog}=installation
   const language = useLanguage(), t = (text: string) => translate(text, language)
   const [runtime, setRuntime] = useState<Runtime | null>(null), permissionRef = useRef<ReturnType<typeof automaticMidiAccess> | null>(null)
-  const [, render] = useState(0), [notice, setNotice] = useState(''), [railCollapsed, setRailCollapsed] = useState(false)
+  const [, render] = useState(0), [notice, setNotice] = useHostNotice(), [railCollapsed, setRailCollapsed] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false), [pendingModel,setPendingModel]=useState<string|null>(null),[dropActive,setDropActive]=useState(false)
   const [translatorOpen,setTranslatorOpen]=useState(false),[translatorArmed,setTranslatorArmed]=useState(false)
   const [globalTheme, setGlobalTheme] = useState<Theme>(loadTheme), [globalDisplay, setGlobalDisplay] = useState<DisplayStyle>(() => { try { const value = window.localStorage.getItem(displayStyleKey); return validDisplayStyle(value) ? value : 'ice' } catch { return 'ice' } })
