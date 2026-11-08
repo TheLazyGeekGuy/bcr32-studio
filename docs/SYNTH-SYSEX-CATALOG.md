@@ -6,7 +6,7 @@ The accent Catalogue button opens a responsive modal. One search filters instrum
 
 ## Saved catalogue updates
 
-Since0.46.0-alpha.17, unchanged saved copies of the previous built-in inventory are refreshed on opening when models have been added. Saved preview values/provenance and the original storage bytes remain intact. Modified definitions and independently scoped catalogues are retained. If a customized/imported catalogue does not contain a new model, open the folder menu and choose **Built-in catalogue** to browse the shipped inventory; export customized work before explicitly replacing the saved catalogue.
+Since0.46.0-alpha.18, unchanged saved copies of the previous built-in inventory are refreshed on opening when models have been added. JSON object keys are compared semantically, including after canonical SXM serialization; multiple model additions are recognized. Saved preview values/provenance and the original storage bytes remain intact. Modified definitions and independently scoped catalogues are retained. If a customized/imported catalogue does not contain a new model, open the folder menu and choose **Built-in catalogue** to browse the shipped inventory; export customized work before explicitly replacing the saved catalogue.
 
 ## Coverage
 

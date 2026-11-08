@@ -3,7 +3,9 @@ const {chromium}=require(process.env.PLAYWRIGHT_CORE||'playwright-core'),{fakeMi
 ;(async()=>{const browser=await chromium.launch({headless:true});try{
  const previous=JSON.parse(fs.readFileSync('src/sysex-catalog/expanded.sxm.json','utf8'))
  previous.devices=previous.devices.filter(d=>d.id!=='a3000v2');delete previous.sources.a3000;delete previous.sources.a3000v2
- const saved=JSON.stringify(previous),page=await browser.newPage()
+ // Reproduce the real serializer: object keys are sorted recursively, while arrays retain order.
+ const sorted=x=>Array.isArray(x)?x.map(sorted):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,sorted(x[k])])):x
+ const saved=JSON.stringify(sorted(previous)),page=await browser.newPage()
  await page.addInitScript(fakeMidi,{sync:true})
  await page.addInitScript(saved=>{const original=Storage.prototype.getItem;window.__catalogueReads=0;Storage.prototype.getItem=function(key){if(String(key).endsWith('sysex-map.catalog.v1')){window.__catalogueReads++;return saved}return original.call(this,key)}},saved)
  await page.goto((process.argv[2]??'http://127.0.0.1:5193')+'/editor/?native=0')

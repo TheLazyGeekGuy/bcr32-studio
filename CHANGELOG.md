@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.46.0-alpha.18] — 2026-11-08
+
+- Fix saved-catalogue refresh after real SXM serialization: compare JSON object contents independently of key order. Old persisted catalogues now expose A3000 V2 and all unchanged built-in additions.
+- Cover multiple missing models, preserve user values/provenance and reject changed definitions/sources. Keep scoped imports and original storage bytes intact.
+- Verify every normalized table and seed model is reachable in the shipped catalogue; add a browser regression with canonically sorted saved JSON.
+
 ## [0.46.0-alpha.17] — 2026-10-30
 
 - Refresh unchanged saved copies of the built-in catalogue when new models are added, so an older22-model snapshot no longer hides A3000 V2. Preserve saved preview values/provenance and never overwrite modified or scoped imported definitions.

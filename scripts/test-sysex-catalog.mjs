@@ -2,10 +2,13 @@ import assert from 'node:assert/strict'
 import {build} from 'esbuild'
 import {createRequire} from 'node:module'
 import {performance} from 'node:perf_hooks'
-import {readFileSync} from 'node:fs'
+import {readFileSync,readdirSync} from 'node:fs'
 const result=await build({stdin:{contents:`export * from './src/sysex-catalog/catalog';export * from './src/bcl-tx';export * from './src/history';export {acceptsValue,valueDomain} from './src/sysex-map'`,resolveDir:process.cwd()},bundle:true,write:false,platform:'node',format:'cjs'})
 const module={exports:{}};new Function('module','exports','require',result.outputFiles[0].text)(module,module.exports,createRequire(import.meta.url));const m=module.exports
 assert.ok(m.synthCatalog.length>=21);assert.equal(new Set(m.synthCatalog.map(x=>x.id)).size,m.synthCatalog.length)
+const shippedIds=new Set(m.synthCatalog.map(x=>x.id))
+for(const file of readdirSync('src/sysex-catalog/tables').filter(f=>f.endsWith('.json')))assert.ok(shippedIds.has(file.slice(0,-5)),`normalized table ${file} must be reachable in the catalogue`)
+for(const device of JSON.parse(readFileSync('src/sysex-catalog/starter.sxm.json','utf8')).devices)assert.ok(shippedIds.has(device.id),`seed model ${device.id} must remain reachable`)
 let count=0,values=0
 for(const model of m.synthCatalog){
  assert.match(m.catalogSources[model.source].url,/^https:\/\//);assert.ok(model.section&&model.notes)

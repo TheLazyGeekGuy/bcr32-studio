@@ -41,8 +41,15 @@ assert.equal(m.catalogueContext({...command('sample-22-0').parameter,extensions:
 const previous=structuredClone(m.starterMap);previous.devices=previous.devices.filter(d=>d.id!=='a3000v2');delete previous.sources.a3000;delete previous.sources.a3000v2
 previous.values=[{device:'tx81z',parameter:'algorithm',value:3,fields:{channel:8},origin:'observed'}]
 const refreshed=m.refreshBuiltinCatalogue(previous);assert.equal(refreshed.devices.length,23);assert.deepEqual(refreshed.values,previous.values);assert.equal(previous.devices.length,22,'refresh leaves saved bytes untouched')
+const serializedPrevious=m.serializeMap(previous),persistedPrevious=m.parseMap(serializedPrevious)
+const afterPersistence=m.refreshBuiltinCatalogue(persistedPrevious)
+assert.equal(afterPersistence.devices.length,23,'real sorted-key SXM persistence does not hide new models')
+assert.deepEqual(afterPersistence.values,previous.values);assert.equal(m.serializeMap(persistedPrevious),serializedPrevious,'source catalogue bytes are unchanged')
+const older=structuredClone(previous);older.devices=older.devices.filter(d=>!['jv2080','microwave-xt'].includes(d.id));assert.equal(older.devices.length,20)
+assert.equal(m.refreshBuiltinCatalogue(m.parseMap(m.serializeMap(older))).devices.length,23,'all missing built-in models return across multiple additions')
 const custom=structuredClone(previous);custom.devices[0].notes+=' User changes';assert.equal(m.refreshBuiltinCatalogue(custom),custom,'custom catalogue is never overwritten')
 assert.equal(m.refreshBuiltinCatalogue(scoped),scoped,'scoped imports remain scoped')
-const partial=structuredClone(previous);partial.devices=partial.devices.slice(0,20);delete partial.values;assert.equal(m.refreshBuiltinCatalogue(partial),partial,'partial multi-model imports remain scoped')
+const partial=structuredClone(previous);partial.name='My instrument selection';partial.devices=partial.devices.slice(0,20);delete partial.values;assert.equal(m.refreshBuiltinCatalogue(partial),partial,'independent multi-model imports remain scoped')
+const changedSource=structuredClone(previous);changedSource.sources.tx81z.title+=' User annotation';assert.equal(m.refreshBuiltinCatalogue(changedSource),changedSource)
 assert.equal(m.refreshBuiltinCatalogue(m.starterMap),m.starterMap)
 console.log('PASS A3000 V2: 103 scoped definitions, independent nibble vectors, V2 overrides, contextual object requirement, signed BCL refusal, Python parity and SXM roundtrip; no hardware exercised.')

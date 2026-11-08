@@ -15,14 +15,22 @@ export function catalogModels(doc:SysExMap):CatalogModel[]{
 }
 export const synthCatalog:readonly CatalogModel[]=catalogModels(starterMap)
 export const catalogSources=starterMap.sources
+// SXM serialization sorts object keys. Object insertion order is not a definition change.
+function equalJson(a:unknown,b:unknown):boolean{
+ if(a===b)return true
+ if(!a||!b||typeof a!=='object'||typeof b!=='object')return false
+ if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((value,index)=>equalJson(value,b[index]))
+ const left=a as Record<string,unknown>,right=b as Record<string,unknown>,keys=Object.keys(left)
+ return keys.length===Object.keys(right).length&&keys.every(key=>Object.hasOwn(right,key)&&equalJson(left[key],right[key]))
+}
 /** Refresh only an unchanged previous built-in inventory; never rewrite imported/custom definitions. */
 export function refreshBuiltinCatalogue(saved:SysExMap):SysExMap{
- if(saved.id!==starterMap.id||saved.name!==starterMap.name||saved.devices.length!==starterMap.devices.length-1)return saved
+ if(saved.id!==starterMap.id||saved.name!==starterMap.name||saved.devices.length<20||saved.devices.length>=starterMap.devices.length)return saved
  const current=new Map(starterMap.devices.map(d=>[d.id,d]))
- if(!saved.devices.every(d=>current.has(d.id)&&JSON.stringify(d)===JSON.stringify(current.get(d.id))))return saved
- if(!Object.entries(saved.sources).every(([id,source])=>!starterMap.sources[id]||JSON.stringify(source)===JSON.stringify(starterMap.sources[id])))return saved
+ if(!saved.devices.every(d=>current.has(d.id)&&equalJson(d,current.get(d.id))))return saved
+ if(!Object.entries(saved.sources).every(([id,source])=>!starterMap.sources[id]||equalJson(source,starterMap.sources[id])))return saved
  // Keep saved preview values, provenance and optional metadata, adding only new built-in definitions/sources.
- return validateMap({...saved,devices:starterMap.devices,sources:{...saved.sources,...starterMap.sources}})
+ try{return validateMap({...saved,devices:starterMap.devices,sources:{...saved.sources,...starterMap.sources}})}catch{return saved}
 }
 export function catalogueContext(parameter:SxmParameter):string|null{
  const x=parameter.extensions?.['org.midistudio.catalogue']
