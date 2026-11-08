@@ -152,6 +152,8 @@ export function FrontPanel({ onModeKey, profile, selection, selections = [select
     {labels.map((label, i) => button(i + 5, label, 37 + (i % 8) * 161.4, i < 8 ? 247 : 369))}
     {['T1', 'T2', 'T3', 'T4'].map((label, i) => button(i + 21, label, i % 2 ? 1583 : 1422, i < 2 ? 247 : 369, 96))}
     {profile.encoders.map(e => {
+      // Custom BCL carries its own value range; do not overwrite the fallback CC assignment.
+      if(e.customAssignment)e={...e,minimum:e.customAssignment.range[0],maximum:e.customAssignment.range[1]}
       const { x, y } = encoderPosition(e.id)
       const live = values[e.id]
       const value = live?.value ?? 0

@@ -80,6 +80,7 @@ export function createCcSender(send: (bytes: number[]) => void, sent: (bytes: nu
       }
       timer ??= setTimeout(flush, interval)
     },
+    cancelPending() { queue.clear(); ordered.length = 0; if (timer !== null) clearTimeout(timer); timer = null },
     close() { closed = true; queue.clear(); ordered.length = 0; if (timer !== null) clearTimeout(timer); timer = null },
   }
 }

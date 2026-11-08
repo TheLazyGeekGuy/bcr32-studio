@@ -1,4 +1,5 @@
 import type {EditorPage} from './page-follow'
+import {createCustomValueQueue,customValueMessages} from '../../../custom-value-output'
 import {createPageState} from './page-state'
 import {assertWorkingPrograms} from './custom-program-transfer'
 import {createLiveControlQueue} from './live-control-queue'
@@ -93,8 +94,10 @@ export interface WorkbenchProps {
  instanceId:string; presetsExchange?:PresetExchange; signal?:AbortSignal; monitor:Monitor
  parameters?:import('../../../translator/parameters').ParameterBus; presentation?:PresentationInstance; onHelpReady:(open:(()=>void)|undefined)=>void; onMidiSettingsReady?:(open:(()=>void)|undefined)=>void
  authorizeTransfer:(frames:number[][])=>(()=>void); setProgramTypeOff?:(index:number)=>void
+ sendCustomValue?:(source:string,value:number,expectedGeneration?:number)=>void
+ customValueGeneration?:()=>number
 }
-function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,setProgramTypeOff,presentation,onHelpReady,onMidiSettingsReady,parameters}:WorkbenchProps) {
+function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,setProgramTypeOff,sendCustomValue,customValueGeneration,presentation,onHelpReady,onMidiSettingsReady,parameters}:WorkbenchProps) {
   const lockedRef=useRef(locked);lockedRef.current=locked
 function loadProfile(): Bcr32Profile {
   try {
@@ -269,6 +272,7 @@ function loadWorkspace() {
   const [sendCC, setSendCC] = useState(false)
   const [portVersion, setPortVersion] = useState(0)
   const sender = useRef<ReturnType<typeof createCcSender> | null>(null)
+  const customSender = useRef<ReturnType<typeof createCustomValueQueue> | null>(null)
   const automaticEmissionPort = useRef<MidiPort | null>(null)
   const automaticStarted = useRef(false)
   const associatedOnce = useRef(false)
@@ -374,15 +378,15 @@ function loadWorkspace() {
     if(type==='sysex'||type==='bcl'){
       if(multiple||!programSelector(selection))return
       if(customView&&customProgramActions.current?.chooseRepresentation(type)===false)return
-      standardQueue.current?.cancel();setAssignmentWrite({status:'idle',queued:0});stopValueEmission();disarmLearn();chooseCustomView(type);customProgramActions.current?.activate();return
+      standardQueue.current?.cancel();setAssignmentWrite({status:'idle',queued:0});cancelValueEmission();disarmLearn();chooseCustomView(type);customProgramActions.current?.activate();return
     }
     if(selected.customAssignment){
       if(multiple)return
-      stopValueEmission();disarmLearn()
+      cancelValueEmission();disarmLearn()
       const restored=withoutCustomProgram(selected),base={...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?restored:e)}
       profileRef.current=base;setCustomView(null);commitChange([selection],{type});return
     }
-    if(customView){stopValueEmission();disarmLearn()}
+    if(customView){cancelValueEmission();disarmLearn()}
     setCustomView(null);updateSelected({type})
   }
   const batchType = sharedField(selectedItems.map(x=>x.control.type))
@@ -473,7 +477,8 @@ function loadWorkspace() {
   }, [theme])
 
 
-  const stopValueEmission = () => { sender.current?.close(); sender.current = null; heldButton.current = null; setSendCC(false) }
+  const cancelValueEmission = () => { sender.current?.cancelPending(); customSender.current?.cancel(); heldButton.current = null }
+  const stopValueEmission = () => { cancelValueEmission(); sender.current?.close(); sender.current = null; customSender.current?.close();customSender.current=null; setSendCC(false) }
   const stopEmission = () => { stopValueEmission(); assignmentWriter.current?.close(); assignmentWriter.current = null; setAssignmentLive(false) }
   const storeLibrary = (next: ControllerPreset[]) => {
     if(lockedRef.current)throw Error('Editor configuration locked')
@@ -583,6 +588,32 @@ function loadWorkspace() {
     return () => { transport.close(); if (sender.current === transport) sender.current = null }
   }, [sendCC, output, presetBusy, !!controllerTracks, controllerRead.status])
 
+  // Explicit gestures only. Rebinding, source edits and busy/locked transitions drop queued values.
+  useEffect(()=>{
+    if(!sendCC||!isBcrOutput(output)||locked||presetBusy||deviceSettingsBusy||controllerRead.status==='reading'||['pending','writing'].includes(assignmentWrite.status)||editorMode!=='controller'||!sendCustomValue||!customValueGeneration)return
+    const generation=customValueGeneration()
+    const queue=createCustomValueQueue(gesture=>{
+      if(lockedRef.current||!isBcrOutput(output))throw Error('Custom value output unavailable')
+      const [kind,id]=gesture.key.split(':') as ['encoders'|'pushes'|'buttons',string]
+      if(profileRef.current[kind]?.find(e=>e.id===Number(id))?.customAssignment?.sourceBcl!==gesture.source)return
+      sendCustomValue(gesture.source,gesture.value,generation)
+      setNotice('SysEx value sent to BCR32 output.')
+      for(const bytes of customValueMessages(gesture.source,gesture.value)){
+        pulseActivity('send',activityPorts(bytes,'send',indicatorRef.current))
+        setEvents(current=>[{hex:`→ ${asHex(bytes)}`,text:describeMessage(bytes),note:'value sent'},...current].slice(0,12))
+      }
+    },error=>{stopValueEmission();setNotice(`Sending stopped: ${error instanceof Error?error.message:String(error)}`)})
+    customSender.current=queue
+    return()=>{queue.close();if(customSender.current===queue)customSender.current=null}
+  },[sendCC,output,inputId,portVersion,locked,presetBusy,deviceSettingsBusy,controllerRead.status,assignmentWrite.status,editorMode,profile,sendCustomValue,customValueGeneration,controllerTracks?.selected,controllerTracks?.presets.join(':')])
+
+  function enqueueCustomValue(control:Selection,source:string,value:number,ordered=false){
+    try{
+      if(!customSender.current)throw Error('Custom SysEx output unavailable; check MIDI connection and busy operations')
+      customSender.current.enqueue({key:selectionKey(control),source,value},ordered)
+    }catch(error){setNotice(error instanceof Error?error.message:String(error))}
+  }
+
   useEffect(() => { setAuxSources({}); setReceivedAux({}) }, [inputId, inputs])
   const previousAssignments = useRef(profile)
   useEffect(() => {
@@ -674,16 +705,18 @@ function loadWorkspace() {
     if(presetBusy || (controllerTracks && controllerRead.status==='reading')){setNotice('Wait for the controller preset operation to complete');return}
     const encoder = profile.encoders.find(e => e.id === id)
     if (!encoder || !Number.isFinite(value)) return
-    const next = Math.max(encoder.minimum, Math.min(encoder.maximum, Math.round(value)))
-    const previous = liveRef.current[id]?.value ?? encoder.minimum
+    const [minimum,maximum]=encoder.customAssignment?.range??[encoder.minimum,encoder.maximum]
+    const next = Math.max(minimum, Math.min(maximum, Math.round(value)))
+    const previous = liveRef.current[id]?.value ?? minimum
     if (next === previous && liveRef.current[id]?.value !== null && liveRef.current[id] !== undefined) return
     const messages = sendCC ? encoderMessages(encoder, next, previous) : null
-    if (sendCC && isRelative(encoder) && !messages) { setNotice('Relative gesture not sent: compatible CC/NRPN required, up to 256 increments per gesture.'); return }
+    if (sendCC && !encoder.customAssignment && isRelative(encoder) && !messages) { setNotice('Relative gesture not sent: compatible CC/NRPN required, up to 256 increments per gesture.'); return }
     arbiter.reset(); setScreenControl({ kind: 'encoders', id })
     if (values[id]?.value !== next) pulseActivity('local')
-    liveRef.current = { ...liveRef.current, [id]: { value: next, source: isRelative(encoder) ? 'relative' : 'local' } }
+    liveRef.current = { ...liveRef.current, [id]: { value: next, source: !encoder.customAssignment&&isRelative(encoder) ? 'relative' : 'local' } }
     setValues(liveRef.current)
     if (!sendCC) return
+    if(encoder.customAssignment){enqueueCustomValue({kind:'encoders',id},encoder.customAssignment.sourceBcl,next);return}
     if (messages) { if (isRelative(encoder)) sender.current?.enqueueOrdered(messages); else sender.current?.enqueueMessages(messages) }
     else setNotice(transportIssue(encoder) ?? 'Preview only: unsupported mode.')
   }
@@ -695,12 +728,14 @@ function loadWorkspace() {
     if (control.kind === 'buttons' && control.id >= 74 && profile.settings?.footswitchModes[control.id-74] !== 'ctrl') return
     const e = profile[control.kind].find(e => e.id === control.id)!
     if (!Number.isFinite(value)) return
-    const next = Math.max(e.minimum, Math.min(e.maximum, Math.round(value)))
+    const [minimum,maximum]=e.customAssignment?.range??[e.minimum,e.maximum]
+    const next = Math.max(minimum, Math.min(maximum, Math.round(value)))
     auxRef.current = { ...auxRef.current, [control.kind]: auxRef.current[control.kind].map((v, i) => i === controlIndex(control.kind, control.id) ? next : v) }
     setAuxValues(auxRef.current)
     setAuxSources(current => ({ ...current, [`${control.kind}:${control.id}`]: 'local' }))
     arbiter.reset(); setScreenControl(control); pulseActivity('local')
     if (sendCC) {
+      if(e.customAssignment){enqueueCustomValue(control,e.customAssignment.sourceBcl,next,true);return}
       const messages = encoderMessages({ ...e, mode: 'absolute' }, next)
       if (messages) sender.current?.enqueueOrdered(messages) // Press AND release must survive batching.
       else setNotice(transportIssue({ ...e, mode: 'absolute' }) ?? 'Button not sent.')
@@ -714,12 +749,15 @@ function loadWorkspace() {
     if (!held) return
     if (!pressed) heldButton.current = null
     if (held.control.kind === 'encoders') return
-    const next = buttonValue(held.config, auxRef.current[held.control.kind][controlIndex(held.control.kind, held.control.id)], pressed)
+    const current=auxRef.current[held.control.kind][controlIndex(held.control.kind,held.control.id)]
+    const range=held.config.customAssignment?.range
+    const next = range ? held.config.mode==='toggle' ? pressed ? current===range[1]?range[0]:range[1] : null : pressed?range[1]:range[0] : buttonValue(held.config,current,pressed)
     if (next !== null) setAuxValue(held.control, next)
   }
 
-  const changeOutput = (id: string) => { sender.current?.close(); sender.current = null; setSendCC(false); setOutputId(id) }
+  const changeOutput = (id: string) => { stopValueEmission(); setOutputId(id) }
   const toggleSend = () => {
+    cancelValueEmission()
     sender.current?.close(); sender.current = null
     const enabled = !sendCC && isBcrOutput(output)
     setSendCC(enabled)
@@ -730,7 +768,7 @@ function loadWorkspace() {
     if (connecting.current) return
     connecting.current = true
     automaticEmissionPort.current = null
-    sender.current?.close(); sender.current = null; setSendCC(false)
+    stopValueEmission()
     try {
       const { access: midi, sysexError } = await requestAccess()
       setAccess(midi)
@@ -1134,7 +1172,7 @@ function loadWorkspace() {
           <span className="tb-sep" aria-hidden="true" />
           <div className="editor-history-tools" role="group" aria-label="History"><button aria-label="Undo" title="Undo" disabled={locked||presetBusy||!historyCounts.undo} onClick={()=>moveHistory('undo')}><span aria-hidden="true" data-i18n-skip>↶</span></button><button aria-label="Redo" title="Redo" disabled={locked||presetBusy||!historyCounts.redo} onClick={()=>moveHistory('redo')}><span aria-hidden="true" data-i18n-skip>↷</span></button></div>
           <span className="tb-sep" aria-hidden="true" />
-          <button className={`cc-toggle tb-switch ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} title="Send CC to BCR32" onClick={toggleSend} disabled={!isBcrOutput(output)}><span className="switch" aria-hidden="true" />CC → BCR32</button>
+          <button className={`cc-toggle tb-switch ${sendCC ? 'enabled' : ''}`} aria-pressed={sendCC} title="Send MIDI values to BCR32" onClick={toggleSend} disabled={!isBcrOutput(output)}><span className="switch" aria-hidden="true" />MIDI → BCR32</button>
           <button className={`cc-toggle tb-switch assignment-toggle ${assignmentLive ? 'enabled' : ''}`} aria-pressed={assignmentLive} disabled={locked} title="Send assignment edits immediately" onClick={() => setAssignmentLive(on => !on)}><span className="switch" aria-hidden="true" />Assignments → BCR32</button>
           <span className="tb-sep" aria-hidden="true" />
           {floatingScreenSupported() && <button className="floating-toggle" aria-pressed={videoFloating} title="Borderless always-on-top screen, like a video player" onClick={() => { void toggleVideoFloating() }}><span aria-hidden="true" data-i18n-skip>▣ </span>{videoFloating ? 'Close floating display' : 'Floating display'}</button>}
@@ -1238,9 +1276,9 @@ function loadWorkspace() {
           {batchType===''&&!customView&&<option value="" disabled>Mixed</option>}{Array.from(new Set([...commonTypes,...(multiple?[]:[selected.type])])).filter(type=>type!=='sysex'&&type!=='bcl').map(type=><option key={type} value={type}>{type.toUpperCase()}</option>)}
           <option data-i18n-skip value="sysex" disabled={multiple||!programSelector(selection)}>SysEx</option><option data-i18n-skip value="bcl" disabled={multiple||!programSelector(selection)}>BCL</option>
         </select></label>
-        {!multiple&&<CustomProgramEditor catalogStorage={storage} key={`${selection.kind}:${selection.id}`} visible={!!customView} representation={customView??'sysex'} actions={customProgramActions} onRepresentation={chooseCustomView} target={selection} config={selected} autoSend={assignmentLive} connectionKey={`${inputId}:${outputId}:${portVersion}:${liveFirmware}:${controllerTracks?.selected}:${controllerTracks?.presets.join(':')}`} firmware={liveFirmware} locked={locked} hardware={{tools:programAccess,available:!locked&&!presetBusy&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status)),begin:()=>{stopValueEmission();cancelLearn()}}} download={download} apply={control=>{
+        {!multiple&&<CustomProgramEditor catalogStorage={storage} key={`${selection.kind}:${selection.id}`} visible={!!customView} representation={customView??'sysex'} actions={customProgramActions} onRepresentation={chooseCustomView} target={selection} config={selected} autoSend={assignmentLive} connectionKey={`${inputId}:${outputId}:${portVersion}:${liveFirmware}:${controllerTracks?.selected}:${controllerTracks?.presets.join(':')}`} firmware={liveFirmware} locked={locked} hardware={{tools:programAccess,available:!locked&&!presetBusy&&editorMode==='controller'&&brightnessEnabled&&!deviceSettingsBusy&&supportsCustomProgram(liveFirmware)&&controllerRead.status!=='reading'&&!(['pending','writing'].includes(assignmentWrite.status)),begin:()=>{cancelValueEmission();cancelLearn()}}} download={download} apply={control=>{
           if(lockedRef.current)return
-          stopValueEmission();disarmLearn()
+          cancelValueEmission();disarmLearn()
           const next=parseProfile({...profileRef.current,[selection.kind]:profileRef.current[selection.kind].map(e=>e.id===selection.id?control:e)})
           profileRef.current=next;setProfile(next)
           setNotice('Custom draft updated.')
@@ -1261,7 +1299,7 @@ function loadWorkspace() {
         </div>})()}
         {selected.type !== 'mmc' && (selection.kind === 'encoders' ? <div className="fields two"><label>Minimum<input type="number" min="0" max={valueLimit(selected)} value={selected.minimum} onChange={(event) => updateSelected({ minimum: Number(event.target.value) })} /></label>
           <label>{selected.type === 'note' ? 'Velocity' : selected.type === 'pc' ? 'Program maximum' : 'Maximum'}<input type="number" min="0" max={valueLimit(selected)} value={selected.maximum} onChange={(event) => updateSelected({ maximum: Number(event.target.value) })} /></label></div> : <div className="fields two">{[0, 1].map(index => <label key={index}>{index === 0 ? 'Value 1' : 'Value 2'}<input type="number" min="0" max={valueLimit(selected)} value={buttonValues(selected)[index]} onChange={event => { if (event.target.value !== '') { const pair = [...buttonValues(selected)] as [number, number]; pair[index] = Number(event.target.value); updateSelected({ buttonValues: pair }) } }} /></label>)}</div>)}
-        {selected.type !== 'off' && transportIssue(selection.kind === 'encoders' ? selected : { ...selected, mode: 'absolute' }) && <p className="surface-help" role="status">{transportIssue(selection.kind === 'encoders' ? selected : { ...selected, mode: 'absolute' })}</p>}
+        {!selected.customAssignment && selected.type !== 'off' && transportIssue(selection.kind === 'encoders' ? selected : { ...selected, mode: 'absolute' }) && <p className="surface-help" role="status">{transportIssue(selection.kind === 'encoders' ? selected : { ...selected, mode: 'absolute' })}</p>}
         <h3 className="mock-h3">Display</h3>
         <label>Label<input maxLength={48} placeholder={multiple?'Mixed / batch label':'Default printed name'} value={sharedField(selections.map(s=>customLabels[s.kind][controlIndex(s.kind,s.id)]))} onChange={event => setCustomLabels(current => ({ ...current,...Object.fromEntries((['encoders','pushes','buttons'] as const).map(kind=>[kind,current[kind].map((label,i)=>selectedKeys.has(selectionKey({kind,id:profile[kind][i].id}))?cleanLabel(event.target.value):label)])) }))} /></label>
         <div className="fields two mock-display-row"><label className="zoom-option" data-i18n-skip><input type="checkbox" checked={selected.display !== false} onChange={e=>updateSelected({display:e.target.checked})} />Display</label>{!!selectedRotations.length && <label>LED ring<select value={batchLed} onChange={event=>updateSelected({ledMode:event.target.value as LedMode})}>{batchLed===''&&<option value="" disabled>Mixed</option>}{ledModes.map(mode=><option data-i18n-skip key={mode} value={mode}>{ledModeLabel[mode]}</option>)}</select></label>}</div>
@@ -1298,7 +1336,7 @@ function loadWorkspace() {
       <section className="log" hidden={view !== 'log'}><MidiMonitor monitor={monitor} control={monitorControl} canApply={!locked} apply={applyMessage}/><p className="eyebrow">MIDI LOG</p><h2>Recent messages</h2><ol>{events.length ? events.map((event, index) => <li key={`${event.hex}-${index}`}>{event.hex} · {event.text}{event.note && <span> · {event.note}</span>}</li>) : <li>No messages received.</li>}</ol></section>
     </section>
         </fieldset></div>
-        <footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-summary" title={notice}><span aria-hidden="true">ⓘ </span>{assignmentLive && assignmentAvailable && assignmentWrite.status !== 'idle' ? <AssignmentWriteStatus inline enabled available state={assignmentWrite} /> : <span>{!assignmentLive ? 'Local assignments' : assignmentAvailable ? 'Live assignments' : 'Live assignments after a full read'}</span>} · <span>{fromPresetCache ? 'Preset restored from UI cache' : controllerRead.total > 0 ? `Assignment read ${controllerRead.received}/${controllerRead.total}` : 'Not read'}</span> · <span>{sendCC ? 'CC → BCR32 on' : 'CC → BCR32 off'}</span></p><p className="sidebar-notice" role="status" title={notice} hidden={notice === initialNotice}>{notice}</p></footer>
+        <footer className="sidebar-meta sidebar-statusbar"><p className="sidebar-summary" title={notice}><span aria-hidden="true">ⓘ </span>{assignmentLive && assignmentAvailable && assignmentWrite.status !== 'idle' ? <AssignmentWriteStatus inline enabled available state={assignmentWrite} /> : <span>{!assignmentLive ? 'Local assignments' : assignmentAvailable ? 'Live assignments' : 'Live assignments after a full read'}</span>} · <span>{fromPresetCache ? 'Preset restored from UI cache' : controllerRead.total > 0 ? `Assignment read ${controllerRead.received}/${controllerRead.total}` : 'Not read'}</span> · <span>{sendCC ? 'MIDI → BCR32 on' : 'MIDI → BCR32 off'}</span></p><p className="sidebar-notice" role="status" title={notice} hidden={notice === initialNotice}>{notice}</p></footer>
       </aside>
     </section>
     <dialog ref={midiSettingsDialog} className="midi-settings-dialog" aria-labelledby={`${instanceId}-midi-settings-title`} onClose={()=>setMidiSettingsOpen(false)} onClick={event=>{if(event.target===event.currentTarget)setMidiSettingsOpen(false)}}>

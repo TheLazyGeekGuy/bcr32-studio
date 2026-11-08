@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0-alpha.19] — 2026-11-08
+
+- Emit supported custom SysEx values from explicit rotary mouse, screen and auxiliary gestures through one-use, exact-message host grants; ordinary CC/NRPN grants remain unchanged.
+- Keep value transmission enabled while editing a custom assignment. Rename the value switch to MIDI → BCR32 and cancel pending gestures on source/connection/lock changes.
+- Preserve inert simulation/import/RX behavior and reject BCR32 configuration/universal system commands in this value path. Sending an external-synth payload does not establish native LED-ring feedback.
+- Dismiss recovered native MIDI presence notices after four seconds in both host shells, preserving newer errors.
+
 ## [0.46.0-alpha.18] — 2026-11-08
 
 - Fix saved-catalogue refresh after real SXM serialization: compare JSON object contents independently of key order. Old persisted catalogues now expose A3000 V2 and all unchanged built-in additions.

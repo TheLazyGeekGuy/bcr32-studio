@@ -15,6 +15,7 @@ import {parseFirmwareReply} from './web-midi'
 import {plannedOperation,validateEditBuffer,validateQuery} from './host-policy'
 import {isZaqHostQuery,isZaqHostWrite,isHostPage,supportsZaqHost} from './zaq-host'
 import Workbench from './Workbench'
+import {bcr32CustomValueMessages} from './custom-value-policy'
 import './workbench.css'
 
 export function createWorkbenchBridge(context:EditorViewContext){
@@ -56,6 +57,15 @@ export function createWorkbenchBridge(context:EditorViewContext){
   async request(){const result=await context.request();if(disposed)throw Error('BCR32 view disposed');midi.refresh();const pair=automaticPorts(midi.access);if(pair.input&&pair.output)midi.bind(pair.input.id,pair.output.id);return {access:midi.access,sysexError:result.sysexError}},
   bind(input:string,output:string){midi.bind(input,output)},
   refresh:midi.refresh,
+  customValueGeneration:()=>context.lease.getState().generation,
+  sendCustomValue(source:string,value:number,expectedGeneration?:number){
+   const state=context.lease.getState()
+   if(disposed||locked||prepared||!state.connected||expectedGeneration!==undefined&&state.generation!==expectedGeneration)throw Error('Custom value output unavailable or binding changed')
+   const messages=bcr32CustomValueMessages(source,value)
+   if(!context.broker.authorizeSysexValue)throw Error('Host does not support custom SysEx values')
+   const grant=context.broker.authorizeSysexValue(context.id,messages)
+   try{context.lease.send(messages,grant);for(const bytes of messages)monitor.push('out',bytes)}finally{context.broker.revoke(grant)}
+  },
   setProgramTypeOff(index:number){
    if(disposed||locked||!identity||!supportsCustomProgram(identity.firmware)||prepared)throw Error('Custom program Type OFF unavailable')
    integer(index,0,81)
@@ -78,7 +88,7 @@ function MountedWorkbench({context,bridge,storage,initial,...props}:EditorViewPr
  bridge.setLocked(props.locked)
  return <div className="bcr32-workbench" data-bcr32-instance={context.id} data-theme={props.appearance.theme}>
   <Workbench storage={storage} initialState={initial} instanceId={context.id} locked={props.locked} active={props.active}
-   requestAccess={bridge.request} bindPair={bridge.bind} onSnapshot={props.checkpoint}
+   requestAccess={bridge.request} bindPair={bridge.bind} onSnapshot={props.checkpoint} sendCustomValue={bridge.sendCustomValue} customValueGeneration={bridge.customValueGeneration}
    themeOverride={props.appearance.theme} displayOverride={props.appearance.displayStyle} onAppearance={props.onAppearance}
    autoZoomOverride={inherited.settings.activeZoom} onAutoZoom={value=>props.presentation?.set({activeZoom:value})}
    parameters={context.parameters} presetsExchange={context.presets} signal={context.lifecycle?.signal} presentation={props.presentation} onHelpReady={bridge.setHelp} onMidiSettingsReady={bridge.setMidiSettings} monitor={bridge.monitor} authorizeTransfer={bridge.authorizeTransfer} setProgramTypeOff={bridge.setProgramTypeOff}/>

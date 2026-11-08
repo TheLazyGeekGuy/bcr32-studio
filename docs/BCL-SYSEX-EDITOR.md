@@ -125,3 +125,12 @@ A catalogue load populates the text draft; it does not replace the installed har
 The checksum argument in `.tx … cks-2 5 $F7` is a BCL operand, not a literal data byte to append. The simple SysEx view no longer prints unsupported operands as pseudo-hex placeholders; such programs remain in BCL. Existing application gates are unchanged. This correction does not implement native checksum execution. Follow [issue41](https://github.com/TheLazyGeekGuy/bcr32-studio/issues/41) for typed operand handling, software conformance and physical emitted-byte qualification.
 
 Source/review/verification trace: [file-only draft work item](work-items/2026-10-29-file-only-checksum-drafts.md).
+## Mouse-operated custom values (0.46.0-alpha.19)
+
+With **MIDI → BCR32** enabled, an explicit gesture on a control with a supported custom program renders that program's `.tx` payload and sends it to this instance's bound MIDI output. For example, `.tx $F0 $7D val $F7` at87 sends `F0 7D 57 F7`. Rotary gestures coalesce to the latest value; auxiliary press/release messages retain order. The native assignment writer and STORE remain separate operations.
+
+The Preview slider stays a simulation. Opening/selecting a control, importing, source editing, enabling output and receiving MIDI never send a value. Source/binding changes, locking, busy operations and closing cancel queued gestures. Unsupported tokens stay local; there is no fallback CC. The custom value path rejects BCR32's own manufacturer commands and universal system commands.
+
+This sends a payload intended for another instrument to the selected BCR32 output. It does **not** establish that BCR32 decodes arbitrary incoming SysEx to update its ring, or that USB output is forwarded to a downstream DIN instrument. Device routing and native visual feedback require separate qualification. No current-value query or firmware feature is added.
+
+Implementation: `src/custom-value-output.ts`, BCR32 `custom-value-policy.ts` / `registration.tsx` / `Workbench.tsx`, and the broker's exact one-use authorization. See [ticket50](https://github.com/TheLazyGeekGuy/bcr32-studio/issues/50) and [diagnostic and evidence](work-items/2026-11-08-sysex-rotary-output-diagnostic.md).
