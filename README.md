@@ -2,7 +2,7 @@
 
 Browser editor for the **Behringer BCR32**, with controller firmware **1.0.2** support, **1.0.3 sequencer step editing**, and the shared MIDI Studio editor tools.
 
-Current version: **0.46.0-alpha.19** · [Changelog](CHANGELOG.md)
+Current version: **0.46.0-alpha.20** · [Changelog](CHANGELOG.md)
 
 Custom programming: select **SysEx** or **BCL** in **Control → MIDI message → Type** for local templates, simulation and targeted files. Programs are retained in JSON presets. Valid direct edits are sent automatically after a short pause when Assignments → BCR32 is enabled, with backup/Type-OFF/upload/read-back. Explicit reads, manual send and restoration are available on firmware1.0.2/1.0.3; advanced tokens remain file-only. Real1.0.3 rotation/push STORE, preset change, recall and full bank/global/working rollback passed. Emitted SysEx and power-cycle persistence still need physical acceptance. See the [BCL/SysEx guide and safety limits](docs/BCL-SYSEX-EDITOR.md).
 
@@ -14,7 +14,7 @@ Firmware **1.0.3**: entering Sequencer sends the hardware page command, automati
 
 ## Controller editing
 
-- Mouse-operated custom SysEx values use **MIDI → BCR32** and the same host-owned output as standard values. Simulation stays inert; outgoing frames do not imply native ring feedback. See [custom value output and the shared contract](docs/CUSTOM-VALUE-OUTPUT.md).
+- Custom SysEx values remain local previews: no native BCR32 ring/current-value setter is qualified for these assignments. Native BCL programming and passive SysEx receive remain available. See [hardware value feedback status](docs/CUSTOM-VALUE-OUTPUT.md).
 - Firmware identity and automatic CTRL assignment read on connection: 82 controls, eight fields each.
 - Correct Program Change Bank Off and Toggle Off decoding, including encoder pushes.
 - T1–T4 preset shortcuts and per-connection UI cache. The first visit reads the preset; subsequent visits use the cached edits. Use the explicit read action to refresh from hardware.

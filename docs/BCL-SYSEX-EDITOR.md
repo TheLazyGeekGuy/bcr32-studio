@@ -2,6 +2,8 @@
 
 ## Scope and evidence
 
+**Current custom-value status (alpha.20):** mouse gestures on native SysEx assignments are local previews. Alpha.19's external-payload emission was not a native ring-value setter and has been removed. Assignment programming and passive SysEx RX are separate, retained paths. See [hardware value feedback](CUSTOM-VALUE-OUTPUT.md) and [issue53](https://github.com/TheLazyGeekGuy/bcr32-studio/issues/53).
+
 Version **0.46.0-alpha.15**, explicit hardware-transfer integration after the initial local implementation, not a claim of complete native custom-output support. Review/implementation: Codex primary agent, 2026-10-29 02:34 onward, checkout `<workspace>/bcr-studio-firmware-103`, branch `work/bcr32-bcl-sysex`, initially clean full baseline **`78ab3a227d50ef13716e6aa45a19a58e92bd5e32`** plus the subsequently uncommitted parser/model/UI/test/documentation changes. Exact model identifier and reasoning effort are unavailable.
 
 Read scope: existing root BCL/profile/forms/text components, BCR32 profile/read/write/CC transport/preset/store/Workbench, generic parameter state/history and actual host interfaces, build and browser fixtures. This standalone checkout lacks the upstream core-contract/onboarding documents listed by the integration skill; the checked source interfaces are authoritative, not historical SDK sketches. The initial alpha1 slice changed no permissions. Alpha2 reuses the same host SDK and grants, adding only a qualified selected-control fragment and addressed Type OFF operation on exact firmware1.0.2/1.0.3; existing preset/global/STORE gates remain unchanged. See the transfer ticket for the additive module policy.
@@ -125,9 +127,9 @@ A catalogue load populates the text draft; it does not replace the installed har
 The checksum argument in `.tx … cks-2 5 $F7` is a BCL operand, not a literal data byte to append. The simple SysEx view no longer prints unsupported operands as pseudo-hex placeholders; such programs remain in BCL. Existing application gates are unchanged. This correction does not implement native checksum execution. Follow [issue41](https://github.com/TheLazyGeekGuy/bcr32-studio/issues/41) for typed operand handling, software conformance and physical emitted-byte qualification.
 
 Source/review/verification trace: [file-only draft work item](work-items/2026-10-29-file-only-checksum-drafts.md).
-## Mouse-operated custom values (0.46.0-alpha.19)
+## Historical mouse-output attempt (0.46.0-alpha.19; withdrawn in alpha.20)
 
-With **MIDI → BCR32** enabled, an explicit gesture on a control with a supported custom program renders that program's `.tx` payload and sends it to this instance's bound MIDI output. For example, `.tx $F0 $7D val $F7` at87 sends `F0 7D 57 F7`. Rotary gestures coalesce to the latest value; auxiliary press/release messages retain order. The native assignment writer and STORE remain separate operations.
+The alpha.19 attempt rendered `.tx` payloads for explicit gestures and sent them to the bound output. This did not provide the owner's requested physical BCR32 ring/current-value feedback and was withdrawn in alpha.20. The description below is historical evidence only, not current behavior.
 
 The Preview slider stays a simulation. Opening/selecting a control, importing, source editing, enabling output and receiving MIDI never send a value. Source/binding changes, locking, busy operations and closing cancel queued gestures. Unsupported tokens stay local; there is no fallback CC. The custom value path rejects BCR32's own manufacturer commands and universal system commands.
 

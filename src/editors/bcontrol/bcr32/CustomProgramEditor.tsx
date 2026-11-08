@@ -95,7 +95,8 @@ export function CustomProgramEditor({target,config,locked,firmware,hardware,auto
     {!selector?<p role="status">This system control has no qualified programmable BCL selector.</p>:<fieldset disabled={locked||hardwareBusy}>
       <header className="custom-editor-header">
         <h3>{representation==='sysex'?'SysEx template':'BCL program'}</h3>
-        <span className="custom-edit-state">{p?.conversionStatus!=='exact'?'File only':autoSend&&source===config.customAssignment?.sourceBcl?'Live editing':'Local draft'}</span>
+        <span className="custom-edit-state">{p?.conversionStatus!=='exact'?'File only':autoSend&&hardware?.available&&source===config.customAssignment?.sourceBcl?'Live assignments':'Local draft'}</span>
+        <span className="custom-edit-state">Value preview <HelpHint label="Value feedback help" text="Custom SysEx values are previewed locally. No qualified command is available to update the BCR32 ring/value for this assignment. Installing its BCL program is a separate operation."/></span>
         <HelpHint label="Editing help" text={p?.conversionStatus!=='exact'?'Advanced tokens are not qualified for hardware transfer. Edit or export the BCL locally; loading this draft does not replace the installed hardware program.':autoSend?'Valid direct edits are applied after a short pause. When the hardware is available, the control is backed up, sent and independently read back. STORE remains a separate action.':'Edits apply to the local draft. Enable Assignments → BCR32 to send subsequent direct edits to the controller. STORE remains a separate action.'}/>
       </header>
       <div className="custom-source-tools">

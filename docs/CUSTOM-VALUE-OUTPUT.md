@@ -1,5 +1,19 @@
 # Custom SysEx value output
 
+## Current status — alpha.20
+
+**Physical ring/current-value feedback is not qualified for native BCR32 custom assignments.** It remains open in [issue53](https://github.com/TheLazyGeekGuy/bcr32-studio/issues/53).
+
+Mouse, keyboard, screen and auxiliary custom-value gestures now update only the local preview, with an explicit limitation message. Native `.tx` assignment programming, preset storage and passive matching SysEx reception retain their existing paths. Standard CC/NRPN output is unchanged. No assignment is replaced with CC, no `.default` rewrite is used as a surrogate value setter, and no preset/routing/STORE operation is added.
+
+Alpha.19 submitted an external-instrument payload to the BCR32 output. Its OUT monitor row proved host submission, not physical ring synchronization. That path and the broker grant/queue added solely for it have been removed. The SDK and saved-state schema are unchanged. The sections below are historical implementation evidence, not current APIs or capabilities.
+
+The manufacturer's [manual](https://cdn-media.empowertribe.com/611d8696b95f80f8c46dbecd816d0b65/Manual_BE_0715-AAW_BCR32_A4_WW_2026-04-06_Rev1.pdf), printed22–23 (PDF12), documents assignments and preset transfer, not a custom-value feedback API. The B-Control implementation author's [historical explanation](https://mountainutilities.eu/forums/can-bcr2000-respond-nrpn-or-sysex) distinguishes standard receive matching from custom-only output on BCR2000/BCF2000; it is not proof of BCR32 firmware behavior. Bounded ControlTribe and existing1.0.2 inventory checks did not identify a qualified setter; this does not establish that firmware1.0.3 lacks all undocumented mechanisms. See the [research report](work-items/2026-11-08-custom-hardware-feedback.md).
+
+A possible alternative is an explicitly chosen CC/NRPN hardware assignment plus software SysEx translation and standard feedback. It changes the native assignment and requires Studio running; it is not applied automatically. Native feedback acceptance still requires a model/firmware-specific setter or demonstrated receive mechanism and independent physical ring/value confirmation without assignment rewrites.
+
+## Historical alpha.19 implementation — withdrawn
+
 Available locally in0.46.0-alpha.19. This is a host software output path, separate from installing a native BCL assignment, reading device state or storing a preset.
 
 ## User behavior

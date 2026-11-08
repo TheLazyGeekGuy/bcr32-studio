@@ -1,5 +1,4 @@
 import type {EditorPage} from './page-follow'
-import {createCustomValueQueue,customValueMessages} from '../../../custom-value-output'
 import {createPageState} from './page-state'
 import {assertWorkingPrograms} from './custom-program-transfer'
 import {createLiveControlQueue} from './live-control-queue'
@@ -94,10 +93,8 @@ export interface WorkbenchProps {
  instanceId:string; presetsExchange?:PresetExchange; signal?:AbortSignal; monitor:Monitor
  parameters?:import('../../../translator/parameters').ParameterBus; presentation?:PresentationInstance; onHelpReady:(open:(()=>void)|undefined)=>void; onMidiSettingsReady?:(open:(()=>void)|undefined)=>void
  authorizeTransfer:(frames:number[][])=>(()=>void); setProgramTypeOff?:(index:number)=>void
- sendCustomValue?:(source:string,value:number,expectedGeneration?:number)=>void
- customValueGeneration?:()=>number
 }
-function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,setProgramTypeOff,sendCustomValue,customValueGeneration,presentation,onHelpReady,onMidiSettingsReady,parameters}:WorkbenchProps) {
+function App({storage,initialState,requestAccess,bindPair,onSnapshot,themeOverride,displayOverride,onAppearance,autoZoomOverride,onAutoZoom,active,locked,instanceId,presetsExchange,signal,monitor,authorizeTransfer,setProgramTypeOff,presentation,onHelpReady,onMidiSettingsReady,parameters}:WorkbenchProps) {
   const lockedRef=useRef(locked);lockedRef.current=locked
 function loadProfile(): Bcr32Profile {
   try {
@@ -272,7 +269,6 @@ function loadWorkspace() {
   const [sendCC, setSendCC] = useState(false)
   const [portVersion, setPortVersion] = useState(0)
   const sender = useRef<ReturnType<typeof createCcSender> | null>(null)
-  const customSender = useRef<ReturnType<typeof createCustomValueQueue> | null>(null)
   const automaticEmissionPort = useRef<MidiPort | null>(null)
   const automaticStarted = useRef(false)
   const associatedOnce = useRef(false)
@@ -477,8 +473,8 @@ function loadWorkspace() {
   }, [theme])
 
 
-  const cancelValueEmission = () => { sender.current?.cancelPending(); customSender.current?.cancel(); heldButton.current = null }
-  const stopValueEmission = () => { cancelValueEmission(); sender.current?.close(); sender.current = null; customSender.current?.close();customSender.current=null; setSendCC(false) }
+  const cancelValueEmission = () => { sender.current?.cancelPending(); heldButton.current = null }
+  const stopValueEmission = () => { cancelValueEmission(); sender.current?.close(); sender.current = null; setSendCC(false) }
   const stopEmission = () => { stopValueEmission(); assignmentWriter.current?.close(); assignmentWriter.current = null; setAssignmentLive(false) }
   const storeLibrary = (next: ControllerPreset[]) => {
     if(lockedRef.current)throw Error('Editor configuration locked')
@@ -588,32 +584,6 @@ function loadWorkspace() {
     return () => { transport.close(); if (sender.current === transport) sender.current = null }
   }, [sendCC, output, presetBusy, !!controllerTracks, controllerRead.status])
 
-  // Explicit gestures only. Rebinding, source edits and busy/locked transitions drop queued values.
-  useEffect(()=>{
-    if(!sendCC||!isBcrOutput(output)||locked||presetBusy||deviceSettingsBusy||controllerRead.status==='reading'||['pending','writing'].includes(assignmentWrite.status)||editorMode!=='controller'||!sendCustomValue||!customValueGeneration)return
-    const generation=customValueGeneration()
-    const queue=createCustomValueQueue(gesture=>{
-      if(lockedRef.current||!isBcrOutput(output))throw Error('Custom value output unavailable')
-      const [kind,id]=gesture.key.split(':') as ['encoders'|'pushes'|'buttons',string]
-      if(profileRef.current[kind]?.find(e=>e.id===Number(id))?.customAssignment?.sourceBcl!==gesture.source)return
-      sendCustomValue(gesture.source,gesture.value,generation)
-      setNotice('SysEx value sent to BCR32 output.')
-      for(const bytes of customValueMessages(gesture.source,gesture.value)){
-        pulseActivity('send',activityPorts(bytes,'send',indicatorRef.current))
-        setEvents(current=>[{hex:`→ ${asHex(bytes)}`,text:describeMessage(bytes),note:'value sent'},...current].slice(0,12))
-      }
-    },error=>{stopValueEmission();setNotice(`Sending stopped: ${error instanceof Error?error.message:String(error)}`)})
-    customSender.current=queue
-    return()=>{queue.close();if(customSender.current===queue)customSender.current=null}
-  },[sendCC,output,inputId,portVersion,locked,presetBusy,deviceSettingsBusy,controllerRead.status,assignmentWrite.status,editorMode,profile,sendCustomValue,customValueGeneration,controllerTracks?.selected,controllerTracks?.presets.join(':')])
-
-  function enqueueCustomValue(control:Selection,source:string,value:number,ordered=false){
-    try{
-      if(!customSender.current)throw Error('Custom SysEx output unavailable; check MIDI connection and busy operations')
-      customSender.current.enqueue({key:selectionKey(control),source,value},ordered)
-    }catch(error){setNotice(error instanceof Error?error.message:String(error))}
-  }
-
   useEffect(() => { setAuxSources({}); setReceivedAux({}) }, [inputId, inputs])
   const previousAssignments = useRef(profile)
   useEffect(() => {
@@ -715,8 +685,8 @@ function loadWorkspace() {
     if (values[id]?.value !== next) pulseActivity('local')
     liveRef.current = { ...liveRef.current, [id]: { value: next, source: !encoder.customAssignment&&isRelative(encoder) ? 'relative' : 'local' } }
     setValues(liveRef.current)
+    if(encoder.customAssignment){setNotice('Custom SysEx: local preview only. Hardware value feedback is not qualified.');return}
     if (!sendCC) return
-    if(encoder.customAssignment){enqueueCustomValue({kind:'encoders',id},encoder.customAssignment.sourceBcl,next);return}
     if (messages) { if (isRelative(encoder)) sender.current?.enqueueOrdered(messages); else sender.current?.enqueueMessages(messages) }
     else setNotice(transportIssue(encoder) ?? 'Preview only: unsupported mode.')
   }
@@ -734,8 +704,8 @@ function loadWorkspace() {
     setAuxValues(auxRef.current)
     setAuxSources(current => ({ ...current, [`${control.kind}:${control.id}`]: 'local' }))
     arbiter.reset(); setScreenControl(control); pulseActivity('local')
+    if(e.customAssignment){setNotice('Custom SysEx: local preview only. Hardware value feedback is not qualified.');return}
     if (sendCC) {
-      if(e.customAssignment){enqueueCustomValue(control,e.customAssignment.sourceBcl,next,true);return}
       const messages = encoderMessages({ ...e, mode: 'absolute' }, next)
       if (messages) sender.current?.enqueueOrdered(messages) // Press AND release must survive batching.
       else setNotice(transportIssue({ ...e, mode: 'absolute' }) ?? 'Button not sent.')

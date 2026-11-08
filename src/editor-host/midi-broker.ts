@@ -43,7 +43,7 @@ const copyState = (s: LeaseState): LeaseState => ({ ...s, binding: s.binding ? {
 export function createMidiBroker(access: MidiAccess, now = () => performance.now()) {
   const leases = new Map<string, InternalLease>()
   const inputOwners = new Map<string, string>(), outputOwners = new Map<string, string>()
-  const grants = new WeakMap<MidiAuthorization, { lease: InternalLease; generation: number; revoked: boolean; valueMessages?:number[][]; used?:boolean }>()
+  const grants = new WeakMap<MidiAuthorization, { lease: InternalLease; generation: number; revoked: boolean }>()
   const observers = new Set<() => void>()
   const hubs=new Map<string,{port:MidiPort;listener:MidiPort['onmidimessage'];subscribers:Set<(bytes:number[],timestamp:number)=>void>}>()
   const routers=new Set<()=>void>()
@@ -151,10 +151,6 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
           if (!l.state.connected || !grant || grant.lease !== l || grant.revoked || grant.generation !== l.state.generation) throw Error('Stale or foreign MIDI authorization')
           if (messages.length > 4096 || messages.reduce((n, b) => n + b.length, 0) > 16384) throw Error('MIDI batch budget exceeded')
           const packets = messages.map(b => [...b])
-          if(grant.valueMessages){
-            if(grant.used||JSON.stringify(packets)!==JSON.stringify(grant.valueMessages))throw Error('Custom value authorization is used or bytes differ')
-            grant.used=true
-          }
           for (const bytes of packets) {
             if(authorization.operation==='preset-store'){
               if(!access.sysexEnabled||!validMessage(bytes)||bytes[0]!==240||!l.validatePresetStore(bytes))throw Error('MIDI preset-store packet refused by operation policy')
@@ -172,7 +168,7 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
               if (!validVoiceMessage(bytes) || !l.validateFeedback(bytes)) throw Error('MIDI packet refused by operation policy')
               continue
             }
-            if (authorization.operation === 'value' ? !(grant.valueMessages ? access.sysexEnabled&&validMessage(bytes)&&bytes[0]===240 : validVoiceMessage(bytes)) :
+            if (authorization.operation === 'value' ? !validVoiceMessage(bytes) :
               !access.sysexEnabled || bytes.length < (authorization.operation === 'query' ? 6 : 8) || bytes[0] !== 240 || bytes.at(-1) !== 247 ||
               bytes.slice(1, -1).some(b => !Number.isInteger(b) || b < 0 || b > 127) ||
               !(authorization.operation === 'brightness' ? l.validateBrightness(bytes) : authorization.operation === 'feedback' ? l.validateFeedback(bytes) : l.validateQuery(bytes))) throw Error('MIDI packet refused by operation policy')
@@ -194,15 +190,6 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
       const token = Object.freeze({ operation }); grants.set(token, { lease: l, generation: l.state.generation, revoked: false }); return token
     },
     revoke(token: MidiAuthorization) { const grant = grants.get(token); if (grant) grant.revoked = true },
-    /** Explicit host gesture only: exact, one-use bytes; ordinary value grants remain voice-only. */
-    authorizeSysexValue(owner:string,messages:readonly (readonly number[])[]):MidiAuthorization{
-      refresh();const l=leases.get(owner)
-      if(closed||!l?.state.connected||!access.sysexEnabled)throw Error('SysEx value authorization unavailable')
-      if(!messages.length||messages.length>4||messages.some(b=>b.length>256||b[0]!==240||!validMessage(b)))throw Error('Invalid SysEx value batch')
-      const token=Object.freeze({operation:'value' as const})
-      grants.set(token,{lease:l,generation:l.state.generation,revoked:false,valueMessages:messages.map(b=>[...b]),used:false})
-      return token
-    },
     // Trusted host utility: passive RX may share an editor input; physical outputs stay exclusive.
     // It cannot borrow editor grants or disguise custom SysEx as a read/query operation.
     createRoutingClient(owner:string,onInvalidation?:(message:string)=>void){

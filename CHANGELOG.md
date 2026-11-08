@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.46.0-alpha.20] — 2026-11-08
+
+- Correct the alpha.19 custom-value behavior after the owner clarified that mouse gestures must update the physical BCR32 ring/value. Sending a synthesizer payload to the BCR32 USB port did not implement that feedback.
+- Remove that misdirected output path and its unused exact-value grants/queue. Restore voice-only value grants; retain native .tx assignments, standard CC/NRPN, passive custom RX, preview ranges and the MIDI-dialog HTML fix.
+- Show the custom-value feedback limitation in all supported languages; distinguish live assignment installation from local value preview. Native hardware feedback remains unqualified, tracked in issue53.
+
 ## [0.46.0-alpha.19] — 2026-11-08
 
 - Fix invalid paragraph nesting in the MIDI settings status row; retain the accessible status role and firmware controls.
