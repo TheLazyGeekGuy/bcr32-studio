@@ -4,9 +4,15 @@ const {fakeMidi}=require('./e2e-zaq-host.cjs'),assert=require('node:assert/stric
 ;(async()=>{const browser=await chromium.launch({headless:true});try{
  const page=await browser.newPage({viewport:{width:1600,height:1000}}),errors=[]
  page.on('pageerror',e=>errors.push(String(e)))
+ page.on('console',message=>{if(message.type()==='error'&&/cannot (?:be|contain)|hydration|validateDOMNesting/i.test(message.text()))errors.push(message.text())})
  await page.addInitScript(fakeMidi,{sync:true})
  await page.addInitScript(()=>localStorage.setItem('bcr32-studio.assignment-live','false'))
  await page.goto((process.argv[2]??'http://127.0.0.1:5187')+'/editor/?native=0')
+ await page.getByRole('button',{name:'MIDI settings',exact:true}).first().click()
+ const settings=page.locator('.midi-settings-dialog');await settings.waitFor({state:'visible'})
+ assert.equal(await settings.locator('.midi-settings-status').evaluate(e=>e.tagName),'DIV')
+ assert.equal(await settings.locator('p .firmware-identity').count(),0,'firmware block is not nested inside a paragraph')
+ await settings.getByRole('button',{name:'Close',exact:true}).click()
  const knob=page.getByRole('button',{name:'Encoder 8 rotation',exact:true})
  await page.getByRole('button',{name:/^Encoder label 8 /}).click()
  const type=page.getByRole('combobox',{name:'MIDI message type',exact:true})

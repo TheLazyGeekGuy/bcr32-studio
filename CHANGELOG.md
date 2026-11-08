@@ -2,6 +2,7 @@
 
 ## [0.46.0-alpha.19] — 2026-11-08
 
+- Fix invalid paragraph nesting in the MIDI settings status row; retain the accessible status role and firmware controls.
 - Emit supported custom SysEx values from explicit rotary mouse, screen and auxiliary gestures through one-use, exact-message host grants; ordinary CC/NRPN grants remain unchanged.
 - Keep value transmission enabled while editing a custom assignment. Rename the value switch to MIDI → BCR32 and cancel pending gestures on source/connection/lock changes.
 - Preserve inert simulation/import/RX behavior and reject BCR32 configuration/universal system commands in this value path. Sending an external-synth payload does not establish native LED-ring feedback.
