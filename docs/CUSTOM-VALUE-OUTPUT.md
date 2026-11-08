@@ -12,6 +12,8 @@ The manufacturer's [manual](https://cdn-media.empowertribe.com/611d8696b95f80f8c
 
 A possible alternative is an explicitly chosen CC/NRPN hardware assignment plus software SysEx translation and standard feedback. It changes the native assignment and requires Studio running; it is not applied automatically. Native feedback acceptance still requires a model/firmware-specific setter or demonstrated receive mechanism and independent physical ring/value confirmation without assignment rewrites.
 
+Owner decision,2026-11-08 11:41 CET: **preserve native SysEx; leave physical ring feedback pending.** The CC/NRPN conversion alternative is not selected and must not be applied as a substitute.
+
 ## Historical alpha.19 implementation — withdrawn
 
 Available locally in0.46.0-alpha.19. This is a host software output path, separate from installing a native BCL assignment, reading device state or storing a preset.

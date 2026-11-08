@@ -32,7 +32,7 @@ Local research artifacts are ignored by Git. The REA receipt is `output/research
 
 Identify a BCR32 firmware-specific value setter or demonstrated receive-matching mechanism; establish exact bytes, target index, range, effects and firmware before a targeted test. Physical ring/value agreement is required independently of a host log. Do not sweep unknown opcodes or reinstall native BCL on every drag.
 
-An alternative CC/NRPN hardware assignment plus MIDI Studio SysEx translation is a separate workflow: it changes the native assignment and requires the host running. A preference question was sent to the owner; no conversion is applied while that decision is pending. Failure of the earlier indexed assignment scan is a separate unresolved synchronization issue, not proof of native SysEx value feedback.
+An alternative CC/NRPN hardware assignment plus MIDI Studio SysEx translation is a separate workflow: it changes the native assignment and requires the host running. **Owner decision,2026-11-08 11:41 CET: retain native SysEx and leave physical ring feedback pending. Do not implement or apply the CC/NRPN conversion as a workaround.** Failure of the earlier indexed assignment scan is a separate unresolved synchronization issue, not proof of native SysEx value feedback.
 
 ## Review trace
 
