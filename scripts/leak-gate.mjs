@@ -13,6 +13,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { isReviewedPublicMatch } from './leak-gate-public-context.mjs'
 
 const ci = process.argv.includes('--ci')
 const root = new URL('..', import.meta.url).pathname
@@ -44,11 +45,12 @@ function loadDenylist() {
   return { file, rules }
 }
 
-function scanText(text, rules) {
+function scanText(text, rules, reviewedContexts = true) {
   const hits = []
   for (const rule of rules) {
     rule.re.lastIndex = 0
-    const matches = [...text.matchAll(rule.re)].map(m => m[0]).filter(m => !rule.allow?.(m))
+    const matches = [...text.matchAll(rule.re)].filter(m =>
+      !rule.allow?.(m[0]) && !(reviewedContexts && isReviewedPublicMatch(rule, text, m)))
     if (matches.length) hits.push({ rule: rule.name, count: matches.length })
   }
   return hits
@@ -62,7 +64,7 @@ function selfTest(rules) {
       const sample = rule.sample ?? rule.literal ?? null
       if (sample === null) continue // regex denylist entries carry no sample
       const file = join(dir, 'probe.txt'); writeFileSync(file, `before ${sample} after\n`)
-      if (!scanText(readFileSync(file, 'utf8'), [rule]).length) missed.push(rule.name)
+      if (!scanText(readFileSync(file, 'utf8'), [rule], false).length) missed.push(rule.name)
     }
     // And the allow-list must not swallow a real address.
     if (scanText('no-reply' + at + 'users.noreply.github.com', generic).length) missed.push('noreply allow-list')
