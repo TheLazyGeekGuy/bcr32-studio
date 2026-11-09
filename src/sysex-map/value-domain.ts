@@ -1,4 +1,4 @@
-import type {SxmParameter} from './types'
+import type {SxmParameter} from './types.js'
 
 /** Required extension: raw wire values need not form a continuous interval. */
 export const valueDomainExtension='org.midistudio.value-domain.v1'

@@ -1,8 +1,8 @@
 /** Dependency-free SXM reader, serializer and local renderer. No MIDI permission or I/O. */
 import schema from './schema.json'
 import type {SysExMap,SxmDevice,SxmParameter,SxmValue} from './types.js'
-import {acceptsValue,valueDomain,valueDomainExtension} from './value-domain'
-export {acceptsValue,valueDomain,valueDomainExtension} from './value-domain'
+import {acceptsValue,valueDomain,valueDomainExtension} from './value-domain.js'
+export {acceptsValue,valueDomain,valueDomainExtension} from './value-domain.js'
 export type * from './types.js'
 function freeze(x:unknown):void{if(x&&typeof x==='object'){Object.values(x).forEach(freeze);Object.freeze(x)}}
 freeze(schema)
